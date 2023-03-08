@@ -1,3 +1,5 @@
+#Requires -Version 7.0
+
 <#
 .SYNOPSIS
   Will make the SQL user account required to authenticate with Azure AD to Azure SQL Database.

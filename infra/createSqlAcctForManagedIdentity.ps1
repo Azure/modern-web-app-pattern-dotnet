@@ -1,3 +1,5 @@
+#Requires -Version 7.0
+
 Param(
   [Parameter(Mandatory = $true)][string]$ServerName,
   [Parameter(Mandatory = $true)][string]$ResourceGroupName,

@@ -1,3 +1,5 @@
+#Requires -Version 7.0
+
 <#
 .SYNOPSIS
     Validates that the user can access a Key Vault that will enable the sample to be deployed

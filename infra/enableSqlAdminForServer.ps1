@@ -1,3 +1,5 @@
+#Requires -Version 7.0
+
 Param(
     [Parameter(Mandatory = $true)][string]$SqlServerName,
     [Parameter(Mandatory = $true)][string]$ResourceGroupName

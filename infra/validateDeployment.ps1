@@ -1,3 +1,5 @@
+#Requires -Version 7.0
+
 <#
 .SYNOPSIS
     Examines the web app that was deployed to identify any known issues and provide recommendations.
