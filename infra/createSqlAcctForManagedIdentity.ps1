@@ -1,5 +1,18 @@
 #Requires -Version 7.0
 
+<#
+.SYNOPSIS
+    Used to create Sql Account for Managed Identity
+.DESCRIPTION
+    Creates a new Sql Account for the Managed Identity service principal and grants account db_owner role
+
+    Also configures the Sql Database for AAD authentication only
+
+    NOTE: Assumes the service principal that will connect to SQL has been set as the Azure AD Admin
+    This was handled by the bicep templates
+    see https://docs.microsoft.com/en-us/azure/azure-sql/database/authentication-aad-configure?view=azuresql&tabs=azure-powershell#azure-portal
+#>
+
 Param(
   [Parameter(Mandatory = $true)][string]$ServerName,
   [Parameter(Mandatory = $true)][string]$ResourceGroupName,
@@ -11,10 +24,6 @@ Param(
   [Parameter(Mandatory = $true)][string]$SqlAdminPwd,
   [Parameter(Mandatory = $true)][bool]$IsProd
 )
-
-# Assumes the service principal that will connect to SQL has been set as the Azure AD Admin
-# This was handled by the bicep templates
-# see https://docs.microsoft.com/en-us/azure/azure-sql/database/authentication-aad-configure?view=azuresql&tabs=azure-powershell#azure-portal
 
 # Make Invoke-Sqlcmd available
 Install-Module -Name SqlServer -Force
@@ -42,4 +51,3 @@ Invoke-Sqlcmd -ServerInstance $ServerUri -database $CatalogName -Username $SqlAd
 
 # Restrict access to Azure AD users
 Enable-AzSqlServerActiveDirectoryOnlyAuthentication -ServerName $ServerName -ResourceGroupName $ResourceGroupName
-
