@@ -21,12 +21,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: 'Az CLI login'
-        uses: azure/login@v1
-        with:
-            client-id: ${{ secrets.AZURE_CLIENT_ID }}
-            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Log in with azd (Federated Credentials)
+        run: |
+          azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
 
       - name: Azure Dev Provision
         run: azd provision --no-prompt
@@ -46,12 +43,12 @@ jobs:
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION2 }}
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-
-      # # login to run az cli commands such as validateDeployment.sh
-      # - name: Log in with Azure
-      #   uses: azure/login@v1
-      #   with:
-      #     creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: QA - Validate Deployment
         run: |
