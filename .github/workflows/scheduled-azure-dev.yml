@@ -26,7 +26,9 @@ jobs:
           azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
 
       - name: Azure Dev Provision
-        run: azd provision --no-prompt
+        run: |
+          azd config set IS_RUN_AS_SERVICEPRINCIPAL true
+          azd provision --no-prompt
         env:
           AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}daily2
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION2 }}
