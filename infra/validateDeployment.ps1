@@ -55,45 +55,36 @@ if ($groupExists -eq 'false') {
 # checking for known issue 87
 # https://github.com/Azure/reliable-web-app-pattern-dotnet/issues/87
 
-$frontEndWebAppName=$(az resource list -g "$ResourceGroupName" --query "[? tags.\`"azd-service-name\`" == 'web' ].name" -o tsv)
+foreach ($appTag in @("web-call-center", "call-center-api", "public-api", "web-public")) {
 
-if ($frontEndWebAppName.Length -eq 0) {
-  Write-Error  "Cannot find the front-end web app"
-  Write-Error "Recommended Action: run the 'azd provision' command again to overlay the missing settings"
-  exit 32
-} else {
-  Write-Debug "Found front-end web app named '$frontEndWebAppName'"
+  $appName=$(az resource list -g "$ResourceGroupName" --query "[? tags.\`"azd-service-name\`" == '$appTag' ].name" -o tsv)
+
+  if ($appName.Length -eq 0) {
+    Write-Error "Cannot find the app with tag: $appTag"
+    Write-Error "Recommended Action: run the 'azd provision' command again to overlay the missing settings"
+    exit 32
+  } else {
+    Write-Debug "Found app with tag: $appTag, appName: $appName"
+  }
+
+  # Determine which appConfig key we are looking for depending on api versus web flavor of our application
+  if ($appTag -like "*api") {
+    $appSettingConfig="Api:AppConfig:Uri"
+  } else {
+    $appSettingConfig="App:AppConfig:Uri" 
+  }
+
+  $AppSvcUri=$(az webapp config appsettings list -n $appName -g $ResourceGroupName --query "[?name=='$appSettingConfig'].value" -o tsv)
+
+  if ($AppSvcUri.Length -eq 0) {
+    Write-Error "Missing required Azure App Service configuration setting $appSettingConfig in app: $appName"
+    Write-Error "Recommended Action: run the 'azd provision' command again to overlay the missing settings"
+    exit 35
+  } else {
+    Write-Debug "Validated that the App Service was configured with setting $appSettingsConfig equal to '$AppSvcUri'"
+  }
 }
 
-$frontEndAppSvcUri=$(az webapp config appsettings list -n $frontEndWebAppName -g $ResourceGroupName --query "[?name=='App:AppConfig:Uri'].value" -o tsv)
-
-if ($frontEndAppSvcUri.Length -eq 0) {
-  Write-Error "Missing required Azure App Service configuration setting front-end web app: App:AppConfig:Uri"
-  Write-Error "Recommended Action: run the 'azd provision' command again to overlay the missing settings"
-  exit 33
-} else {
-  Write-Debug "Validated that the App Service was configured with setting 'App:AppConfig:Uri' equal to '$frontEndAppSvcUri'"
-}
-
-$apiWebAppName=$(az resource list -g "$ResourceGroupName" --query "[? tags.\`"azd-service-name\`" == 'api' ].name" -o tsv)
-
-if ($apiWebAppName.Length -eq 0 ) {
-  Write-Error "Cannot find the API web app"
-  Write-Error "Recommended Action: run the 'azd provision' command again to overlay the missing settings"
-  exit 34
-} else {
-  Write-Debug "Found API web app named '$apiWebAppName'"
-}
-
-$apiAppSvcUri=$(az webapp config appsettings list -n $apiWebAppName -g $ResourceGroupName --query "[?name=='Api:AppConfig:Uri'].value" -o tsv)
-
-if ($apiAppSvcUri.Length -eq 0) {
-  Write-Error "Missing required Azure App Service configuration setting for api web app: Api:AppConfig:Uri"
-  Write-Error "Recommended Action: run the 'azd provision' command again to overlay the missing settings"
-  exit 35
-} else {
-  Write-Debug "Validated that the App Service was configured with setting 'Api:AppConfig:Uri' equal to '$apiAppSvcUri'"
-}
 
 # end of check for issue 87
 
