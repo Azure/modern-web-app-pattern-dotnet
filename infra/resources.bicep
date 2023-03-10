@@ -164,9 +164,6 @@ resource baseApiUrlAppConfigSetting 'Microsoft.AppConfiguration/configurationSto
   properties: {
     value: 'https://${callcenterApi.properties.defaultHostName}'
   }
-  dependsOn: [
-    openConfigSvcsForEdits
-  ]
 }
 
 resource pubAppBaseApiUrlAppConfigSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2022-05-01' = {
@@ -175,9 +172,6 @@ resource pubAppBaseApiUrlAppConfigSetting 'Microsoft.AppConfiguration/configurat
   properties: {
     value: 'https://${publicApi.properties.defaultHostName}'
   }
-  dependsOn: [
-    openConfigSvcsForEdits
-  ]
 }
 
 resource sqlConnStrAppConfigSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2022-05-01' = {
@@ -186,9 +180,6 @@ resource sqlConnStrAppConfigSetting 'Microsoft.AppConfiguration/configurationSto
   properties: {
     value: 'Server=tcp:${sqlSetup.outputs.sqlServerFqdn},1433;Initial Catalog=${sqlSetup.outputs.sqlCatalogName};Authentication=Active Directory Default'
   }
-  dependsOn: [
-    openConfigSvcsForEdits
-  ]
 }
 
 resource redisConnAppConfigKvRef 'Microsoft.AppConfiguration/configurationStores/keyValues@2022-05-01' = {
@@ -200,9 +191,6 @@ resource redisConnAppConfigKvRef 'Microsoft.AppConfiguration/configurationStores
     })
     contentType: 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
   }
-  dependsOn: [
-    openConfigSvcsForEdits
-  ]
 }
 
 resource frontEndClientSecretAppCfg 'Microsoft.AppConfiguration/configurationStores/keyValues@2022-05-01' = {
@@ -225,9 +213,6 @@ resource storageAppConfigKvRef 'Microsoft.AppConfiguration/configurationStores/k
     })
     contentType: 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
   }
-  dependsOn: [
-    openConfigSvcsForEdits
-  ]
 }
 
 var aspNetCoreEnvironment = isProd ? 'Production' : 'Development'
@@ -535,6 +520,9 @@ resource appConfigSvc 'Microsoft.AppConfiguration/configurationStores@2022-05-01
   tags: tags
   sku: {
     name: 'Standard'
+  }
+  properties: {
+    publicNetworkAccess: 'Enabled'
   }
 }
 
@@ -945,211 +933,6 @@ resource redisPvtEndpointDnsGroupName 'Microsoft.Network/privateEndpoints/privat
       }
     ]
   }
-}
-
-// private link for Key vault
-
-resource privateDnsZoneNameForKv 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: 'privatelink.vaultcore.azure.net'
-  location: 'global'
-  tags: tags
-  dependsOn: [
-    vnet
-  ]
-}
-
-resource privateDnsZoneNameForKv_link 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
-  parent: privateDnsZoneNameForKv
-  name: '${privateDnsZoneNameForKv.name}-link'
-  location: 'global'
-  tags: tags
-  properties: {
-    registrationEnabled: false
-    virtualNetwork: {
-      id: vnet.id
-    }
-  }
-}
-
-resource pvtEndpointDnsGroupNameForKv 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2020-07-01' = {
-  name: '${privateEndpointForKv.name}/mydnsgroupname'
-  properties: {
-    privateDnsZoneConfigs: [
-      {
-        name: 'config1'
-        properties: {
-          privateDnsZoneId: privateDnsZoneNameForKv.id
-        }
-      }
-    ]
-  }
-}
-
-resource privateEndpointForKv 'Microsoft.Network/privateEndpoints@2020-07-01' = {
-  name: 'privateEndpointForKv'
-  location: location
-  tags: tags
-  properties: {
-    subnet: {
-      id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, privateEndpointSubnetName)
-    }
-    privateLinkServiceConnections: [
-      {
-        name: kv.name
-        properties: {
-          privateLinkServiceId: kv.id
-          groupIds: [
-            'vault'
-          ]
-        }
-      }
-    ]
-  }
-}
-
-// private link for App Config Svc
-
-resource privateDnsZoneNameForAppConfig 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: 'privatelink.azconfig.io'
-  location: 'global'
-  tags: tags
-  dependsOn: [
-    vnet
-  ]
-}
-
-resource privateDnsZoneNameForAppConfig_link 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
-  parent: privateDnsZoneNameForAppConfig
-  name: '${privateDnsZoneNameForAppConfig.name}-link'
-  location: 'global'
-  tags: tags
-  properties: {
-    registrationEnabled: false
-    virtualNetwork: {
-      id: vnet.id
-    }
-  }
-}
-
-resource pvtEndpointDnsGroupNameForAppConfig 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2020-07-01' = {
-  name: '${privateEndpointForAppConfig.name}/mydnsgroupname'
-  properties: {
-    privateDnsZoneConfigs: [
-      {
-        name: 'config1'
-        properties: {
-          privateDnsZoneId: privateDnsZoneNameForAppConfig.id
-        }
-      }
-    ]
-  }
-}
-
-resource privateEndpointForAppConfig 'Microsoft.Network/privateEndpoints@2020-07-01' = {
-  name: 'privateEndpointForAppConfig'
-  location: location
-  tags: tags
-  properties: {
-    subnet: {
-      id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, privateEndpointSubnetName)
-    }
-    privateLinkServiceConnections: [
-      {
-        name: appConfigSvc.name
-        properties: {
-          privateLinkServiceId: appConfigSvc.id
-          groupIds: [
-            'configurationStores'
-          ]
-        }
-      }
-    ]
-  }
-}
-
-// app config vars cannot be set without public network access
-// the above config settings must depend on this block to ensure
-// access is allowed before we try saving the setting
-resource openConfigSvcsForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
-  name: 'openConfigSvcsForEdits'
-  location: location
-  tags: tags
-  kind: 'AzureCLI'
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${devOpsManagedIdentityId}': {}
-    }
-  }
-  properties: {
-    forceUpdateTag: uniqueScriptId
-    azCliVersion: '2.40.0'
-    retentionInterval: 'P1D'
-    environmentVariables: [
-      {
-        name: 'APP_CONFIG_SVC_NAME'
-        value: appConfigSvc.name
-      }
-      {
-        name: 'KEY_VAULT_NAME'
-        value: kv.name
-      }
-      {
-        name: 'RESOURCE_GROUP'
-        secureValue: resourceGroup().name
-      }
-    ]
-    scriptContent: '''
-      az appconfig update --name $APP_CONFIG_SVC_NAME --resource-group $RESOURCE_GROUP --enable-public-network true
-      az keyvault update --name $KEY_VAULT_NAME --resource-group $RESOURCE_GROUP  --public-network-access Enabled
-      '''
-  }
-}
-
-resource closeConfigSvcsForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01' = if (isProd) {
-  name: 'closeConfigSvcsForEdits'
-  location: location
-  tags: tags
-  kind: 'AzureCLI'
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${devOpsManagedIdentityId}': {}
-    }
-  }
-  properties: {
-    forceUpdateTag: uniqueScriptId
-    azCliVersion: '2.40.0'
-    retentionInterval: 'P1D'
-    environmentVariables: [
-      {
-        name: 'APP_CONFIG_SVC_NAME'
-        value: appConfigSvc.name
-      }
-      {
-        name: 'KEY_VAULT_NAME'
-        value: kv.name
-      }
-      {
-        name: 'RESOURCE_GROUP'
-        secureValue: resourceGroup().name
-      }
-    ]
-    scriptContent: '''
-      az appconfig update --name $APP_CONFIG_SVC_NAME --resource-group $RESOURCE_GROUP --enable-public-network false
-      az keyvault update --name $KEY_VAULT_NAME --resource-group $RESOURCE_GROUP  --public-network-access Disabled
-      '''
-  }
-  // app config vars cannot be set without public network access
-  // now that they are set - we block public access for prod
-  // and leave public access enabled to support local dev scenarios
-  dependsOn:[
-    baseApiUrlAppConfigSetting
-    sqlConnStrAppConfigSetting
-    redisConnAppConfigKvRef
-    frontEndClientSecretAppCfg
-    storageAppConfigKvRef
-  ]
 }
 
 output WEB_PUBLIC_URI string = publicWeb.properties.defaultHostName
