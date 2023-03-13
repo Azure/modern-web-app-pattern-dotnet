@@ -33,9 +33,14 @@ jobs:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           IS_RUN_AS_SERVICEPRINCIPAL: true
 
+
+
+
       - name: Set AZD resource group
         # temporary work around for known issue with multiple resource groups
-        run: azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}daily2-rg
+        run:  |      
+          azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
+          azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}daily2-rg
 
       - name: Azure Dev Deploy
         run: azd deploy --no-prompt
