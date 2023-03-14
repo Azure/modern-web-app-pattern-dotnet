@@ -27,9 +27,15 @@ jobs:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           IS_RUN_AS_SERVICEPRINCIPAL: true
 
+      - name: Set AZD resource group
+        # temporary work around for known issue with multiple resource groups
+        # Need to azd login again
+        run:  |      
+          azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
+          azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}qa
+
       - name: Azure Dev Deploy
         run: |
-            azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
             azd deploy --no-prompt
         env:
           AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}qa
@@ -39,14 +45,21 @@ jobs:
       - name: Quality Assurance Review
         run: echo 'TODO - perform test automation here'; echo 'TODO - add reviewer approvals as needed'
 
-      - name: Azure Dev Provision
+      - name: Azure Prod Provision
         run: azd provision --no-prompt
         env:
           AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}prod
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Azure Dev Deploy
+      - name: Set AZD resource group
+        # temporary work around for known issue with multiple resource groups
+        # Need to azd login again
+        run:  |      
+          azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
+          azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}prod
+
+      - name: Azure Prod Deploy
         run: azd deploy --no-prompt
         env:
           AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}prod
