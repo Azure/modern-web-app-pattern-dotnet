@@ -121,7 +121,7 @@ namespace Relecloud.Web.Api.Controllers
                     return BadRequest(PurchaseTicketsResult.ErrorResponse("We were unable to process this card. Please review your payment details."));
                 }
 
-                var customer = await this.concertRepository.GetCustomerByEmailAsync(purchaseTicketRequest.PaymentDetails.Email);
+                var customer = await this.concertRepository.GetCustomerByEmailAsync(purchaseTicketRequest.PaymentDetails!.Email);
                 var customerId = customer?.Id ?? 0;
                 if (customerId == 0)
                 {
