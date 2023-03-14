@@ -58,7 +58,7 @@ jobs:
         # Need to azd login again
         run:  |      
           azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
-          azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}prod
+          azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}prod-rg
 
       - name: Azure Prod Deploy
         run: azd deploy --no-prompt
