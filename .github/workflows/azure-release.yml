@@ -27,12 +27,10 @@ jobs:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           IS_RUN_AS_SERVICEPRINCIPAL: true
 
-      - name: Log in with azd (Federated Credentials)
-        run: |
-          azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
-
       - name: Azure Dev Deploy
-        run: azd deploy --no-prompt
+        run: |
+            azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
+            azd deploy --no-prompt
         env:
           AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}qa
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
