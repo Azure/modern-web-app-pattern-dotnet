@@ -27,12 +27,14 @@ jobs:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           IS_RUN_AS_SERVICEPRINCIPAL: true
 
+      # Need to azd login again - token seems to expire or be wiped out by previous command. 
+      - name: Log in with azd (Federated Credentials)
+        run: |
+          azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
+
       - name: Set AZD resource group
         # temporary work around for known issue with multiple resource groups
-        # Need to azd login again
-        run:  |      
-          azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
-          azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}qa-rg
+        run:  azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}qa-rg
 
       - name: Azure Dev Deploy
         run: |
@@ -53,12 +55,14 @@ jobs:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           IS_RUN_AS_SERVICEPRINCIPAL: true
 
+      # Need to azd login again - token seems to expire or be wiped out by previous command. 
+      - name: Log in with azd (Federated Credentials)
+        run: |
+          azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
+
       - name: Set AZD resource group
         # temporary work around for known issue with multiple resource groups
-        # Need to azd login again
-        run:  |      
-          azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
-          azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}prod-rg
+        run:  azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}prod-rg
 
       - name: Azure Prod Deploy
         run: azd deploy --no-prompt
