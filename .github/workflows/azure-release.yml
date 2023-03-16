@@ -1,3 +1,4 @@
+name: MWA-Release
 on:
   workflow_dispatch:
 
@@ -7,8 +8,9 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  qa:
     runs-on: ubuntu-latest
+    environment: qa
     container:
       image: mcr.microsoft.com/azure-dev-cli-apps:latest
     steps:
@@ -19,7 +21,7 @@ jobs:
         run: |
           azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
 
-      - name: Azure Dev Provision
+      - name: Azure QA Provision
         run: azd provision --no-prompt
         env:
           AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}qa
@@ -36,7 +38,7 @@ jobs:
         # temporary work around for known issue with multiple resource groups
         run:  azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}qa-rg
 
-      - name: Azure Dev Deploy
+      - name: Azure QA Deploy
         run: |
             azd deploy --no-prompt
         env:
@@ -45,7 +47,19 @@ jobs:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Quality Assurance Review
-        run: echo 'TODO - perform test automation here'; echo 'TODO - add reviewer approvals as needed'
+        run: echo 'TODO - perform test automation here'
+
+
+  prod:
+    runs-on: ubuntu-latest
+    needs: qa
+    ## prod env should be configured to require reviewer approvals in github portal
+    environment: prod
+    container:
+      image: mcr.microsoft.com/azure-dev-cli-apps:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
       - name: Azure Prod Provision
         run: azd provision --no-prompt
@@ -67,6 +81,6 @@ jobs:
       - name: Azure Prod Deploy
         run: azd deploy --no-prompt
         env:
-          AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}prod-rg
+          AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}prod
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
