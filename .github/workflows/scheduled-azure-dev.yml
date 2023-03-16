@@ -1,3 +1,4 @@
+name: "MWA- Daily Build"
 on:
   workflow_dispatch:
   schedule:

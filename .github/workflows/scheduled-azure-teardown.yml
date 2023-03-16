@@ -1,3 +1,5 @@
+name: "MWA- Daily Build Teardown"
+
 on:
   workflow_dispatch:
   schedule:

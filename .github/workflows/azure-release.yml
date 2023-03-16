@@ -10,7 +10,7 @@ permissions:
 jobs:
   qa:
     runs-on: ubuntu-latest
-    environment: qa
+    ##environment: QA
     container:
       image: mcr.microsoft.com/azure-dev-cli-apps:latest
     steps:
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: qa
     ## prod env should be configured to require reviewer approvals in github portal
-    environment: prod
+    ##environment: PROD
     container:
       image: mcr.microsoft.com/azure-dev-cli-apps:latest
     steps:
