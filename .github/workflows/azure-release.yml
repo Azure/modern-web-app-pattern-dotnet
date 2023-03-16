@@ -10,7 +10,7 @@ permissions:
 jobs:
   QA:
     runs-on: ubuntu-latest
-    ##environment: QA
+    environment: QA
     container:
       image: mcr.microsoft.com/azure-dev-cli-apps:latest
     steps:
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: QA
     ## prod env should be configured to require reviewer approvals in github portal
-    ##environment: PROD
+    environment: PROD
     container:
       image: mcr.microsoft.com/azure-dev-cli-apps:latest
     steps:
@@ -64,7 +64,7 @@ jobs:
       - name: Log in with azd (Federated Credentials)
         run: |
           azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
-          
+
       - name: Azure Prod Provision
         run: azd provision --no-prompt
         env:
