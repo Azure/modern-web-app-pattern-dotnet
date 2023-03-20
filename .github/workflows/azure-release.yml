@@ -2,6 +2,10 @@ name: MWA- Release
 on:
   workflow_dispatch:
 
+# on:
+#   pull_request:
+#     types: [opened, reopened]
+
 # https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Clinux#set-up-azure-login-with-openid-connect-authentication
 permissions:
   id-token: write
