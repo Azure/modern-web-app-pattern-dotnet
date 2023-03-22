@@ -79,9 +79,10 @@ jobs:
     container:
       image: mcr.microsoft.com/azure-dev-cli-apps:latest
     env:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}daily2
+        AZURE_LOCATION: ${{ secrets.AZURE_LOCATION2 }}
+        AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        IS_RUN_AS_SERVICEPRINCIPAL: true
 
     steps:
 
@@ -92,7 +93,7 @@ jobs:
       - name: Create AZD environment
         # Creating an azd environment so we can set the principal type
         # https://github.com/Azure/reliable-web-app-pattern-dotnet/issues/241
-        run: azd env new ${{ secrets.AZURE_ENV_NAME }}scheduled --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ secrets.AZURE_LOCATION2 }}
+        run: azd env new ${{ secrets.AZURE_ENV_NAME }}daily2 --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ secrets.AZURE_LOCATION2 }}
         
       - name: Azure Dev Down
         run: azd down --force --purge --no-prompt
