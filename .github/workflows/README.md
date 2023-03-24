@@ -11,10 +11,9 @@ To allow your GitHub Actions to perform deployments from your main branch, perfo
 2. Clone your repository locally and navigate to the repository directory.
 3. Run the following azd commands. Update `<PrincipalName>` to match your desired Service Principal name.
 ```azurecli
-azd pipeline config --principal-name <PrincipalName>
 azd pipeline config --principal-name <PrincipalName> --principal-role "User Access Administrator"
 ```
-4. Execute the following az cli commands to add additional trusts to allow deployment from GitHub environments named "QA" and "PROD". Update `<PrincipalName>` and `<REPO>` to match your GitHub repository, the REPO should be set to: GitHub_Organization/Repository_Name, an example for this repository would be: `Azure/modern-web-app-pattern-dotnet`.
+1. Execute the following az cli commands to add additional trusts to allow deployment from GitHub environments named "QA" and "PROD". Update `<PrincipalName>` and `<REPO>` to match your GitHub repository, the REPO should be set to: GitHub_Organization/Repository_Name, an example for this repository would be: `Azure/modern-web-app-pattern-dotnet`.
 ```azurecli
 appId=$(az ad app list --display-name <PrincipalName> --query [0].id -o tsv)
 az rest --method POST --uri "https://graph.microsoft.com/beta/applications/${appId}/federatedIdentityCredentials" --body '{"name":"qa","issuer":"https://token.actions.githubusercontent.com","subject":"repo:<REPO>:environment:QA","description":"QA Env","audiences":["api://AzureADTokenExchange"]}'
