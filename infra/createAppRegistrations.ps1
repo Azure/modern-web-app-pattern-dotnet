@@ -2,10 +2,11 @@
 
 <#
 .SYNOPSIS
-    Creates two Azure AD app registrations for the reliable-web-app-pattern-dotnet
+    Creates two Azure AD app registrations for the modern-web-app-pattern-dotnet
     and saves the configuration data in App Configuration Svc and Key Vault.
 
     <This command should only be run after using the azd command to deploy resources to Azure>
+    
 .DESCRIPTION
     The Relecloud web app uses Azure AD to authenticate and authorize the users that can
     make concert ticket purchases. To prove that the website is a trusted, and secure, resource
