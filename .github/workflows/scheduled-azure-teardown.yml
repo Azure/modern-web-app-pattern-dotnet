@@ -1,8 +1,17 @@
+# This file is part of our engineering process to build and maintain this file.
+# See the README markdown file for further details
+
+name: "MWA- Daily Build Teardown"
+
 on:
   workflow_dispatch:
   schedule:
     - cron: '0 1,13 * * *'
 
+permissions:
+  id-token: write
+  contents: read
+  
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,20 +21,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         
-      # login to run ado commands such provision, deploy, and down
-      - name: Log in with Azure (Client Credentials)
-        if: ${{ env.AZURE_CREDENTIALS != '' }}
+      - name: Log in with azd (Federated Credentials)
         run: |
-          $info = $Env:AZURE_CREDENTIALS | ConvertFrom-Json -AsHashtable;
-          Write-Host "::add-mask::$($info.clientSecret)"
-
-          azd login `
-            --client-id "$($info.clientId)" `
-            --client-secret "$($info.clientSecret)" `
-            --tenant-id "$($info.tenantId)"
-        shell: pwsh
-        env:
-          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+          azd auth login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
 
       - name: Azure Dev Down
         continue-on-error: true
@@ -34,3 +32,18 @@ jobs:
           AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}daily2
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION2 }}
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Resource names are reserved for a period of time after deletion - ensure they're purged to keep integration running
+      # https://docs.microsoft.com/en-us/azure/azure-app-configuration/faq#why-can-t-i-create-an-app-configuration-store-with-the-same-name-as-one-that-i-just-deleted
+      - name: Purge App Configuration Service
+        continue-on-error: true
+        run: |
+          chmod +x ./infra/appConfigSvcPurge.sh
+          ./infra/appConfigSvcPurge.sh -g ${{ secrets.AZURE_ENV_NAME }}daily2-rg
