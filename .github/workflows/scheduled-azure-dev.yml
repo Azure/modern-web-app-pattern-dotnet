@@ -1,6 +1,7 @@
 name: "MWA- Daily Build"
 on:
   pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
     inputs:
       run_tear_down:
         description: 'When true, resources will be deleted after a run'
@@ -27,6 +28,8 @@ jobs:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}
+      IS_RUN_AS_SERVICEPRINCIPAL: true
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -43,9 +46,7 @@ jobs:
       - name: Azure Dev Provision
         run: azd provision --no-prompt
         env:
-          AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Set AZD resource group
         # temporary work around for known issue with multiple resource groups
@@ -54,10 +55,7 @@ jobs:
       - name: Azure Dev Provision
         run: azd provision --no-prompt
         env:
-          AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          IS_RUN_AS_SERVICEPRINCIPAL: true
 
       - name: 'Az CLI login'
         uses: azure/login@v1
