@@ -1,15 +1,16 @@
 name: "MWA- Daily Build"
 on:
-  pull_request:
-    types: [opened, synchronize, ready_for_review, reopened]
+  workflow_dispatch:
     inputs:
       run_tear_down:
         description: 'When true, resources will be deleted after a run'
         required: false
         default: true
         type: boolean
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
   schedule:
-    - cron: '0 0,12 * * *'
+    - cron: '0 12 * * *'
       inputs:
         run_tear_down:
           default: true
