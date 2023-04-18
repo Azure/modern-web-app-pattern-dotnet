@@ -67,7 +67,7 @@ jobs:
       - name: QA - Validate Deployment
         run: |
           chmod +x ./infra/validateDeployment.sh
-          ./infra/validateDeployment.sh -g ${{ secrets.AZURE_ENV_NAME }}daily2-rg
+          ./infra/validateDeployment.sh -g ${{ secrets.AZURE_ENV_NAME }}-rg
 
 
   teardown:
