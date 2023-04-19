@@ -60,7 +60,7 @@ jobs:
 
       - name: Set AZD resource group
         # temporary work around for known issue with multiple resource groups
-        run: azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}
+        run: azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}-rg
 
       - name: Azure Dev Deploy
         run: azd deploy --no-prompt
