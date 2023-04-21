@@ -53,8 +53,8 @@ steps:
       scriptType: bash
       scriptLocation: inlineScript
       inlineScript: |
-        chmod +x ./infra/validateDeployment.sh
-        ./infra/validateDeployment.sh -g $(env_name)-rg
+        chmod +x ./infra/devOpsScripts/validateDeployment.sh
+        ./infra/devOpsScripts/validateDeployment.sh -g $(env_name)-rg
 
   - task: AzureCLI@2
     displayName: Azure Dev Down

@@ -8,11 +8,42 @@
 
     Also configures the Sql Database for AAD authentication only
 
-    NOTE: Assumes the service principal that will connect to SQL has been set as the Azure AD Admin
+    NOTE: This script is not intended to be run from a local environment.
+    This script is run by azd during devOps deployment.
+    For the local environment version of this script, please see makeSqlUserAccount.ps1
+
+    This script provides a workflow to automatically configure the deployed Azure resources and make it easier to get
+    started. It is not intended as part of a recommended best practice as we do not recommend deploying Azure SQL
+    with network configurations that would allow a deployment script such as this to connect.
+
+    We recommend handling this one-time process as part of your SQL data migration process
+    More details can be found in our docs for Azure SQL server
+    https://learn.microsoft.com/en-us/azure/app-service/tutorial-connect-msi-sql-database?tabs=windowsclient%2Cef%2Cdotnet
+
+    Assumes the service principal that will connect to SQL has been set as the Azure AD Admin
     This was handled by the bicep templates
     see https://docs.microsoft.com/en-us/azure/azure-sql/database/authentication-aad-configure?view=azuresql&tabs=azure-powershell#azure-portal
+.PARAMETER ServerName
+    A required parameter for the name of target Azure SQL Server.
+.PARAMETER ResourceGroupName
+    A required parameter for the name of resource group that contains the environment that was
+    created by the azd command.
+.PARAMETER ServerUri
+    A required parameter for the Uri of target Azure SQL Server.
+.PARAMETER CatalogName
+    A required parameter for the name the Azure SQL Database name used.
+.PARAMETER ApplicationId
+    A required parameter for the Managed Identity's Application ID used to generate its SID 
+    used for creating a user in SQL.
+.PARAMETER ManagedIdentityName
+    A required parameter for the name of Managed Identity that will be used.
+.PARAMETER SqlAdminLogin
+    A required parameter for the SQL Administrator Login used.
+.PARAMETER SqlAdminPwd
+    A required parameter for the SQL Administrator Password used.
+.PARAMETER IsProd
+    A required parameter indicating Production environment is being used.
 #>
-
 Param(
   [Parameter(Mandatory = $true)][string]$ServerName,
   [Parameter(Mandatory = $true)][string]$ResourceGroupName,

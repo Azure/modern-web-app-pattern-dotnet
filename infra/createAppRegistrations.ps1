@@ -2,7 +2,7 @@
 
 <#
 .SYNOPSIS
-    Creates two Azure AD app registrations for the modern-web-app-pattern-dotnet
+    Creates Azure AD app registrations for the call center web and api applications
     and saves the configuration data in App Configuration Svc and Key Vault.
 
     <This command should only be run after using the azd command to deploy resources to Azure>
@@ -56,9 +56,16 @@ else {
     Write-Debug "Found resource group named: $ResourceGroupName"
 }
 
+# Attempt to find Key Vault resource and fail if not found
 $keyVaultName = (az keyvault list -g "$ResourceGroupName" --query "[? starts_with(name,'rc-')].name" -o tsv)
-$appConfigSvcName = (az appconfig list -g "$ResourceGroupName" --query "[].name" -o tsv)
 
+if ($keyVaultName.Length -eq 0) {
+    Write-Error "FATAL ERROR: Could not find Key Vault resource. Confirm the --ResourceGroupName is the one created by the ``azd provision`` command."
+    exit 7
+}
+
+$appConfigSvcName = (az appconfig list -g "$ResourceGroupName" --query "[].name" -o tsv)
+$tenantId = (az account show --query "tenantId" -o tsv)
 
 $appServiceRootUri = 'azurewebsites.net' # hard coded because app svc does not return the public endpoint
 $frontEndWebAppName = (az resource list -g "$ResourceGroupName" --query "[? tags.\`"azd-service-name\`" == 'web-call-center' ].name" -o tsv)
@@ -73,8 +80,6 @@ if ($group2Exists -eq 'false') {
     $secondaryResourceGroupName = ''
 }
 
-$mySqlServer = (az resource list -g $ResourceGroupName --query "[?type=='Microsoft.Sql/servers'].name" -o tsv)
-
 Write-Debug "Derived inputs"
 Write-Debug "----------------------------------------------"
 Write-Debug "keyVaultName=$keyVaultName"
@@ -83,38 +88,31 @@ Write-Debug "frontEndWebAppUri=$frontEndWebAppUri"
 Write-Debug "resourceToken=$resourceToken"
 Write-Debug "environmentName=$environmentName"
 Write-Debug "secondaryResourceGroupName=$secondaryResourceGroupName"
+Write-Debug "tenantId='$tenantId'"
 Write-Debug ""
 
-if ($keyVaultName.Length -eq 0) {
-    Write-Error "FATAL ERROR: Could not find Key Vault resource. Confirm the --ResourceGroupName is the one created by the ``azd provision`` command."
-    exit 7
-}
 
-Write-Debug "Runtime values"
-Write-Debug "----------------------------------------------"
 $frontEndWebAppName = "$environmentName-$resourceToken-frontend"
 $apiWebAppName = "$environmentName-$resourceToken-api"
 $maxNumberOfRetries = 20
 
+Write-Debug "Runtime values"
+Write-Debug "----------------------------------------------"
 Write-Debug "frontEndWebAppName='$frontEndWebAppName'"
 Write-Debug "apiWebAppName='$apiWebAppName'"
 Write-Debug "maxNumberOfRetries=$maxNumberOfRetries"
 
-$tenantId = (az account show --query "tenantId" -o tsv)
-$userObjectId = (az account show --query "id" -o tsv)
-
-Write-Debug "tenantId='$tenantId'"
-Write-Debug ""
 
 # Resolves permission constraint that prevents the deploymentScript from running this command
 # https://github.com/Azure/reliable-web-app-pattern-dotnet/issues/134
+$mySqlServer = (az resource list -g $ResourceGroupName --query "[?type=='Microsoft.Sql/servers'].name" -o tsv)
 az sql server update -n $mySqlServer -g $ResourceGroupName --set publicNetworkAccess="Disabled" > $null
 
 $frontEndWebObjectId = (az ad app list --filter "displayName eq '$frontEndWebAppName'" --query "[].id" -o tsv)
 
 if ($frontEndWebObjectId.Length -eq 0) {
 
-    # this web app doesn't exist and must be creaed
+    # this web app registration doesn't exist and must be created
     $frontEndWebAppClientId = (az ad app create `
             --display-name $frontEndWebAppName `
             --sign-in-audience AzureADMyOrg `
@@ -181,10 +179,9 @@ Write-Host ""
 
 $apiObjectId = (az ad app list --filter "displayName eq '$apiWebAppName'" --query "[].id" -o tsv)
 
-
 if ( $apiObjectId.Length -eq 0 ) {
-    # the api app registration does not exist and must be created
     
+    # the api app registration does not exist and must be created
     $apiWebAppClientId = (az ad app create `
             --display-name $apiWebAppName `
             --sign-in-audience AzureADMyOrg `
