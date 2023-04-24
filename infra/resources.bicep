@@ -31,7 +31,7 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-
 param uniqueScriptId string = newGuid()
 
 @description('Built in \'Data Reader\' role ID: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles')
-var appConfigurationRoleDefinitionId = '516239f1-63e1-4d78-a4de-a74fb236a071'
+var appConfigDataReaderRoleDefinitionId = '516239f1-63e1-4d78-a4de-a74fb236a071'
 
 @description('Built in \'Key Vault Secrets Officer\' role ID: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles')
 var kvSecretsOfficerRoleDefinitionId = 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
@@ -87,13 +87,25 @@ param azureAdB2cSignoutCallback string
 
 @description('Grant the \'Data Reader\' role to the user-assigned managed identity, at the scope of the resource group.')
 resource appConfigRoleAssignmentForWebApps 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name: guid(appConfigurationRoleDefinitionId, appConfigSvc.id, managedIdentity.name, resourceToken)
+  name: guid(resourceGroup().id, managedIdentity.id, appConfigDataReaderRoleDefinitionId)
   scope: resourceGroup()
   properties: {
     principalType: 'ServicePrincipal'
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', appConfigurationRoleDefinitionId)
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', appConfigDataReaderRoleDefinitionId)
     principalId: managedIdentity.properties.principalId
     description: 'Grant the "Data Reader" role to the user-assigned managed identity so it can access the azure app configuration service.'
+  }
+}
+
+@description('Grant the \'Data Reader\' role to the interactive user, at the scope of the resource group.')
+resource appConfigRoleAssignmentForInteractiveUser 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (!isRunAsServicePrincipal) {
+  name: guid(resourceGroup().id, principalId, appConfigDataReaderRoleDefinitionId)
+  scope: resourceGroup()
+  properties: {
+    principalType: 'User'
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', appConfigDataReaderRoleDefinitionId)
+    principalId: principalId
+    description: 'Grant the "Data Reader" role to the interactive user so they can access the azure app configuration service.'
   }
 }
 
