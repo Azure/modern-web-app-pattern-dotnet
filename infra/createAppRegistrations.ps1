@@ -38,6 +38,8 @@ Param(
 
 $canSetSecondAzureLocation = 1
 
+$Debug = $psboundparameters.debug.ispresent
+
 Write-Debug "Inputs"
 Write-Debug "----------------------------------------------"
 Write-Debug "resourceGroupName='$resourceGroupName'"
@@ -80,8 +82,12 @@ if ($group2Exists -eq 'false') {
     $secondaryResourceGroupName = ''
 }
 
+$azdEnvironmentData=(azd env get-values)
+$isProd=($azdEnvironmentData | select-string 'IS_PROD="true"').Count -gt 0
+
 Write-Debug "Derived inputs"
 Write-Debug "----------------------------------------------"
+Write-Debug "isProd=$isProd"
 Write-Debug "keyVaultName=$keyVaultName"
 Write-Debug "appConfigSvcName=$appConfigSvcName"
 Write-Debug "frontEndWebAppUri=$frontEndWebAppUri"
@@ -102,6 +108,11 @@ Write-Debug "frontEndWebAppName='$frontEndWebAppName'"
 Write-Debug "apiWebAppName='$apiWebAppName'"
 Write-Debug "maxNumberOfRetries=$maxNumberOfRetries"
 
+if ($Debug) {
+    Write-Debug "press any key to continue..."
+    [void][System.Console]::ReadKey($true)
+    Write-Debug "..."
+}
 
 # Resolves permission constraint that prevents the deploymentScript from running this command
 # https://github.com/Azure/reliable-web-app-pattern-dotnet/issues/134
@@ -154,6 +165,15 @@ if ($frontEndWebObjectId.Length -eq 0) {
         Start-Sleep -Seconds 3
     }
 
+    # prod environments do not allow public network access, this must be changed before we can set values
+    if ($isProd) {
+        # open the app config so that the local user can access
+        az appconfig update --name $appConfigSvcName --resource-group $ResourceGroupName --enable-public-network true > $null
+
+        # open the key vault so that the local user can access
+        az keyvault update --name $keyVaultName --resource-group $ResourceGroupName  --public-network-access Enabled > $null
+    }
+
     # save 'AzureAd:ClientSecret' to Key Vault
     az keyvault secret set --name 'AzureAd--ClientSecret' --vault-name $keyVaultName --value $frontEndWebAppClientSecret --only-show-errors > $null
     Write-Host "Set keyvault value for: 'AzureAd--ClientSecret'"
@@ -166,6 +186,14 @@ if ($frontEndWebObjectId.Length -eq 0) {
     az appconfig kv set --name $appConfigSvcName --key 'AzureAd:ClientId' --value $frontEndWebAppClientId --yes --only-show-errors > $null
     Write-Host "Set appconfig value for: 'AzureAd:ClientId'"
 
+    # prod environments do not allow public network access
+    if ($isProd) {
+        # close the app config so that the local user can access
+        az appconfig update --name $appConfigSvcName --resource-group $ResourceGroupName --enable-public-network false > $null
+
+        # close the key vault so that the local user can access
+        az keyvault update --name $keyVaultName --resource-group $ResourceGroupName  --public-network-access Disabled > $null
+    }
 }
 else {
     Write-Host "frontend app registration objectId=$frontEndWebObjectId already exists. Delete the '$frontEndWebAppName' app registration to recreate or reset the settings."
@@ -302,6 +330,12 @@ if ( $apiObjectId.Length -eq 0 ) {
         Start-Sleep -Seconds 3
     }
     
+    # prod environments do not allow public network access, this must be changed before we can set values
+    if ($isProd) {
+        # open the app config so that the local user can access
+        az appconfig update --name $appConfigSvcName --resource-group $ResourceGroupName --enable-public-network true > $null
+    }
+
     # save 'App:RelecloudApi:AttendeeScope' scope for role to App Config Svc
     az appconfig kv set --name $appConfigSvcName --key 'App:RelecloudApi:AttendeeScope' --value "api://$apiWebAppClientId/$scopeName" --yes --only-show-errors > $null
     Write-Host "Set appconfig value for: 'App:RelecloudApi:AttendeeScope'"
@@ -314,6 +348,11 @@ if ( $apiObjectId.Length -eq 0 ) {
     az appconfig kv set --name $appConfigSvcName --key 'Api:AzureAd:TenantId' --value $tenantId --yes --only-show-errors > $null
     Write-Host "Set appconfig value for: 'Api:AzureAd:TenantId'"
 
+    # prod environments do not allow public network access
+    if ($isProd) {
+        # close the app config so that the local user can access
+        az appconfig update --name $appConfigSvcName --resource-group $ResourceGroupName --enable-public-network false > $null
+    }
 } 
 else {
     Write-Host "API app registration objectId=$apiObjectId already exists. Delete the '$apiWebAppName' app registration to recreate or reset the settings."
@@ -343,6 +382,15 @@ if ($secondaryResourceGroupName.Length -gt 0 && $canSetSecondAzureLocation -eq 1
   Write-Host ""
   Write-Host "Now configuring secondary key vault"
 
+  # prod environments do not allow public network access, this must be changed before we can set values
+  if ($isProd) {
+    # open the app config so that the local user can access
+    az appconfig update --name $secondaryAppConfigSvcName --resource-group $secondaryResourceGroupName --enable-public-network true > $null
+
+    # open the key vault so that the local user can access
+    az keyvault update --name $secondaryKeyVaultName --resource-group $secondaryResourceGroupName  --public-network-access Enabled > $null
+  }
+
   # save 'AzureAd:ClientSecret' to Key Vault
   az keyvault secret set --name 'AzureAd--ClientSecret' --vault-name $secondaryKeyVaultName --value $frontEndWebAppClientSecret --only-show-errors > $null
   Write-Host "... Set keyvault value for: 'AzureAd--ClientSecret'"
@@ -369,6 +417,15 @@ if ($secondaryResourceGroupName.Length -gt 0 && $canSetSecondAzureLocation -eq 1
   az appconfig kv set --name $secondaryAppConfigSvcName --key 'Api:AzureAd:TenantId' --value $tenantId --yes --only-show-errors > $null
   Write-Host "... Set appconfig value for: 'Api:AzureAd:TenantId'"
     
+  # prod environments do not allow public network access
+  if ($isProd) {
+    # close the app config so that the local user can access
+    az appconfig update --name $secondaryAppConfigSvcName --resource-group $secondaryResourceGroupName --enable-public-network false > $null
+
+    # close the key vault so that the local user can access
+    az keyvault update --name $secondaryKeyVaultName --resource-group $secondaryResourceGroupName  --public-network-access Disabled > $null
+  }
+  
 } elseif ($canSetSecondAzureLocation -eq 2) {
     Write-Host ""
     Write-Host "skipped setup for secondary azure location because frontend app registration objectId=$frontEndWebObjectId already exists."
