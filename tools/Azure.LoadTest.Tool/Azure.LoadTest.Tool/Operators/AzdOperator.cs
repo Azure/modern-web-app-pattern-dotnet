@@ -91,16 +91,33 @@ namespace Azure.LoadTest.Tool.Operators
         }
 
         /// <summary>
-        /// When the load test runs it will use Environment variables to configure the JMX
-        /// This AZD var specifies the domain that was parameterized when the JMX was created
-        /// so that that load test can be reused for multiple environments
+        /// Parses the configuration file and returns a dictionary containing any Azure Load Test Environment parameters encoded as AZD parameters with the prefix `ALT_ENV_PARAM_`
         /// </summary>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        internal string GetEnvironmentVarDomainName()
+        internal Dictionary<string, string> GetLoadTestEnvironmentVars()
         {
-            const string AZURE_WEBSITE_DOMAIN = "AZURE_WEBSITE_DOMAIN";
-            return _configuration.GetValue<string>(AZURE_WEBSITE_DOMAIN) ?? throw new InvalidOperationException($"Missing required configuration {AZURE_WEBSITE_DOMAIN}");
+            const string AZD_ENCODED_AZURE_LOAD_TEST_PARAM = "ALT_ENV_PARAM_";
+
+            // future feature request: make this delimiter configurable
+            const string AZD_ENCODED_PARAM_DELIMITER = ",";
+
+            var environmentConfiguration = new Dictionary<string, string>();
+            foreach(var keyValuePair in _configuration.AsEnumerable())
+            {
+                if (string.IsNullOrEmpty(keyValuePair.Value)
+                    // when true we found a configuration in the ini file but it isn't one that relates to Azure Load Test environments
+                    || !keyValuePair.Key.StartsWith(AZD_ENCODED_AZURE_LOAD_TEST_PARAM, StringComparison.Ordinal)
+                    // when true we found a configuration in the ini file but it isn't one that is encoded as key/value pairs for Azure Load Test environments
+                    || !keyValuePair.Value.Contains(","))
+                {
+                    continue;
+                }
+
+                var azureLoadTestData = keyValuePair.Value.Split(AZD_ENCODED_PARAM_DELIMITER);
+                environmentConfiguration[azureLoadTestData[0]] = azureLoadTestData[1];
+            }
+
+            return environmentConfiguration;
         }
     }
 }

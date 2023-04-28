@@ -20,13 +20,13 @@ namespace Azure.LoadTest.Tool.Operators
             _logger = logger;
         }
 
-        public async Task<Guid> CreateLoadTestAsync(string loadTestDataPlaneUri, string domainName, CancellationToken cancellation)
+        public async Task<Guid> CreateLoadTestAsync(string loadTestDataPlaneUri, Dictionary<string, string> altEnvironmentVariables, CancellationToken cancellation)
         {
             var credential = new DefaultAzureCredential();
             var token = await credential.GetTokenAsync(
                 new Azure.Core.TokenRequestContext(new[] { AzureLoadTestResourceUri }), cancellation);
 
-            var newTestPlan = CreteNewTestPlan(domainName);
+            var newTestPlan = CreteNewTestPlan(altEnvironmentVariables);
             var json = JsonSerializer.Serialize(newTestPlan, new JsonSerializerOptions
             {
                 WriteIndented = true,
@@ -51,7 +51,7 @@ namespace Azure.LoadTest.Tool.Operators
 
             return newTestPlan.TestId;
 
-            TestProperties CreteNewTestPlan(string domainName)
+            TestProperties CreteNewTestPlan(Dictionary<string, string> altEnvironmentVariables)
             {
                 var hiddenParamDisplayName = $"Relecloud LoadTest Sample {DateTime.Now}";
                 var hiddenParamDescription = "Run this test to examine the impact of performance efficiency changes";
@@ -60,10 +60,7 @@ namespace Azure.LoadTest.Tool.Operators
                 {
                     DisplayName = hiddenParamDisplayName,
                     Description = hiddenParamDescription,
-                    EnvironmentVariables = new EnvironmentVariables
-                    {
-                        Domain = domainName
-                    }
+                    EnvironmentVariables = altEnvironmentVariables
                 };
             }
         }
@@ -165,13 +162,13 @@ namespace Azure.LoadTest.Tool.Operators
             }
         }
 
-        public async Task<string> StartLoadTestAsync(string loadTestDataPlaneUri, Guid existingTestPlanId, string domainName, CancellationToken cancellation)
+        public async Task<string> StartLoadTestAsync(string loadTestDataPlaneUri, Guid existingTestPlanId, Dictionary<string, string> altEnvironmentVariables, CancellationToken cancellation)
         {
             var credential = new DefaultAzureCredential();
             var token = await credential.GetTokenAsync(
                 new Azure.Core.TokenRequestContext(new[] { AzureLoadTestResourceUri }), cancellation);
 
-            var newTestRun = CreateNewTestRun(existingTestPlanId, domainName);
+            var newTestRun = CreateNewTestRun(existingTestPlanId, altEnvironmentVariables);
             var json = JsonSerializer.Serialize(newTestRun, new JsonSerializerOptions
             {
                 WriteIndented = true,
@@ -200,7 +197,7 @@ namespace Azure.LoadTest.Tool.Operators
 
             return loadTestResponse?.TestRunId ?? throw new InvalidOperationException("Load test was not started successfully");
 
-            TestRunRequest CreateNewTestRun(Guid testPlanId, string domainName)
+            TestRunRequest CreateNewTestRun(Guid testPlanId, Dictionary<string, string> altEnvironmentVariables)
             {
                 var hiddenParamDisplayName = $"Relecloud LoadTest Run {DateTime.Now}";
                 var hiddenParamDescription = "This test run was automatically started";
@@ -209,10 +206,7 @@ namespace Azure.LoadTest.Tool.Operators
                 {
                     DisplayName = hiddenParamDisplayName,
                     Description = hiddenParamDescription,
-                    EnvironmentVariables = new EnvironmentVariables
-                    {
-                        Domain = domainName
-                    }
+                    EnvironmentVariables = altEnvironmentVariables
                 };
             }
         }

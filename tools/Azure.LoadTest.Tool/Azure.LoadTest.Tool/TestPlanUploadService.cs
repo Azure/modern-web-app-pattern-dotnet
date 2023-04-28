@@ -25,11 +25,11 @@ namespace Azure.LoadTest.Tool
 
         public async Task CreateTestPlanAsync(CancellationToken cancellationToken)
         {
-            string subscriptionId = _azdOperator.GetSubscriptionId();
-            string resourceGroupName = _azdOperator.GetResourceGroupName();
-            string loadTestName = _azdOperator.GetAzureLoadTestServiceName();
-            string domainName = _azdOperator.GetEnvironmentVarDomainName();
-            string pathToJmx = _azdOperator.GetPathToJMeterFile();
+            var subscriptionId = _azdOperator.GetSubscriptionId();
+            var resourceGroupName = _azdOperator.GetResourceGroupName();
+            var loadTestName = _azdOperator.GetAzureLoadTestServiceName();
+            var domainName = _azdOperator.GetLoadTestEnvironmentVars();
+            var pathToJmx = _azdOperator.GetPathToJMeterFile();
 
             _logger.LogInformation($"Working with subscriptionId: {subscriptionId}");
             _logger.LogInformation($"Looking for resourceGroupName: {resourceGroupName}");
