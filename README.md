@@ -1,4 +1,4 @@
-> Disclaimer: this repository is under active development. We are not accepting issues at this time. As we work through the engineering phase this content is not yet expected to be deployable.
+> Disclaimer: this repository is under active development. We are not accepting issues at this time. As we work through the engineering phase this content may not be functional.
 
 # Modern web app pattern for .NET
 
