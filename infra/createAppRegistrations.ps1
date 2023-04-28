@@ -1,9 +1,12 @@
+#Requires -Version 7.0
+
 <#
 .SYNOPSIS
-    Creates two Azure AD app registrations for the reliable-web-app-pattern-dotnet
+    Creates Azure AD app registrations for the call center web and api applications
     and saves the configuration data in App Configuration Svc and Key Vault.
 
     <This command should only be run after using the azd command to deploy resources to Azure>
+    
 .DESCRIPTION
     The Relecloud web app uses Azure AD to authenticate and authorize the users that can
     make concert ticket purchases. To prove that the website is a trusted, and secure, resource
@@ -35,6 +38,8 @@ Param(
 
 $canSetSecondAzureLocation = 1
 
+$Debug = $psboundparameters.debug.ispresent
+
 Write-Debug "Inputs"
 Write-Debug "----------------------------------------------"
 Write-Debug "resourceGroupName='$resourceGroupName'"
@@ -53,9 +58,16 @@ else {
     Write-Debug "Found resource group named: $ResourceGroupName"
 }
 
+# Attempt to find Key Vault resource and fail if not found
 $keyVaultName = (az keyvault list -g "$ResourceGroupName" --query "[? starts_with(name,'rc-')].name" -o tsv)
-$appConfigSvcName = (az appconfig list -g "$ResourceGroupName" --query "[].name" -o tsv)
 
+if ($keyVaultName.Length -eq 0) {
+    Write-Error "FATAL ERROR: Could not find Key Vault resource. Confirm the --ResourceGroupName is the one created by the ``azd provision`` command."
+    exit 7
+}
+
+$appConfigSvcName = (az appconfig list -g "$ResourceGroupName" --query "[].name" -o tsv)
+$tenantId = (az account show --query "tenantId" -o tsv)
 
 $appServiceRootUri = 'azurewebsites.net' # hard coded because app svc does not return the public endpoint
 $frontEndWebAppName = (az resource list -g "$ResourceGroupName" --query "[? tags.\`"azd-service-name\`" == 'web-call-center' ].name" -o tsv)
@@ -70,48 +82,48 @@ if ($group2Exists -eq 'false') {
     $secondaryResourceGroupName = ''
 }
 
-$mySqlServer = (az resource list -g $ResourceGroupName --query "[?type=='Microsoft.Sql/servers'].name" -o tsv)
+$azdEnvironmentData=(azd env get-values)
+$isProd=($azdEnvironmentData | select-string 'IS_PROD="true"').Count -gt 0
 
 Write-Debug "Derived inputs"
 Write-Debug "----------------------------------------------"
+Write-Debug "isProd=$isProd"
 Write-Debug "keyVaultName=$keyVaultName"
 Write-Debug "appConfigSvcName=$appConfigSvcName"
 Write-Debug "frontEndWebAppUri=$frontEndWebAppUri"
 Write-Debug "resourceToken=$resourceToken"
 Write-Debug "environmentName=$environmentName"
 Write-Debug "secondaryResourceGroupName=$secondaryResourceGroupName"
+Write-Debug "tenantId='$tenantId'"
 Write-Debug ""
 
-if ($keyVaultName.Length -eq 0) {
-    Write-Error "FATAL ERROR: Could not find Key Vault resource. Confirm the --ResourceGroupName is the one created by the ``azd provision`` command."
-    exit 7
-}
 
-Write-Debug "Runtime values"
-Write-Debug "----------------------------------------------"
 $frontEndWebAppName = "$environmentName-$resourceToken-frontend"
 $apiWebAppName = "$environmentName-$resourceToken-api"
 $maxNumberOfRetries = 20
 
+Write-Debug "Runtime values"
+Write-Debug "----------------------------------------------"
 Write-Debug "frontEndWebAppName='$frontEndWebAppName'"
 Write-Debug "apiWebAppName='$apiWebAppName'"
 Write-Debug "maxNumberOfRetries=$maxNumberOfRetries"
 
-$tenantId = (az account show --query "tenantId" -o tsv)
-$userObjectId = (az account show --query "id" -o tsv)
-
-Write-Debug "tenantId='$tenantId'"
-Write-Debug ""
+if ($Debug) {
+    Write-Debug "press any key to continue..."
+    [void][System.Console]::ReadKey($true)
+    Write-Debug "..."
+}
 
 # Resolves permission constraint that prevents the deploymentScript from running this command
 # https://github.com/Azure/reliable-web-app-pattern-dotnet/issues/134
+$mySqlServer = (az resource list -g $ResourceGroupName --query "[?type=='Microsoft.Sql/servers'].name" -o tsv)
 az sql server update -n $mySqlServer -g $ResourceGroupName --set publicNetworkAccess="Disabled" > $null
 
 $frontEndWebObjectId = (az ad app list --filter "displayName eq '$frontEndWebAppName'" --query "[].id" -o tsv)
 
 if ($frontEndWebObjectId.Length -eq 0) {
 
-    # this web app doesn't exist and must be creaed
+    # this web app registration doesn't exist and must be created
     $frontEndWebAppClientId = (az ad app create `
             --display-name $frontEndWebAppName `
             --sign-in-audience AzureADMyOrg `
@@ -153,6 +165,12 @@ if ($frontEndWebObjectId.Length -eq 0) {
         Start-Sleep -Seconds 3
     }
 
+    # prod environments do not allow public network access, this must be changed before we can set values
+    if ($isProd) {
+        # open the key vault so that the local user can access
+        az keyvault update --name $keyVaultName --resource-group $ResourceGroupName  --public-network-access Enabled > $null
+    }
+
     # save 'AzureAd:ClientSecret' to Key Vault
     az keyvault secret set --name 'AzureAd--ClientSecret' --vault-name $keyVaultName --value $frontEndWebAppClientSecret --only-show-errors > $null
     Write-Host "Set keyvault value for: 'AzureAd--ClientSecret'"
@@ -165,6 +183,11 @@ if ($frontEndWebObjectId.Length -eq 0) {
     az appconfig kv set --name $appConfigSvcName --key 'AzureAd:ClientId' --value $frontEndWebAppClientId --yes --only-show-errors > $null
     Write-Host "Set appconfig value for: 'AzureAd:ClientId'"
 
+    # prod environments do not allow public network access
+    if ($isProd) {
+        # close the key vault so that the local user can access
+        az keyvault update --name $keyVaultName --resource-group $ResourceGroupName  --public-network-access Disabled > $null
+    }
 }
 else {
     Write-Host "frontend app registration objectId=$frontEndWebObjectId already exists. Delete the '$frontEndWebAppName' app registration to recreate or reset the settings."
@@ -178,10 +201,9 @@ Write-Host ""
 
 $apiObjectId = (az ad app list --filter "displayName eq '$apiWebAppName'" --query "[].id" -o tsv)
 
-
 if ( $apiObjectId.Length -eq 0 ) {
-    # the api app registration does not exist and must be created
     
+    # the api app registration does not exist and must be created
     $apiWebAppClientId = (az ad app create `
             --display-name $apiWebAppName `
             --sign-in-audience AzureADMyOrg `
@@ -313,7 +335,6 @@ if ( $apiObjectId.Length -eq 0 ) {
     # save 'Api:AzureAd:TenantId' to App Config Svc
     az appconfig kv set --name $appConfigSvcName --key 'Api:AzureAd:TenantId' --value $tenantId --yes --only-show-errors > $null
     Write-Host "Set appconfig value for: 'Api:AzureAd:TenantId'"
-
 } 
 else {
     Write-Host "API app registration objectId=$apiObjectId already exists. Delete the '$apiWebAppName' app registration to recreate or reset the settings."
@@ -343,6 +364,12 @@ if ($secondaryResourceGroupName.Length -gt 0 && $canSetSecondAzureLocation -eq 1
   Write-Host ""
   Write-Host "Now configuring secondary key vault"
 
+  # prod environments do not allow public network access, this must be changed before we can set values
+  if ($isProd) {
+    # open the key vault so that the local user can access
+    az keyvault update --name $secondaryKeyVaultName --resource-group $secondaryResourceGroupName  --public-network-access Enabled > $null
+  }
+
   # save 'AzureAd:ClientSecret' to Key Vault
   az keyvault secret set --name 'AzureAd--ClientSecret' --vault-name $secondaryKeyVaultName --value $frontEndWebAppClientSecret --only-show-errors > $null
   Write-Host "... Set keyvault value for: 'AzureAd--ClientSecret'"
@@ -369,6 +396,12 @@ if ($secondaryResourceGroupName.Length -gt 0 && $canSetSecondAzureLocation -eq 1
   az appconfig kv set --name $secondaryAppConfigSvcName --key 'Api:AzureAd:TenantId' --value $tenantId --yes --only-show-errors > $null
   Write-Host "... Set appconfig value for: 'Api:AzureAd:TenantId'"
     
+  # prod environments do not allow public network access
+  if ($isProd) {
+    # close the key vault so that the local user can access
+    az keyvault update --name $secondaryKeyVaultName --resource-group $secondaryResourceGroupName  --public-network-access Disabled > $null
+  }
+  
 } elseif ($canSetSecondAzureLocation -eq 2) {
     Write-Host ""
     Write-Host "skipped setup for secondary azure location because frontend app registration objectId=$frontEndWebObjectId already exists."

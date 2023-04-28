@@ -1,6 +1,22 @@
 #!/bin/bash
 
+# This script is part of the sample's workflow for configuring App Registrations
+# in Azure AD and saving the appropriate values in Key Vault, and Azure App Config Service
+# so that the application can authenticate users. Note that an app registration is
+# something you'll want to set up once, and reuse for every version of the web app
+# that you deploy. You can learn more about app registrations at
+# https://learn.microsoft.com/en-us/azure/active-directory/develop/application-model
+#
+# If you do not have permission to create App Registrations consider
+# sharing this script, or something similar, with your administrators to help them
+# set up the variables you need to integrate with Azure AD
+#
+# This code may be repurposed for your scenario as desired
+# but is not covered by the guidance in this content.
+
 POSITIONAL_ARGS=()
+
+debug=''
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -8,6 +24,10 @@ while [[ $# -gt 0 ]]; do
       resourceGroupName="$2"
       shift # past argument
       shift # past value
+      ;;
+    --debug)
+      debug=1
+      shift # past argument
       ;;
     --help*)
       echo ""
@@ -69,10 +89,19 @@ if [[ $group2Exists -eq 'false' ]]; then
     secondaryResourceGroupName=''
 fi
 
-mySqlServer=$(az resource list -g $resourceGroupName --query "[?type=='Microsoft.Sql/servers'].name" -o tsv)
+azdData=$(azd env get-values)
+isProd=''
+if [[ $azdData =~ 'IS_PROD="true"' ]]; then
+  isProd=true
+fi
 
 echo "Derived inputs"
 echo "----------------------------------------------"
+if [[ $isProd ]]; then
+  echo "isProd=true"
+else
+  echo "isProd=false"
+fi
 echo "keyVaultName=$keyVaultName"
 echo "appConfigSvcName=$appConfigSvcName"
 echo "frontEndWebAppUri=$frontEndWebAppUri"
@@ -102,9 +131,20 @@ userObjectId=$(az account show --query "id" -o tsv)
 echo "tenantId='$tenantId'"
 echo ""
 
-# Resolves permission constraint that prevents the deploymentScript from running this command
-# https://github.com/Azure/reliable-web-app-pattern-dotnet/issues/134
-az sql server update -n $mySqlServer -g $resourceGroupName --set publicNetworkAccess="Disabled" > /dev/null
+if [[ $debug ]]; then
+    read -n 1 -r -s -p "Press any key to continue..."
+    echo ''
+    echo "..."
+fi
+
+# prod environments do not allow public network access, this must be changed before we can set values
+if [[ $isProd ]]; then
+  mySqlServer=$(az resource list -g $resourceGroupName --query "[?type=='Microsoft.Sql/servers'].name" -o tsv)
+
+  # Resolves permission constraint that prevents the deploymentScript from running this command
+  # https://github.com/Azure/reliable-web-app-pattern-dotnet/issues/134
+  az sql server update -n $mySqlServer -g $resourceGroupName --set publicNetworkAccess="Disabled" > /dev/null
+fi
 
 frontEndWebObjectId=$(az ad app list --filter "displayName eq '$frontEndWebAppName'" --query "[].id" -o tsv)
 
@@ -151,6 +191,12 @@ if [[ ${#frontEndWebObjectId} -eq 0 ]]; then
       sleep 3
     done
 
+    # prod environments do not allow public network access, this must be changed before we can set values
+    if [[ $isProd ]]; then       
+        # open the key vault so that the local user can access
+        az keyvault update --name $keyVaultName --resource-group $resourceGroupName  --public-network-access Enabled > /dev/null
+    fi
+
     # save 'AzureAd:ClientSecret' to Key Vault
     az keyvault secret set --name 'AzureAd--ClientSecret' --vault-name $keyVaultName --value $frontEndWebAppClientSecret --only-show-errors > /dev/null
     echo "Set keyvault value for: 'AzureAd--ClientSecret'"
@@ -162,6 +208,12 @@ if [[ ${#frontEndWebObjectId} -eq 0 ]]; then
     #save 'AzureAd:ClientId' to App Config Svc
     az appconfig kv set --name $appConfigSvcName --key 'AzureAd:ClientId' --value $frontEndWebAppClientId --yes --only-show-errors > /dev/null
     echo "Set appconfig value for: 'AzureAd:ClientId'"
+
+    # prod environments do not allow public network access
+    if [[ $isProd ]]; then        
+        # close the key vault so that the local user cannot access
+        az keyvault update --name $keyVaultName --resource-group $resourceGroupName  --public-network-access Disabled > /dev/null
+    fi
 else
     echo "frontend app registration objectId=$frontEndWebObjectId already exists. Delete the '$frontEndWebAppName' app registration to recreate or reset the settings."
     frontEndWebAppClientId=$(az ad app show --id $frontEndWebObjectId --query "appId" -o tsv)
@@ -335,6 +387,12 @@ if [[ ${#secondaryResourceGroupName} -gt 0 && $canSetSecondAzureLocation -eq 1 ]
   echo ""
   echo "Now configuring secondary key vault"
 
+    # prod environments do not allow public network access, this must be changed before we can set values
+  if [[ $isProd ]]; then
+      # open the key vault so that the local user can access
+      az keyvault update --name $secondaryKeyVaultName --resource-group $secondaryResourceGroupName  --public-network-access Enabled > /dev/null
+  fi
+
   # save 'AzureAd:ClientSecret' to Key Vault
   az keyvault secret set --name 'AzureAd--ClientSecret' --vault-name $secondaryKeyVaultName --value $frontEndWebAppClientSecret --only-show-errors > /dev/null
   echo "... Set keyvault value for: 'AzureAd--ClientSecret'"
@@ -360,6 +418,13 @@ if [[ ${#secondaryResourceGroupName} -gt 0 && $canSetSecondAzureLocation -eq 1 ]
   # save 'Api:AzureAd:TenantId' to App Config Svc
   az appconfig kv set --name $secondaryAppConfigSvcName --key 'Api:AzureAd:TenantId' --value $tenantId --yes --only-show-errors > /dev/null
   echo "... Set appconfig value for: 'Api:AzureAd:TenantId'"
+
+  # prod environments do not allow public network access
+  if [[ $isProd ]]; then
+      # close the key vault so that the local user cannot access
+      az keyvault update --name $secondaryKeyVaultName --resource-group $secondaryResourceGroupName  --public-network-access Disabled > /dev/null
+  fi
+
 elif [[ $canSetSecondAzureLocation -eq 2 ]]; then
   echo ""
   echo "skipped setup for secondary azure location because frontend app registration objectId=$frontEndWebObjectId already exists."

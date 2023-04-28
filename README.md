@@ -2,7 +2,7 @@
 
 # Modern web app pattern for .NET
 
-The reference implementation provides a production-grade web application that uses best practices from our guidance and gives developers concrete examples to build their own Modern Web Application in Azure. It simulates the journey from an on-premises ASP.NET application to a migration to Azure. It shows you what changes to make to maximize the benefits of the cloud in the [Refactor](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/digital-estate/5-rs-of-rationalization#the-five-rs-of-rationalization) phase of cloud adoption. Here's an outline of the contents in this readme:
+This reference implementation provides a production-grade web application that uses best practices from our guidance and gives developers concrete examples to build their own Modern Web Application in Azure. It simulates the journey from an on-premises ASP.NET application to a migration to Azure. It shows you what changes to make to maximize the benefits of the cloud in the [Refactor](https://learn.microsoft.com/azure/cloud-adoption-framework/digital-estate/5-rs-of-rationalization#the-five-rs-of-rationalization) phase of cloud adoption. Here's an outline of the contents in this readme:
 
 <!-- content lives in GH until published
 - [Azure Architecture Center guidance](#azure-architecture-center-guidance)
@@ -35,22 +35,22 @@ This project has a six-part video series that details the reliable web app patte
 
 - Azure Front Door routes traffic based on availability of the primary region. When the primary region is unavailable it will route traffic to the secondary region.
 - When Front Door passes the request to the Web App, it will pass-through the Azure Web Application Firewall. The Azure Web Application Firewall will evaluate the request and protect the web app against common security attacks.
-- Once the traffic reaches the web front-end users will be shown the home page. They can view these pages without authenticating.
+- Once the traffic reaches the web front-end, users will be shown the home page. They can view these pages without authenticating.
 - Navigating to the Concerts on the web app will send a request to the web front-end that tells it to ask the web api app for details about upcoming concerts.
 - Details about the upcoming concerts will be retrieved from the Azure SQL Database by the web api app with a SQL query. The results will be formatted as a JSON response and returned to the web front-end.
 - When the web front-end receives results from the API it will use razor template engine to render the HTML page shown to the user that asked for a list of concerts.
-- Once a user adds a concert ticket to their shopping cart the front-end web app will start interacting with Azure Cache for Redis. Asking the web app to put a concert ticket into the cart tells the web app to save information about that pending purchase as JSON data in Redis as part of a session object for the current user. Saving the session to an external datastore enables the web app to load balance traffic more evenly and to handle horizontal scaling events without losing the customer's intent to buy a ticket. No inventory management is included in this sample so there are no quantities deducted, or placed on reserve, in the backend of the system.
-- As the user checks out the front-end web app will ask the user to authenticate with Azure AD. This scenario is for a call center that places orders on-behalf of customers so the accounts in-use are managed by Relecloud and are not self-managed.
-- After authenticating to Azure AD the front-end web app will receive a token from Azure AD that represents the current user. This token is saved as a cookie in the user's browser and is not persisted by the front-end web app.
-- As the user proceeds with checkout the web app will collect payment data. Payment data is not sent anywhere for this sample.
-- When the payment data is submitted for approval the ticket will be purchased. Logic to handle this is located in the web api project so the web app makes a call to the web api project.
+- Once a user adds a concert ticket to their shopping cart, the front-end web app will start interacting with Azure Cache for Redis. Asking the web app to put a concert ticket into the cart tells the web app to save information about that pending purchase as JSON data in Redis as part of a session object for the current user. Saving the session to an external datastore enables the web app to load balance traffic more evenly and to handle horizontal scaling events without losing the customer's intent to buy a ticket. No inventory management is included in this sample so there are no quantities deducted, or placed on reserve, in the backend of the system.
+- As the user checks out, the front-end web app will ask the user to authenticate with Azure AD. This scenario is for a call center that places orders on-behalf of customers so the accounts in-use are managed by Relecloud and are not self-managed.
+- After authenticating to Azure AD, the front-end web app will receive a token from Azure AD that represents the current user. This token is saved as a cookie in the user's browser and is not persisted by the front-end web app.
+- As the user proceeds with checkout, the web app will collect payment data. Payment data is not sent anywhere for this sample.
+- When the payment data is submitted for approval, the ticket will be purchased. Logic to handle this is located in the web api project so the web app makes a call to the web api project.
 - Prior to calling the API, the front-end web app asks the MSAL library for a token it can use to call the web api app as an authenticated user.
-- When the MSAL library, in the front-end web app,  has a token it will cache it in Azure Cache for Redis. If it does not have a token it will request one from Azure AD and then save it in Azure Cache for Redis.
-- Once the ticket purchase request is sent to the web api app the API will render the ticket image and save it to Azure storage.
-- After the ticket purchase is completed successfully the user will be directed to their tickets page where they can see a list of the tickets they have purchased. These tickets will be immediately available because rendering the ticket was part of the purchase request.
-  - As information flows between services the Azure network handles traffic routing across private endpoints by using Azure Private DNS to lookup the correct IP addresses. This enables the system to block public network traffic and use a single v-net to manage traffic between these systems. This v-net can be connected to others as-needed to allow the app to call other systems in your digital estate or to allow other systems to call the web API so they can access details about ticket purchases.
-  - As the front-end, and web api, apps process requests they are sending data to Application Insights so that you can monitor information about processing web requests
-  - When the web app is started for the first time it will load configuration data from App Config Service and Azure Key Vault. This information is saved in the web apps memory and is not accessed afterwards.
+- When the MSAL library in the front-end web app has a token, it will cache it in Azure Cache for Redis. If it does not have a token, it will request one from Azure AD and then save it in Azure Cache for Redis.
+- Once the ticket purchase request is sent to the web api app, the API will render the ticket image and save it to Azure storage.
+- After the ticket purchase is completed successfully, the user will be directed to their tickets page where they can see a list of the tickets they have purchased. These tickets will be immediately available because rendering the ticket was part of the purchase request.
+- As information flows between services the Azure network handles traffic routing across private endpoints by using Azure Private DNS to lookup the correct IP addresses. This enables the system to block public network traffic and use a single v-net to manage traffic between these systems. This v-net can be connected to others as-needed to allow the app to call other systems in your digital estate or to allow other systems to call the web API so they can access details about ticket purchases.
+- As the front-end and web api apps process requests, they are sending data to Application Insights so that you can monitor information about processing web requests
+- When the web app is started for the first time it will load configuration data from App Config Service and Azure Key Vault. This information is saved in the web apps memory and is not accessed afterwards.
 
 ## Steps to deploy the reference implementation
 
@@ -59,9 +59,9 @@ and deploy the code.
 
 ### Pre-requisites
 
-1. To run the scripts, Windows users require Powershell 7.2 (LTS) or above. Alternatively, you can use a bash terminal using [Windows Subsystem for Linux](https://learn.microsoft.com/en-us/windows/wsl/install). macOS users can use a bash terminal.
+1. To run the scripts, Windows users require Powershell 7.2 (LTS) or above. Alternatively, you can use a bash terminal using [Windows Subsystem for Linux](https://learn.microsoft.com/windows/wsl/install). macOS users can use a bash terminal.
 
-   1. PowerShell users - [Install PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows)
+   1. PowerShell users - [Install PowerShell](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows)
        Run the following to verify that you're running the latest PowerShell
    
        ```ps1
@@ -87,7 +87,7 @@ and deploy the code.
     ```ps1
     az login
     ```
-1. [Upgrade the Azure CLI Bicep extension](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install#azure-cli).
+1. [Upgrade the Azure CLI Bicep extension](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install#azure-cli).
     Run the following command to verify that you're running version 0.12.40 or higher.
 
     ```ps1
@@ -326,7 +326,7 @@ database and other shared resources can impact multiple workstreams.
 To connect to the shared database the dev team uses connection strings
 from Key Vault and App Configuration Service. Devs use the following
 script to retrieve data and store it as
-[User Secrets](https://docs.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-6.0&tabs=windows)
+[User Secrets](https://docs.microsoft.com/aspnet/core/security/app-secrets?view=aspnetcore-6.0&tabs=windows)
 on their workstation.
 
 Using the `secrets.json` file helps the team keep their credentials

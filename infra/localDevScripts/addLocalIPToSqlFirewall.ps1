@@ -1,3 +1,5 @@
+#Requires -Version 7.0
+
 <#
 .SYNOPSIS
     Used by developers to get access to Azure SQL database
@@ -10,8 +12,7 @@
 
 .PARAMETER ResourceGroupName
     A required parameter for the name of resource group that contains the environment that was
-    created by the azd command. The cmdlet will populate the App Config Svc and Key
-    Vault services in this resource group with Azure AD app registration config data.
+    created by the azd command.
 #>
 
 Param(

@@ -123,7 +123,7 @@ resource makeRedisAccessibleForDevs 'Microsoft.Resources/deploymentScripts@2020-
     forceUpdateTag: uniqueScriptId
     azCliVersion: '2.40.0'
     retentionInterval: 'P1D'
-    scriptContent: loadTextContent('azureRedisCachePublicDevAccess.sh')
+    scriptContent: loadTextContent('./deploymentScripts/azureRedisCachePublicDevAccess.sh')
     arguments:' --subscription ${subscription().subscriptionId} --resource-group ${resourceGroup().name} --name ${redisCache.name}'
   }
 }

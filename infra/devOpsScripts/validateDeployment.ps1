@@ -1,3 +1,5 @@
+#Requires -Version 7.0
+
 <#
 .SYNOPSIS
     Examines the web app that was deployed to identify any known issues and provide recommendations.
@@ -15,8 +17,7 @@
 
 .PARAMETER ResourceGroupName
     A required parameter for the name of resource group that contains the environment that was
-    created by the azd command. The cmdlet will populate the App Config Svc and Key
-    Vault services in this resource group with Azure AD app registration config data.
+    created by the azd command.
 #>
 
 Param(
