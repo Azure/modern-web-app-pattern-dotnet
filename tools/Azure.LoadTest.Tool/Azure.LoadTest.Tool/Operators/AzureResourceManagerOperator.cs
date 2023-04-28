@@ -1,75 +1,53 @@
 ﻿using Azure.Identity;
-using Azure.LoadTest.Tool.Models.AzureManagement;
-using Azure.LoadTest.Tool.Models.AzureManagement.LoadTestService;
-using System.Net.Http.Headers;
-using System.Text.Json;
+using Azure.LoadTest.Tool.Providers;
+using Azure.ResourceManager.Resources;
+using Azure.ResourceManager.Resources.Models;
 
 namespace Azure.LoadTest.Tool.Operators
 {
     public class AzureResourceManagerOperator
     {
-        public async Task<string> GetAzureLoadTestDataPlaneUriAsync(string subscriptionId, string resourceGroupName, string loadTestName, CancellationToken cancellation)
+        private readonly AzdParametersProvider _azdOperator;
+
+        private ResourcesManagementClient? _client;
+
+        public AzureResourceManagerOperator(
+            AzdParametersProvider azdOperator)
         {
-            var credential = new DefaultAzureCredential();
-            var token = credential.GetToken(
-                new Azure.Core.TokenRequestContext(new[] { "https://management.core.windows.net" }));
-
-            var url = $"https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.LoadTestService/loadTests/{loadTestName}?api-version=2022-12-01";
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-            var response = await client.GetAsync(url, cancellation);
-            var endpointMessage = await response.Content.ReadAsStringAsync(cancellation);
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = JsonSerializer.Deserialize<AzureManagementApiErrorResponse>(endpointMessage);
-                if (string.IsNullOrEmpty(error?.Error?.Message))
-                {
-                    throw new InvalidOperationException("Could not deserialize error response received from Azure Management API");
-                }
-
-                throw new InvalidOperationException(error.Error.Message);
-            }
-
-            var altResource = JsonSerializer.Deserialize<AzureLoadTestResourceResponse>(endpointMessage);
-            return altResource?.Properties?.DataPlaneURI ?? throw new ArgumentNullException($"Unable to retrieve the DataPlaneURI for the Azure Load Test Resource {loadTestName}");
+            _azdOperator = azdOperator;
         }
 
-        public async Task<AzureResourceResponse> GetResourceByIdAsync(string resourceId, CancellationToken cancellation)
+        private ResourcesManagementClient GetResourceClient()
         {
-            var credential = new DefaultAzureCredential();
-            var token = credential.GetToken(
-                new Azure.Core.TokenRequestContext(new[] { "https://management.core.windows.net" }));
+            if (_client == null)
+            {
+                var subscriptionId = _azdOperator.GetSubscriptionId();
+                _client = new ResourcesManagementClient(subscriptionId, new DefaultAzureCredential());
+            }
 
+            return _client;
+        }
+
+        public Task<GenericResource> GetAzureLoadTestByNameAsync(string resourceGroupName, string loadTestServiceName, CancellationToken cancellation)
+        {
+            var subscriptionId = _azdOperator.GetSubscriptionId();
+            var resourceId = $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.LoadTestService/loadTests/{loadTestServiceName}";
+
+            return GetResourceByIdAsync(resourceId, cancellation);
+        }
+
+        public async Task<GenericResource> GetResourceByIdAsync(string resourceId, CancellationToken cancellation)
+        {
             var formattedResourceId = resourceId;
             if (!formattedResourceId.StartsWith("/"))
             {
                 formattedResourceId = "/" + formattedResourceId;
             }
 
-            var providerSpecificApiVersion = GetApiVersionForProvider(resourceId);
+            var genericResourceResponse = await GetResourceClient().Resources.GetByIdAsync(formattedResourceId, GetApiVersionForProvider(resourceId), cancellation);
+            ThrowIfError(genericResourceResponse);
 
-            var url = $"https://management.azure.com{formattedResourceId}?api-version={providerSpecificApiVersion}";
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-            var response = await client.GetAsync(url, cancellation);
-            var endpointMessage = await response.Content.ReadAsStringAsync(cancellation);
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = JsonSerializer.Deserialize<AzureManagementApiErrorResponse>(endpointMessage);
-                if (string.IsNullOrEmpty(error?.Error?.Message))
-                {
-                    throw new InvalidOperationException("Could not deserialize error response received from Azure Management API");
-                }
-
-                throw new InvalidOperationException(error.Error.Message);
-            }
-
-            var azureResource = JsonSerializer.Deserialize<AzureResourceResponse>(endpointMessage);
-            return azureResource ?? throw new ArgumentNullException($"Unable to retrieve the azure resource with id: {resourceId}");
+            return genericResourceResponse.Value ?? throw new ArgumentNullException($"Unable to retrieve the azure resource with id: {resourceId}");
 
 
             string GetApiVersionForProvider(string resourceId)
@@ -81,18 +59,37 @@ namespace Azure.LoadTest.Tool.Operators
                 }
 
                 // API specific for Azure App Service
-                if (resourceId.Contains("Microsoft.Web/sites", StringComparison.OrdinalIgnoreCase))
+                if (resourceId.Contains("Microsoft.Web/sites", StringComparison.Ordinal))
                 {
                     return "2022-09-01";
                 }
 
+                if (resourceId.Contains("Microsoft.LoadTestService", StringComparison.Ordinal))
+                {
+                    return "2022-12-01";
+                }
+
                 // API specific for App Insights
-                if (resourceId.Contains("microsoft.insights/components", StringComparison.OrdinalIgnoreCase))
+                if (resourceId.Contains("microsoft.insights/components", StringComparison.Ordinal))
                 {
                     return "2020-02-02";
                 }
 
                 return DEFAULT_API_VERSION;
+            }
+        }
+
+        private static void ThrowIfError(Response<GenericResource> genericResourceResponse)
+        {
+            if (genericResourceResponse.GetRawResponse().IsError)
+            {
+                var errorReason = genericResourceResponse.GetRawResponse().ReasonPhrase;
+                if (string.IsNullOrEmpty(errorReason))
+                {
+                    throw new InvalidOperationException("Could not deserialize error response received from Azure Management API");
+                }
+
+                throw new InvalidOperationException(errorReason);
             }
         }
     }

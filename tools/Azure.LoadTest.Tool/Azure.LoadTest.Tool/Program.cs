@@ -1,5 +1,6 @@
 ﻿using Azure.LoadTest.Tool.Models.CommandOptions;
 using Azure.LoadTest.Tool.Operators;
+using Azure.LoadTest.Tool.Providers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.CommandLine;
@@ -26,10 +27,10 @@ namespace Azure.LoadTest.Tool
                 .ConfigureServices((context, services) =>
                 {
                     services.AddSingleton(options);
-                    services.AddTransient<AzdOperator>().AddOptions<AzureLoadTestToolOptions>();
                     services.AddTransient<TestPlanUploadService>();
                     services.AddTransient<AzureLoadTestDataPlaneOperator>();
                     services.AddTransient<AzureResourceManagerOperator>();
+                    services.AddTransient<AzdParametersProvider>().AddOptions<AzureLoadTestToolOptions>();
                 })
                 .Build();
 

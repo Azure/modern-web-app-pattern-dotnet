@@ -3,13 +3,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.FileProviders.Physical;
 
-namespace Azure.LoadTest.Tool.Operators
+namespace Azure.LoadTest.Tool.Providers
 {
-    public class AzdOperator
+    public class AzdParametersProvider
     {
         private readonly IConfiguration _configuration;
 
-        public AzdOperator(AzureLoadTestToolOptions options)
+        public AzdParametersProvider(AzureLoadTestToolOptions options)
         {
             if (string.IsNullOrEmpty(options.EnvironmentName))
             {
@@ -26,7 +26,6 @@ namespace Azure.LoadTest.Tool.Operators
                 .AddIniFile(provider: dotnetConfigurationProvider, path: ".env", optional: false, reloadOnChange: false)
                 .Build();
         }
-
 
         /// AZD uses a special directory to store configuration files
         /// the well-known name for this directory is the ".azure" directory
@@ -102,7 +101,7 @@ namespace Azure.LoadTest.Tool.Operators
             const string AZD_ENCODED_PARAM_DELIMITER = ",";
 
             var environmentConfiguration = new Dictionary<string, string>();
-            foreach(var keyValuePair in _configuration.AsEnumerable())
+            foreach (var keyValuePair in _configuration.AsEnumerable())
             {
                 if (string.IsNullOrEmpty(keyValuePair.Value)
                     // when true we found a configuration in the ini file but it isn't one that relates to Azure Load Test environments
