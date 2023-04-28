@@ -352,4 +352,4 @@ MigrationBackup/
 # Azd folders
 .azure
 
-tools/AzureLoadTest.Tool/Properties/launchSettings.json
+tools/Azure.LoadTest.Tool/Azure.LoadTest.Tool/Properties/launchSettings.json
