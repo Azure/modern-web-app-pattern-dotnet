@@ -1,66 +1,70 @@
-﻿using Azure.Identity;
-using Azure.LoadTest.Tool.Models.AzureLoadTest;
+﻿using Azure.Core;
+using Azure.Developer.LoadTesting;
+using Azure.Identity;
 using Azure.LoadTest.Tool.Models.AzureLoadTest.AppComponents;
 using Azure.LoadTest.Tool.Models.AzureLoadTest.TestPlans;
 using Azure.LoadTest.Tool.Models.AzureLoadTest.TestRuns;
-using Microsoft.Extensions.Logging;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
+using Azure.LoadTest.Tool.Providers;
 
 namespace Azure.LoadTest.Tool.Operators
 {
     public class AzureLoadTestDataPlaneOperator
     {
-        // represents the resource/audience we target when we retrieve a token for authorization
-        private const string AzureLoadTestResourceUri = "https://loadtest.azure-dev.com";
+        private readonly AzdParametersProvider _azdOperator;
+        private readonly DefaultAzureCredential _sharedCredentials;
 
-        private readonly ILogger<AzureLoadTestDataPlaneOperator> _logger;
+        private readonly Dictionary<string, LoadTestAdministrationClient> _administrationClient = new Dictionary<string, LoadTestAdministrationClient>();
+        private readonly Dictionary<string, LoadTestRunClient> _loadTestRunClient = new Dictionary<string, LoadTestRunClient>();
 
         public AzureLoadTestDataPlaneOperator(
-            ILogger<AzureLoadTestDataPlaneOperator> logger)
+            AzdParametersProvider azdOperator)
         {
-            _logger = logger;
+            _azdOperator = azdOperator;
+            _sharedCredentials = new DefaultAzureCredential();
         }
 
-        public async Task<Guid> CreateLoadTestAsync(string loadTestDataPlaneUri, Dictionary<string, string> altEnvironmentVariables, CancellationToken cancellation)
+        private LoadTestAdministrationClient GetAdministrationClient(string dataPlaneUri)
         {
-            var credential = new DefaultAzureCredential();
-            var token = await credential.GetTokenAsync(
-                new Azure.Core.TokenRequestContext(new[] { AzureLoadTestResourceUri }), cancellation);
-
-            var newTestPlan = CreteNewTestPlan(altEnvironmentVariables);
-            var json = JsonSerializer.Serialize(newTestPlan, new JsonSerializerOptions
+            if (!_administrationClient.ContainsKey(dataPlaneUri))
             {
-                WriteIndented = true,
-            });
+                _administrationClient[dataPlaneUri] = new LoadTestAdministrationClient(new Uri($"https://{dataPlaneUri}"), _sharedCredentials);
+            }
 
-            _logger.LogInformation($"Request Body: {Environment.NewLine}{json}");
+            return _administrationClient[dataPlaneUri];
+        }
 
-            var url = $"https://{loadTestDataPlaneUri}/tests/{newTestPlan.TestId}?api-version=2022-11-01";
-            _logger.LogInformation($"Will patch: {url}");
-
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var content = new StringContent(json, Encoding.UTF8, "application/merge-patch+json");
-
-            var response = await client.PatchAsync(url, content, cancellation);
-            var endpointMessage = await response.Content.ReadAsStringAsync(cancellation);
-            if (!response.IsSuccessStatusCode)
+        private LoadTestRunClient GetLoadTestRunClient(string dataPlaneUri)
+        {
+            if (!_loadTestRunClient.ContainsKey(dataPlaneUri))
             {
-                throw new Exception("CreateLoadTestAsync broke: " + endpointMessage);
+                _loadTestRunClient[dataPlaneUri] = new LoadTestRunClient(new Uri($"https://{dataPlaneUri}"), _sharedCredentials);
+            }
+
+            return _loadTestRunClient[dataPlaneUri];
+        }
+
+        public async Task<Guid> CreateLoadTestAsync(string loadTestDataPlaneUri)
+        {
+            var newTestId = Guid.NewGuid();
+            var altEnvironmentVariables = _azdOperator.GetLoadTestEnvironmentVars();
+            var newTestPlan = CreteNewTestPlan();
+            var response = await GetAdministrationClient(loadTestDataPlaneUri).CreateOrUpdateTestAsync(newTestId.ToString(), RequestContent.Create(newTestPlan));
+            
+            if (response.IsError)
+            {
+                throw new Exception("CreateLoadTestAsync broke: " + response.ReasonPhrase);
             }
 
             return newTestPlan.TestId;
 
-            TestPlanRequest CreteNewTestPlan(Dictionary<string, string> altEnvironmentVariables)
+            TestPlanRequest CreteNewTestPlan()
             {
                 var hiddenParamDisplayName = $"Relecloud LoadTest Sample {DateTime.Now}";
                 var hiddenParamDescription = "Run this test to examine the impact of performance efficiency changes";
 
                 return new TestPlanRequest
                 {
+                    TestId = newTestId,
                     DisplayName = hiddenParamDisplayName,
                     Description = hiddenParamDescription,
                     EnvironmentVariables = altEnvironmentVariables
@@ -68,7 +72,7 @@ namespace Azure.LoadTest.Tool.Operators
             }
         }
 
-        public async Task<string> UploadTestFileAsync(string loadTestDataPlaneUri, Guid testPlanId, string pathToTestFile, CancellationToken cancellation)
+        public async Task UploadTestFileAsync(string loadTestDataPlaneUri, Guid testPlanId, string pathToTestFile)
         {
             var testFile = new FileInfo(pathToTestFile);
             if (!testFile.Exists)
@@ -76,75 +80,30 @@ namespace Azure.LoadTest.Tool.Operators
                 throw new ArgumentNullException($"Could not find test file named: {pathToTestFile}");
             }
 
-            var credential = new DefaultAzureCredential();
-            var token = await credential.GetTokenAsync(
-                new Azure.Core.TokenRequestContext(new[] { AzureLoadTestResourceUri }), cancellation);
+            var requestContent = RequestContent.Create(testFile.FullName);
+            var response = await GetAdministrationClient(loadTestDataPlaneUri).UploadTestFileAsync(WaitUntil.Completed, testPlanId.ToString(), testFile.Name, requestContent);
 
-            var url = $"https://{loadTestDataPlaneUri}/tests/{testPlanId}/files/{testFile.Name}?api-version=2022-11-01";
-            _logger.LogInformation($"Will put: {url}");
-
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-
-            using var content = new StreamContent(testFile.OpenRead());
-            content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
+            if (response.GetRawResponse().IsError)
             {
-                FileName = testFile.Name
-            };
-            content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-
-            var response = await client.PutAsync(url, content, cancellation);
-            var endpointMessage = await response.Content.ReadAsStringAsync(cancellation);
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorMessage = string.IsNullOrEmpty(endpointMessage) ? response.ReasonPhrase : endpointMessage;
-                throw new Exception("UploadTestFileAsync broke: " + errorMessage);
+                throw new Exception("UploadTestFileAsync broke: " + response.GetRawResponse().ReasonPhrase);
             }
-
-            var loadTestResponse = JsonSerializer.Deserialize<FileUploadResponse>(endpointMessage);
-
-            return loadTestResponse?.Url ?? throw new InvalidOperationException("JMX file was not uploaded successfully");
         }
 
-        public async Task<string> AssociateAppComponentsAsync(string loadTestDataPlaneUri, Guid testPlanId, IEnumerable<AppComponentInfo> serverSideComponents, CancellationToken cancellation)
+        public async Task AssociateAppComponentsAsync(string loadTestDataPlaneUri, Guid existingTestId, IEnumerable<AppComponentInfo> serverSideComponents)
         {
             if (serverSideComponents == null)
             {
                 throw new ArgumentNullException(nameof(serverSideComponents));
             }
 
-            // make an API call that requests details
-            var credential = new DefaultAzureCredential();
-            var token = await credential.GetTokenAsync(
-                new Azure.Core.TokenRequestContext(new[] { AzureLoadTestResourceUri }), cancellation);
+            var componentsForServerSideMetrics = CreateAppComponents(existingTestId, serverSideComponents);
+            var requestContent = RequestContent.Create(componentsForServerSideMetrics);
+            var response = await GetAdministrationClient(loadTestDataPlaneUri).CreateOrUpdateAppComponentsAsync(existingTestId.ToString(), requestContent);
 
-            var componentsForServerSideMetrics = CreateAppComponents(testPlanId, serverSideComponents);
-            var json = JsonSerializer.Serialize(componentsForServerSideMetrics, new JsonSerializerOptions
+            if (response.IsError)
             {
-                WriteIndented = true,
-            });
-
-            _logger.LogInformation($"Request Body: {Environment.NewLine}{json}");
-
-            var url = $"https://{loadTestDataPlaneUri}/tests/{testPlanId}/app-components?api-version=2022-11-01";
-            _logger.LogInformation($"Will patch: {url}");
-
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var content = new StringContent(json, Encoding.UTF8, "application/merge-patch+json");
-
-            var response = await client.PatchAsync(url, content, cancellation);
-            var endpointMessage = await response.Content.ReadAsStringAsync(cancellation);
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorMessage = string.IsNullOrEmpty(endpointMessage) ? response.ReasonPhrase : endpointMessage;
-                throw new Exception("AssociateAppComponentsAsync broke: " + errorMessage);
+                throw new Exception("AssociateAppComponentsAsync broke: " + response.ReasonPhrase);
             }
-
-            var appCompAssociateResponse = JsonSerializer.Deserialize<AssociateAppComponentsResponse>(endpointMessage);
-
-            return appCompAssociateResponse?.LastModifiedBy ?? throw new InvalidOperationException("Server-side metrics were not associated successfully");
 
             AssociateAppComponentsRequest CreateAppComponents(Guid testPlanId, IEnumerable<AppComponentInfo> serverSideComponents)
             {
@@ -165,40 +124,17 @@ namespace Azure.LoadTest.Tool.Operators
             }
         }
 
-        public async Task<string> StartLoadTestAsync(string loadTestDataPlaneUri, Guid existingTestPlanId, Dictionary<string, string> altEnvironmentVariables, CancellationToken cancellation)
+        public async Task StartLoadTestAsync(string loadTestDataPlaneUri, Guid existingTestPlanId)
         {
-            var credential = new DefaultAzureCredential();
-            var token = await credential.GetTokenAsync(
-                new Azure.Core.TokenRequestContext(new[] { AzureLoadTestResourceUri }), cancellation);
+            var newTestRunId = Guid.NewGuid().ToString();
+            var altEnvironmentVariables = _azdOperator.GetLoadTestEnvironmentVars();
+            var data = CreateNewTestRun(existingTestPlanId, altEnvironmentVariables);
+            var operation = await GetLoadTestRunClient(loadTestDataPlaneUri).BeginTestRunAsync(WaitUntil.Started, newTestRunId, RequestContent.Create(data));
 
-            var newTestRun = CreateNewTestRun(existingTestPlanId, altEnvironmentVariables);
-            var json = JsonSerializer.Serialize(newTestRun, new JsonSerializerOptions
+            if (operation.GetRawResponse().IsError)
             {
-                WriteIndented = true,
-            });
-
-            _logger.LogInformation($"Request Body: {Environment.NewLine}{json}");
-
-            var newTestRunId = Guid.NewGuid();
-            var url = $"https://{loadTestDataPlaneUri}/test-runs/{newTestRunId}?api-version=2022-11-01";
-            _logger.LogInformation($"Will patch: {url}");
-
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var content = new StringContent(json, Encoding.UTF8, "application/merge-patch+json");
-
-            var response = await client.PatchAsync(url, content, cancellation);
-            var endpointMessage = await response.Content.ReadAsStringAsync(cancellation);
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorMessage = string.IsNullOrEmpty(endpointMessage) ? response.ReasonPhrase : endpointMessage;
-                throw new Exception("StartLoadTestAsync broke: " + errorMessage);
+                throw new Exception("StartLoadTestAsync broke: " + operation.GetRawResponse().ReasonPhrase);
             }
-
-            var loadTestResponse = JsonSerializer.Deserialize<TestRunResponse>(endpointMessage);
-
-            return loadTestResponse?.TestRunId ?? throw new InvalidOperationException("Load test was not started successfully");
 
             TestRunRequest CreateNewTestRun(Guid testPlanId, Dictionary<string, string> altEnvironmentVariables)
             {

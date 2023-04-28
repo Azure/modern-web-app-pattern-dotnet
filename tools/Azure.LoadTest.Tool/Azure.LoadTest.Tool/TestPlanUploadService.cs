@@ -1,5 +1,4 @@
-﻿using Azure.LoadTest.Tool.Models.AzureLoadTest;
-using Azure.LoadTest.Tool.Models.AzureLoadTest.AppComponents;
+﻿using Azure.LoadTest.Tool.Models.AzureLoadTest.AppComponents;
 using Azure.LoadTest.Tool.Operators;
 using Azure.LoadTest.Tool.Providers;
 using Microsoft.Extensions.Logging;
@@ -30,7 +29,6 @@ namespace Azure.LoadTest.Tool
             var subscriptionId = _azdOperator.GetSubscriptionId();
             var resourceGroupName = _azdOperator.GetResourceGroupName();
             var loadTestName = _azdOperator.GetAzureLoadTestServiceName();
-            var domainName = _azdOperator.GetLoadTestEnvironmentVars();
             var pathToJmx = _azdOperator.GetPathToJMeterFile();
 
             _logger.LogInformation($"Working with subscriptionId: {subscriptionId}");
@@ -41,11 +39,11 @@ namespace Azure.LoadTest.Tool
 
             _logger.LogInformation($"Found the dataPlaneUri: {dataPlaneUri}");
 
-            var testId = await _altOperator.CreateLoadTestAsync(dataPlaneUri, domainName, cancellationToken);
+            var testId = await _altOperator.CreateLoadTestAsync(dataPlaneUri);
 
             _logger.LogInformation($"Created testId: {testId}");
 
-            await _altOperator.UploadTestFileAsync(dataPlaneUri, testId, pathToJmx, cancellationToken);
+            await _altOperator.UploadTestFileAsync(dataPlaneUri, testId, pathToJmx);
 
             var resourceIds = _azdOperator.GetAzureLoadTestAppComponentsResourceIds();
 
@@ -65,9 +63,9 @@ namespace Azure.LoadTest.Tool
                 });
             }
 
-            await _altOperator.AssociateAppComponentsAsync(dataPlaneUri, testId, appComponents, cancellationToken);
+            await _altOperator.AssociateAppComponentsAsync(dataPlaneUri, testId, appComponents);
 
-            await _altOperator.StartLoadTestAsync(dataPlaneUri, testId, domainName, cancellationToken);
+            await _altOperator.StartLoadTestAsync(dataPlaneUri, testId);
         }
 
         private async Task<string> GetAzureLoadTestDataPlaneUri(string resourceGroupName, string loadTestName, CancellationToken cancellationToken)
