@@ -28,6 +28,7 @@ namespace Azure.LoadTest.Tool
             string subscriptionId = _azdOperator.GetSubscriptionId();
             string resourceGroupName = _azdOperator.GetResourceGroupName();
             string loadTestName = _azdOperator.GetAzureLoadTestServiceName();
+            string domainName = _azdOperator.GetEnvironmentVarDomainName();
             string pathToJmx = _azdOperator.GetPathToJMeterFile();
 
             _logger.LogInformation($"Working with subscriptionId: {subscriptionId}");
@@ -38,7 +39,7 @@ namespace Azure.LoadTest.Tool
 
             _logger.LogInformation($"Found the dataPlaneUri: {dataPlaneUri}");
 
-            var testId = await _altOperator.CreateLoadTestAsync(dataPlaneUri, cancellationToken);
+            var testId = await _altOperator.CreateLoadTestAsync(dataPlaneUri, domainName, cancellationToken);
 
             _logger.LogInformation($"Created testId: {testId}");
 
@@ -64,7 +65,7 @@ namespace Azure.LoadTest.Tool
 
             await _altOperator.AssociateAppComponentsAsync(dataPlaneUri, testId, appComponents, cancellationToken);
 
-            await _altOperator.StartLoadTestAsync(dataPlaneUri, testId, cancellationToken);
+            await _altOperator.StartLoadTestAsync(dataPlaneUri, testId, domainName, cancellationToken);
         }
     }
 }

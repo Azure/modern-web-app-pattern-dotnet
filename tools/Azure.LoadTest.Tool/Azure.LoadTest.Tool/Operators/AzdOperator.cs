@@ -89,5 +89,18 @@ namespace Azure.LoadTest.Tool.Operators
             const string AZURE_LOAD_TEST_FILE = "AZURE_LOAD_TEST_FILE";
             return _configuration.GetValue<string>(AZURE_LOAD_TEST_FILE) ?? throw new InvalidOperationException($"Missing required configuration {AZURE_LOAD_TEST_FILE}");
         }
+
+        /// <summary>
+        /// When the load test runs it will use Environment variables to configure the JMX
+        /// This AZD var specifies the domain that was parameterized when the JMX was created
+        /// so that that load test can be reused for multiple environments
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        internal string GetEnvironmentVarDomainName()
+        {
+            const string AZURE_WEBSITE_DOMAIN = "AZURE_WEBSITE_DOMAIN";
+            return _configuration.GetValue<string>(AZURE_WEBSITE_DOMAIN) ?? throw new InvalidOperationException($"Missing required configuration {AZURE_WEBSITE_DOMAIN}");
+        }
     }
 }
