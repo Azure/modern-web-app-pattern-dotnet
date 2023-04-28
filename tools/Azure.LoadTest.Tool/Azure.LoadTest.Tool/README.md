@@ -39,5 +39,3 @@ In the value component of this example we see
 
 ## Todo
 - reuse tokens - extract HttpClient into named clients
-- adjust log levels
-- refactor and review models

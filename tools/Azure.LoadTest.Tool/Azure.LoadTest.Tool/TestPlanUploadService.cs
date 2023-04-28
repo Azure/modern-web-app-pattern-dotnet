@@ -1,4 +1,5 @@
 ﻿using Azure.LoadTest.Tool.Models.AzureLoadTest;
+using Azure.LoadTest.Tool.Models.AzureLoadTest.AppComponents;
 using Azure.LoadTest.Tool.Operators;
 using Microsoft.Extensions.Logging;
 
@@ -47,12 +48,12 @@ namespace Azure.LoadTest.Tool
 
             var resourceIds = _azdOperator.GetAzureLoadTestAppComponentsResourceIds();
             
-            var appComponents = new List<ComponentInfo>();
+            var appComponents = new List<AppComponentInfo>();
             foreach (var resourceId in  resourceIds)
             {
                 var resourceDetails = await _azureOperator.GetResourceByIdAsync(resourceId, cancellationToken);
 
-                appComponents.Add(new ComponentInfo
+                appComponents.Add(new AppComponentInfo
                 {
                     ResourceId = resourceId,
                     Kind = resourceDetails.Kind,

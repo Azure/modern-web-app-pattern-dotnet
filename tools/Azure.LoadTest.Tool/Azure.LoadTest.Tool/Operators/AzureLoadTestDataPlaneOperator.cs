@@ -1,5 +1,8 @@
 ﻿using Azure.Identity;
 using Azure.LoadTest.Tool.Models.AzureLoadTest;
+using Azure.LoadTest.Tool.Models.AzureLoadTest.AppComponents;
+using Azure.LoadTest.Tool.Models.AzureLoadTest.TestPlans;
+using Azure.LoadTest.Tool.Models.AzureLoadTest.TestRuns;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using System.Text;
@@ -37,12 +40,12 @@ namespace Azure.LoadTest.Tool.Operators
             var url = $"https://{loadTestDataPlaneUri}/tests/{newTestPlan.TestId}?api-version=2022-11-01";
             _logger.LogInformation($"Will patch: {url}");
 
-            using HttpClient client = new HttpClient();
+            using var client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var content = new StringContent(json, Encoding.UTF8, "application/merge-patch+json");
 
-            HttpResponseMessage response = await client.PatchAsync(url, content, cancellation);
+            var response = await client.PatchAsync(url, content, cancellation);
             var endpointMessage = await response.Content.ReadAsStringAsync(cancellation);
             if (!response.IsSuccessStatusCode)
             {
@@ -51,7 +54,7 @@ namespace Azure.LoadTest.Tool.Operators
 
             return newTestPlan.TestId;
 
-            TestProperties CreteNewTestPlan(Dictionary<string, string> altEnvironmentVariables)
+            TestPlanRequest CreteNewTestPlan(Dictionary<string, string> altEnvironmentVariables)
             {
                 var hiddenParamDisplayName = $"Relecloud LoadTest Sample {DateTime.Now}";
                 var hiddenParamDescription = "Run this test to examine the impact of performance efficiency changes";
@@ -80,7 +83,7 @@ namespace Azure.LoadTest.Tool.Operators
             var url = $"https://{loadTestDataPlaneUri}/tests/{testPlanId}/files/{testFile.Name}?api-version=2022-11-01";
             _logger.LogInformation($"Will put: {url}");
 
-            using HttpClient client = new HttpClient();
+            using var client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
 
             using var content = new StreamContent(testFile.OpenRead());
@@ -90,7 +93,7 @@ namespace Azure.LoadTest.Tool.Operators
             };
             content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
 
-            HttpResponseMessage response = await client.PutAsync(url, content, cancellation);
+            var response = await client.PutAsync(url, content, cancellation);
             var endpointMessage = await response.Content.ReadAsStringAsync(cancellation);
             if (!response.IsSuccessStatusCode)
             {
@@ -103,7 +106,7 @@ namespace Azure.LoadTest.Tool.Operators
             return loadTestResponse?.Url ?? throw new InvalidOperationException("JMX file was not uploaded successfully");
         }
 
-        public async Task<string> AssociateAppComponentsAsync(string loadTestDataPlaneUri, Guid testPlanId, IEnumerable<ComponentInfo> serverSideComponents, CancellationToken cancellation)
+        public async Task<string> AssociateAppComponentsAsync(string loadTestDataPlaneUri, Guid testPlanId, IEnumerable<AppComponentInfo> serverSideComponents, CancellationToken cancellation)
         {
             if (serverSideComponents == null)
             {
@@ -115,8 +118,8 @@ namespace Azure.LoadTest.Tool.Operators
             var token = await credential.GetTokenAsync(
                 new Azure.Core.TokenRequestContext(new[] { AzureLoadTestResourceUri }), cancellation);
 
-            var newTestRun = CreateAppComponents(testPlanId, serverSideComponents);
-            var json = JsonSerializer.Serialize(newTestRun, new JsonSerializerOptions
+            var componentsForServerSideMetrics = CreateAppComponents(testPlanId, serverSideComponents);
+            var json = JsonSerializer.Serialize(componentsForServerSideMetrics, new JsonSerializerOptions
             {
                 WriteIndented = true,
             });
@@ -126,12 +129,12 @@ namespace Azure.LoadTest.Tool.Operators
             var url = $"https://{loadTestDataPlaneUri}/tests/{testPlanId}/app-components?api-version=2022-11-01";
             _logger.LogInformation($"Will patch: {url}");
 
-            using HttpClient client = new HttpClient();
+            using var client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var content = new StringContent(json, Encoding.UTF8, "application/merge-patch+json");
 
-            HttpResponseMessage response = await client.PatchAsync(url, content, cancellation);
+            var response = await client.PatchAsync(url, content, cancellation);
             var endpointMessage = await response.Content.ReadAsStringAsync(cancellation);
             if (!response.IsSuccessStatusCode)
             {
@@ -143,9 +146,9 @@ namespace Azure.LoadTest.Tool.Operators
 
             return appCompAssociateResponse?.LastModifiedBy ?? throw new InvalidOperationException("Server-side metrics were not associated successfully");
 
-            AssociateAppComponentsRequest CreateAppComponents(Guid testPlanId, IEnumerable<ComponentInfo> serverSideComponents)
+            AssociateAppComponentsRequest CreateAppComponents(Guid testPlanId, IEnumerable<AppComponentInfo> serverSideComponents)
             {
-                var components = new Dictionary<string, ComponentInfo>();
+                var components = new Dictionary<string, AppComponentInfo>();
                 foreach (var serverSideComponent in serverSideComponents)
                 {
                     if (!string.IsNullOrEmpty(serverSideComponent.ResourceId))
@@ -180,12 +183,12 @@ namespace Azure.LoadTest.Tool.Operators
             var url = $"https://{loadTestDataPlaneUri}/test-runs/{newTestRunId}?api-version=2022-11-01";
             _logger.LogInformation($"Will patch: {url}");
 
-            using HttpClient client = new HttpClient();
+            using var client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var content = new StringContent(json, Encoding.UTF8, "application/merge-patch+json");
 
-            HttpResponseMessage response = await client.PatchAsync(url, content, cancellation);
+            var response = await client.PatchAsync(url, content, cancellation);
             var endpointMessage = await response.Content.ReadAsStringAsync(cancellation);
             if (!response.IsSuccessStatusCode)
             {

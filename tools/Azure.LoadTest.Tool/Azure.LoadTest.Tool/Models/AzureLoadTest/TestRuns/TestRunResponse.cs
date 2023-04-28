@@ -1,7 +1,10 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Azure.LoadTest.Tool.Models.AzureLoadTest
+namespace Azure.LoadTest.Tool.Models.AzureLoadTest.TestRuns
 {
+    /// <summary>
+    /// API Version 2022-11-01
+    /// </summary>
     public class TestRunResponse
     {
         [JsonPropertyName("testId")]

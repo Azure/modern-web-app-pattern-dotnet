@@ -1,5 +1,6 @@
 ﻿using Azure.Identity;
 using Azure.LoadTest.Tool.Models.AzureManagement;
+using Azure.LoadTest.Tool.Models.AzureManagement.LoadTestService;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
@@ -14,11 +15,11 @@ namespace Azure.LoadTest.Tool.Operators
                 new Azure.Core.TokenRequestContext(new[] { "https://management.core.windows.net" }));
 
             var url = $"https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.LoadTestService/loadTests/{loadTestName}?api-version=2022-12-01";
-            using HttpClient client = new HttpClient();
+            using var client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            HttpResponseMessage response = await client.GetAsync(url, cancellation);
+            var response = await client.GetAsync(url, cancellation);
             var endpointMessage = await response.Content.ReadAsStringAsync(cancellation);
             if (!response.IsSuccessStatusCode)
             {
@@ -31,13 +32,12 @@ namespace Azure.LoadTest.Tool.Operators
                 throw new InvalidOperationException(error.Error.Message);
             }
 
-            var altResource = JsonSerializer.Deserialize<AzureLoadTestResource>(endpointMessage);
+            var altResource = JsonSerializer.Deserialize<AzureLoadTestResourceResponse>(endpointMessage);
             return altResource?.Properties?.DataPlaneURI ?? throw new ArgumentNullException($"Unable to retrieve the DataPlaneURI for the Azure Load Test Resource {loadTestName}");
         }
 
         public async Task<AzureResourceResponse> GetResourceByIdAsync(string resourceId, CancellationToken cancellation)
         {
-            // GET 
             var credential = new DefaultAzureCredential();
             var token = credential.GetToken(
                 new Azure.Core.TokenRequestContext(new[] { "https://management.core.windows.net" }));
@@ -51,11 +51,11 @@ namespace Azure.LoadTest.Tool.Operators
             var providerSpecificApiVersion = GetApiVersionForProvider(resourceId);
 
             var url = $"https://management.azure.com{formattedResourceId}?api-version={providerSpecificApiVersion}";
-            using HttpClient client = new HttpClient();
+            using var client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            HttpResponseMessage response = await client.GetAsync(url, cancellation);
+            var response = await client.GetAsync(url, cancellation);
             var endpointMessage = await response.Content.ReadAsStringAsync(cancellation);
             if (!response.IsSuccessStatusCode)
             {
