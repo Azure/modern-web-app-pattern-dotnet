@@ -1,4 +1,4 @@
-﻿using Azure.LoadTest.Tool.Models;
+﻿using Azure.LoadTest.Tool.Models.CommandOptions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.FileProviders.Physical;

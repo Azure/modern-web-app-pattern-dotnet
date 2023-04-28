@@ -1,9 +1,9 @@
-﻿using Azure.LoadTest.Tool.Operators;
-using System.CommandLine;
+﻿using Azure.LoadTest.Tool.Models.CommandOptions;
+using Azure.LoadTest.Tool.Operators;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
-using Azure.LoadTest.Tool.Models;
 using System.CommandLine.Parsing;
 
 namespace Azure.LoadTest.Tool

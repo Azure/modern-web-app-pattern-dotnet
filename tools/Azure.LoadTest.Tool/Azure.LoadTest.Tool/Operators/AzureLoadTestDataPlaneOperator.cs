@@ -9,6 +9,7 @@ namespace Azure.LoadTest.Tool.Operators
 {
     public class AzureLoadTestDataPlaneOperator
     {
+        // represents the resource/audience we target when we retrieve a token for authorization
         private const string AzureLoadTestResourceUri = "https://loadtest.azure-dev.com";
 
         private readonly ILogger<AzureLoadTestDataPlaneOperator> _logger;
