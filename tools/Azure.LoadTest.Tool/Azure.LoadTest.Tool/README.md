@@ -36,6 +36,3 @@ In the value component of this example we see
 - the value of the environment parameter will be the case-sensitve result of "76tfvbnjua1234a.azurewebsites.net"
 
 > Note the use of comma as a delimiter in this format which cannot be changed in this version of the tool
-
-## Todo
-- reuse tokens - extract HttpClient into named clients
