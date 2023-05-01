@@ -11,7 +11,7 @@ namespace Azure.LoadTest.Tool
 {
     public class Program
     {
-        // Expecting that all parameters are passed as AZD environment variables
+        // Expecting that parameters are passed as AZD environment variables
         public async static Task Main(string[] args)
         {
             var rootCommand = new RootCommand
