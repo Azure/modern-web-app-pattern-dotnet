@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Azure.LoadTest.Tool": {
+      "commandName": "Project",
+      "commandLineArgs": "--environment-name relekendev3",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
