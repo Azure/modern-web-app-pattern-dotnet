@@ -1022,4 +1022,6 @@ resource privateEndpointForKv 'Microsoft.Network/privateEndpoints@2020-07-01' = 
 output WEB_PUBLIC_URI string = publicWeb.properties.defaultHostName
 output WEB_CALLCENTER_URI string = callcenterWeb.properties.defaultHostName
 output PUBLIC_API_URI string = publicApi.properties.defaultHostName
+output PUBLIC_API_APP_INSIGHTS_RESOURCEID string = webApplicationInsightsResources.outputs.APPLICATIONINSIGHTS_RESOURCE_ID
+output PUBLIC_API_APP_SERVICE_RESOURCEID string = publicApi.id
 output CALLCENTER_API_URI string = callcenterApi.properties.defaultHostName

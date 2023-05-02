@@ -17,3 +17,7 @@ resource loadTestService 'Microsoft.LoadTestService/loadTests@2022-12-01' = {
 }
 
 output loadTestServiceName string = loadTestService.name
+
+// path to the file name will be relative to the tool that uploads the file
+// the default tool used to upload the file is {repoRoot}/tools/Azure.LoadTest.Tool/bin/Debug/net7.0/Azure.LoadTest.Tool.exe
+output loadTestFileName string = 'basic-test.jmx'

@@ -225,4 +225,10 @@ output DEBUG_IS_MULTI_LOCATION_DEPLOYMENT bool = isMultiLocationDeployment
 output DEBUG_SECONDARY_AZURE_LOCATION string = secondaryAzureLocation
 output DEBUG_IS_PROD bool = isProdBool
 
+// the following settings will be used by the Azure.LoadTest.Tool to configure the Load Test service with a JMX and server side diagnostics to monitor during the test run
+// these details assume the Azure App Service is configured for Active/Passive deployment
+output AZURE_RESOURCE_GROUP string = primaryResourceGroupName
 output AZURE_LOAD_TEST_NAME string = azureLoadTest.outputs.loadTestServiceName
+output AZURE_LOAD_TEST_FILE string = azureLoadTest.outputs.loadTestFileName
+output APP_COMPONENTS_RESOURCE_IDS string = '${primaryResources.outputs.PUBLIC_API_APP_INSIGHTS_RESOURCEID},${primaryResources.outputs.PUBLIC_API_APP_SERVICE_RESOURCEID}'
+output SUBSCRIPTION_ID string = primaryResourceGroup.properties.s
