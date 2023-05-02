@@ -17,7 +17,7 @@ retrieved from command line via `azd env get-values`.
 - [AZURE_LOAD_TEST_NAME]: name of the Azure Load Test Service resource
 - [AZURE_LOAD_TEST_FILE]: path to the Azure Load Test JMeter file
 - [AZURE_RESOURCE_GROUP]: the resource group where the Azure Load Test Service resource is deployed
-- [SUBSCRIPTION_ID]: the subscriptino where the Azure Load Test Service resource is deployed
+- [AZURE_SUBSCRIPTION_ID]: the subscription where the Azure Load Test Service resource is deployed
 
 **AZD Parameters: Load Test Environment Parameters**
 

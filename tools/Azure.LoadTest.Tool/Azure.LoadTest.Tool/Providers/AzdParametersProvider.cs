@@ -65,8 +65,8 @@ namespace Azure.LoadTest.Tool.Providers
 
         internal string GetSubscriptionId()
         {
-            const string SUBSCRIPTION_ID = "SUBSCRIPTION_ID";
-            return _configuration.GetValue<string>(SUBSCRIPTION_ID) ?? throw new InvalidOperationException($"Missing required configuration {SUBSCRIPTION_ID}");
+            const string AZURE_SUBSCRIPTION_ID = "AZURE_SUBSCRIPTION_ID";
+            return _configuration.GetValue<string>(AZURE_SUBSCRIPTION_ID) ?? throw new InvalidOperationException($"Missing required configuration {AZURE_SUBSCRIPTION_ID}");
         }
 
         internal string GetAzureLoadTestServiceName()
