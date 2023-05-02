@@ -80,7 +80,7 @@ namespace Azure.LoadTest.Tool.Operators
                 throw new ArgumentNullException($"Could not find test file named: {pathToTestFile}");
             }
 
-            var requestContent = RequestContent.Create(testFile.FullName);
+            var requestContent = RequestContent.Create(await File.ReadAllBytesAsync(testFile.FullName));
             var response = await GetAdministrationClient(loadTestDataPlaneUri).UploadTestFileAsync(WaitUntil.Completed, testPlanId.ToString(), testFile.Name, requestContent);
 
             if (response.GetRawResponse().IsError)
