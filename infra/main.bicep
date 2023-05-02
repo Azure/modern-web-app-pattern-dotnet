@@ -85,6 +85,16 @@ var secondaryResourceGroupName = '${name}-secondary-rg'
 var primaryResourceToken = toLower(uniqueString(subscription().id, primaryResourceGroupName, location))
 var secondaryResourceToken = toLower(uniqueString(subscription().id, secondaryResourceGroupName, secondaryAzureLocation))
 
+module logAnalyticsForDiagnostics './logAnalyticsWorkspaceForDiagnostics.bicep' = {
+  name: 'logAnalyticsForDiagnostics'
+  scope: primaryResourceGroup
+  params: {
+    tags: tags
+    location: location
+    logAnalyticsWorkspaceNameForDiagnstics: 'diagnostics-${primaryResourceToken}-log'
+  }
+}
+
 resource primaryResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: primaryResourceGroupName
   location: location
@@ -174,10 +184,20 @@ module azureFrontDoor './azureFrontDoor.bicep' = if (isMultiLocationDeployment) 
   name: 'frontDoor-${primaryResourceToken}'
   scope: primaryResourceGroup
   params: {
+    tags: tags
+    logAnalyticsWorkspaceIdForDiagnostics: logAnalyticsForDiagnostics.outputs.LOG_WORKSPACE_ID
+    primaryBackendAddress: primaryResources.outputs.WEB_PUBLIC_URI
+    secondaryBackendAddress: isMultiLocationDeployment ? secondaryResources.outputs.WEB_PUBLIC_URI : 'none'
+  }
+}
+
+module azureLoadTest './azureLoadTest.bicep' = {
+  name: 'azureLoadTest'
+  scope: primaryResourceGroup
+  params: {
     resourceToken: primaryResourceToken
     tags: tags
-    primaryBackendAddress: primaryResources.outputs.WEB_CALLCENTER_URI
-    secondaryBackendAddress: isMultiLocationDeployment ? secondaryResources.outputs.WEB_CALLCENTER_URI : 'none'
+    location: location
   }
 }
 
@@ -198,9 +218,11 @@ resource telemetrydeployment 'Microsoft.Resources/deployments@2021-04-01' = if (
   }
 }
 
-output WEB_URI string = isMultiLocationDeployment ? azureFrontDoor.outputs.WEB_URI : primaryResources.outputs.WEB_CALLCENTER_URI
+output WEB_URI string = 'https://${azureFrontDoor.outputs.HOST_NAME}'
 output AZURE_LOCATION string = location
 
 output DEBUG_IS_MULTI_LOCATION_DEPLOYMENT bool = isMultiLocationDeployment
 output DEBUG_SECONDARY_AZURE_LOCATION string = secondaryAzureLocation
 output DEBUG_IS_PROD bool = isProdBool
+
+output AZURE_LOAD_TEST_NAME string = azureLoadTest.outputs.loadTestServiceName
