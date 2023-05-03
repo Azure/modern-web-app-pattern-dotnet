@@ -81,7 +81,7 @@ namespace Azure.LoadTest.Tool
             await _altOperator.StartLoadTestAsync(dataPlaneUri, testId);
         }
 
-        private async Task<string> GetAzureLoadTestDataPlaneUri(string resourceGroupName, string loadTestName, CancellationToken cancellationToken)
+        private async Task<string> GetAzureLoadTestDataPlaneUriAsync(string resourceGroupName, string loadTestName, CancellationToken cancellationToken)
         {
             var azureLoadTestResource = await _azureOperator.GetAzureLoadTestByNameAsync(resourceGroupName, loadTestName, cancellationToken);
 

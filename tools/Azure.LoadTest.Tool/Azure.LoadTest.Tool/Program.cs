@@ -32,14 +32,16 @@ namespace Azure.LoadTest.Tool
                         services.AddTransient<AzureLoadTestDataPlaneOperator>();
                         services.AddTransient<AzureResourceManagerOperator>();
                         services.AddTransient<AzdParametersProvider>();
+                        services.AddTransient<UserOutputProvider>();
                     })
                     .Build();
 
-                var logger = host.Services.GetService<ILogger<Program>>() ?? throw new ArgumentNullException("Found Improper configuration: Could not build a logger");
+                var userOutput = host.Services.GetService<UserOutputProvider>() ?? throw new ArgumentNullException("Found Improper configuration: Could not build a logger");
+                var logger = host.Services.GetService<ILogger<Program>>() ?? throw new ArgumentNullException(nameof(ILogger<Program>));
 
                 if (string.IsNullOrEmpty(options.EnvironmentName))
                 {
-                    logger.LogError("Missing required parameter --environment-name which specifies where the AZD configuration is loaded.");
+                    userOutput.WriteFatalError("Missing required parameter --environment-name which specifies where the AZD configuration is loaded.");
                     
                     return;
                 }
@@ -57,14 +59,12 @@ namespace Azure.LoadTest.Tool
                 {
                     await myService.CreateTestPlanAsync(token);
 
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.Write("SUCCESS: ");
-                    Console.ResetColor();
-                    Console.WriteLine($"Completed Load Test configuration and load test was started.{Environment.NewLine}");
+                    
                 }
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "Could not handle FATAL error:");
+                    userOutput.WriteFatalError(ex.Message);
                 }
             });
 
