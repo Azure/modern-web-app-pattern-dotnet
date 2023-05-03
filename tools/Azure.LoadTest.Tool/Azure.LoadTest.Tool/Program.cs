@@ -22,7 +22,7 @@ namespace Azure.LoadTest.Tool
                     description: "An AZD environment name")
             };
 
-            rootCommand.Handler = CommandHandler.Create<ParseResult, AzureLoadTestToolOptions, CancellationToken>(async (result, options, token) =>
+            rootCommand.Handler = CommandHandler.Create<AzureLoadTestToolOptions, CancellationToken>(async (options, token) =>
             {
                 var host = Host.CreateDefaultBuilder()
                     .ConfigureServices((context, services) =>
@@ -31,7 +31,7 @@ namespace Azure.LoadTest.Tool
                         services.AddTransient<TestPlanUploadService>();
                         services.AddTransient<AzureLoadTestDataPlaneOperator>();
                         services.AddTransient<AzureResourceManagerOperator>();
-                        services.AddTransient<AzdParametersProvider>().AddOptions<AzureLoadTestToolOptions>();
+                        services.AddTransient<AzdParametersProvider>();
                     })
                     .Build();
 
@@ -45,6 +45,7 @@ namespace Azure.LoadTest.Tool
                 }
 
                 // Resolve the registered service
+                // separation of concerns - add the Host
                 var myService = host.Services.GetService<TestPlanUploadService>();
 
                 if (myService == null)

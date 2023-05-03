@@ -31,17 +31,17 @@ namespace Azure.LoadTest.Tool
             var loadTestName = _azdOperator.GetAzureLoadTestServiceName();
             var pathToJmx = _azdOperator.GetPathToJMeterFile();
 
-            _logger.LogInformation($"Working with subscriptionId: {subscriptionId}");
-            _logger.LogInformation($"Looking for resourceGroupName: {resourceGroupName}");
-            _logger.LogInformation($"Configuring loadTestName: {loadTestName}");
+            _logger.LogDebug("Working with subscriptionId: {subscriptionId}", subscriptionId);
+            _logger.LogDebug("Looking for resourceGroupName: {resourceGroupName}", resourceGroupName);
+            _logger.LogDebug("Configuring loadTestName: {loadTestName}", loadTestName);
 
-            var dataPlaneUri = await GetAzureLoadTestDataPlaneUri(resourceGroupName, loadTestName, cancellationToken);
+            var dataPlaneUri = await GetAzureLoadTestDataPlaneUriAsync(resourceGroupName, loadTestName, cancellationToken);
 
-            _logger.LogInformation($"Found the dataPlaneUri: {dataPlaneUri}");
+            _logger.LogDebug("Found the dataPlaneUri: {dataPlaneUri}", dataPlaneUri);
 
             var testId = await _altOperator.CreateLoadTestAsync(dataPlaneUri);
 
-            _logger.LogInformation($"Created testId: {testId}");
+            _logger.LogDebug("Created testId: {testId}", testId);
 
             await _altOperator.UploadTestFileAsync(dataPlaneUri, testId, pathToJmx);
 
