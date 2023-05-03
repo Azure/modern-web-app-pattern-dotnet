@@ -36,7 +36,7 @@ namespace Azure.LoadTest.Tool.Operators
             return GetResourceByIdAsync(resourceId, cancellation);
         }
 
-        public async Task<GenericResource> GetResourceByIdAsync(string resourceId, CancellationToken cancellation)
+        public async Task<GenericResource> GetResourceByIdAsync(string resourceId, string apiVersion, CancellationToken cancellation)
         {
             var formattedResourceId = resourceId;
             if (!formattedResourceId.StartsWith("/"))
