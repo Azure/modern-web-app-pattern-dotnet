@@ -1,4 +1,5 @@
-﻿using Azure.LoadTest.Tool.Models.CommandOptions;
+﻿using Azure.LoadTest.Tool.Mappers;
+using Azure.LoadTest.Tool.Models.CommandOptions;
 using Azure.LoadTest.Tool.Operators;
 using Azure.LoadTest.Tool.Providers;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,10 +30,12 @@ namespace Azure.LoadTest.Tool
                     {
                         services.AddSingleton(options);
                         services.AddTransient<TestPlanUploadService>();
+                        services.AddSingleton<AzdParametersProvider>();
                         services.AddTransient<AzureLoadTestDataPlaneOperator>();
                         services.AddTransient<AzureResourceManagerOperator>();
-                        services.AddTransient<AzdParametersProvider>();
                         services.AddTransient<UserOutputProvider>();
+                        services.AddTransient<AzureResourceApiMapper>();
+                        services.AddTransient<AppComponentsMapper>();
                     })
                     .Build();
 

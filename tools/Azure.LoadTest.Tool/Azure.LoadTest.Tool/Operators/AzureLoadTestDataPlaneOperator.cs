@@ -72,6 +72,9 @@ namespace Azure.LoadTest.Tool.Operators
             }
         }
 
+        /// <summary>
+        /// Must be invoked to save the JMeter file with the test definition or to provide any JMeter plugins that are required for the test
+        /// </summary>
         public async Task UploadTestFileAsync(string loadTestDataPlaneUri, Guid testPlanId, string pathToTestFile)
         {
             var testFile = new FileInfo(pathToTestFile);
@@ -89,6 +92,11 @@ namespace Azure.LoadTest.Tool.Operators
             }
         }
 
+        /// <summary>
+        /// The association of app components allows the Azure Load Test service to display more chart details on the page where Test Runs are examined.
+        /// By default only the client side metrics are reported (these are the metrics visible to JMeter). This operation is provided to make
+        /// server-side metrics available and these should include things like metrics from App Service and Azure App Insights.
+        /// </summary>
         public async Task AssociateAppComponentsAsync(string loadTestDataPlaneUri, Guid existingTestId, Dictionary<string, AppComponentInfo> serverSideComponents)
         {
             if (serverSideComponents == null)
@@ -96,23 +104,18 @@ namespace Azure.LoadTest.Tool.Operators
                 throw new ArgumentNullException(nameof(serverSideComponents));
             }
 
-            var componentsForServerSideMetrics = CreateAppComponents(existingTestId, serverSideComponents);
+            var componentsForServerSideMetrics = new AssociateAppComponentsRequest
+            {
+                TestId = existingTestId,
+                Components = serverSideComponents
+            };
+
             var requestContent = RequestContent.Create(componentsForServerSideMetrics);
             var response = await GetAdministrationClient(loadTestDataPlaneUri).CreateOrUpdateAppComponentsAsync(existingTestId.ToString(), requestContent);
 
             if (response.IsError)
             {
                 throw new Exception("AssociateAppComponentsAsync broke: " + response.ReasonPhrase);
-            }
-
-            AssociateAppComponentsRequest CreateAppComponents(Guid testPlanId, IEnumerable<AppComponentInfo> serverSideComponents)
-            {
-
-                return new AssociateAppComponentsRequest
-                {
-                    TestId = testPlanId,
-                    Components = components
-                };
             }
         }
 

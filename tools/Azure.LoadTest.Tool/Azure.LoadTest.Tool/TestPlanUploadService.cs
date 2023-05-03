@@ -1,4 +1,5 @@
-﻿using Azure.LoadTest.Tool.Models.AzureLoadTest.AppComponents;
+﻿using Azure.LoadTest.Tool.Mappers;
+using Azure.LoadTest.Tool.Models.AzureLoadTest.AppComponents;
 using Azure.LoadTest.Tool.Operators;
 using Azure.LoadTest.Tool.Providers;
 using Microsoft.Extensions.Logging;
@@ -11,20 +12,23 @@ namespace Azure.LoadTest.Tool
         private AzdParametersProvider _azdOperator;
         private AzureLoadTestDataPlaneOperator _altOperator;
         private AzureResourceManagerOperator _azureOperator;
+        private AppComponentsMapper _appComponentsMapper;
 
         public TestPlanUploadService(
             ILogger<TestPlanUploadService> logger,
             AzdParametersProvider azdOperator,
             AzureLoadTestDataPlaneOperator altOperator,
-            AzureResourceManagerOperator azureOperator)
+            AzureResourceManagerOperator azureOperator,
+            AppComponentsMapper appComponentsMapper)
         {
             _logger = logger;
             _azdOperator = azdOperator;
             _altOperator = altOperator;
             _azureOperator = azureOperator;
+            _appComponentsMapper = appComponentsMapper;
         }
 
-        public async Task CreateTestPlanAsync(CancellationToken cancellationToken)
+        public async Task CreateTestPlanAsync(CancellationToken cancellation)
         {
             var subscriptionId = _azdOperator.GetSubscriptionId();
             var resourceGroupName = _azdOperator.GetResourceGroupName();
@@ -35,7 +39,7 @@ namespace Azure.LoadTest.Tool
             _logger.LogDebug("Looking for resourceGroupName: {resourceGroupName}", resourceGroupName);
             _logger.LogDebug("Configuring loadTestName: {loadTestName}", loadTestName);
 
-            var dataPlaneUri = await GetAzureLoadTestDataPlaneUriAsync(resourceGroupName, loadTestName, cancellationToken);
+            var dataPlaneUri = await GetAzureLoadTestDataPlaneUriAsync(resourceGroupName, loadTestName, cancellation);
 
             _logger.LogDebug("Found the dataPlaneUri: {dataPlaneUri}", dataPlaneUri);
 
@@ -45,36 +49,9 @@ namespace Azure.LoadTest.Tool
 
             await _altOperator.UploadTestFileAsync(dataPlaneUri, testId, pathToJmx);
 
-            var resourceIds = _azdOperator.GetAzureLoadTestAppComponentsResourceIds();
+            var azureResourceIds = _azdOperator.GetAzureLoadTestAppComponentsResourceIds();
 
-            #region operation delegated to class not built
-
-            var appComponents = new List<AppComponentInfo>();
-            foreach (var resourceId in resourceIds)
-            {
-                var resourceDetails = await _azureOperator.GetResourceByIdAsync(resourceId, cancellationToken);
-
-                appComponents.Add(new AppComponentInfo
-                {
-                    ResourceId = resourceId,
-                    Kind = resourceDetails.Kind,
-                    ResourceGroup = resourceGroupName,
-                    ResourceName = resourceDetails.Name,
-                    ResourceType = resourceDetails.Type,
-                    SubscriptionId = subscriptionId
-                });
-            }
-
-            var components = new Dictionary<string, AppComponentInfo>();
-            foreach (var serverSideComponent in serverSideComponents)
-            {
-                if (!string.IsNullOrEmpty(serverSideComponent.ResourceId))
-                {
-                    components.Add(serverSideComponent.ResourceId, serverSideComponent);
-                }
-            }
-
-            #endregion
+            var appComponents = await _appComponentsMapper.MapComponentsAsync(azureResourceIds, cancellation);
 
             await _altOperator.AssociateAppComponentsAsync(dataPlaneUri, testId, appComponents);
 

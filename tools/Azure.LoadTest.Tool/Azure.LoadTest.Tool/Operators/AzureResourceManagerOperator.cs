@@ -1,4 +1,5 @@
 ﻿using Azure.Identity;
+using Azure.LoadTest.Tool.Mappers;
 using Azure.LoadTest.Tool.Providers;
 using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Resources.Models;
@@ -8,13 +9,16 @@ namespace Azure.LoadTest.Tool.Operators
     public class AzureResourceManagerOperator
     {
         private readonly AzdParametersProvider _azdOperator;
+        private readonly AzureResourceApiMapper _apiMapper;
 
         private ResourcesManagementClient? _client;
 
         public AzureResourceManagerOperator(
-            AzdParametersProvider azdOperator)
+            AzdParametersProvider azdOperator,
+            AzureResourceApiMapper apiMapper)
         {
             _azdOperator = azdOperator;
+            _apiMapper = apiMapper;
         }
 
         private ResourcesManagementClient GetResourceClient()
@@ -36,7 +40,7 @@ namespace Azure.LoadTest.Tool.Operators
             return GetResourceByIdAsync(resourceId, cancellation);
         }
 
-        public async Task<GenericResource> GetResourceByIdAsync(string resourceId, string apiVersion, CancellationToken cancellation)
+        public async Task<GenericResource> GetResourceByIdAsync(string resourceId, CancellationToken cancellation)
         {
             var formattedResourceId = resourceId;
             if (!formattedResourceId.StartsWith("/"))
@@ -44,39 +48,11 @@ namespace Azure.LoadTest.Tool.Operators
                 formattedResourceId = "/" + formattedResourceId;
             }
 
-            var genericResourceResponse = await GetResourceClient().Resources.GetByIdAsync(formattedResourceId, GetApiVersionForProvider(resourceId), cancellation);
+            var apiVersion = _apiMapper.GetApiForAzureResourceProvider(formattedResourceId);
+            var genericResourceResponse = await GetResourceClient().Resources.GetByIdAsync(formattedResourceId, apiVersion, cancellation);
             ThrowIfError(genericResourceResponse);
 
             return genericResourceResponse.Value ?? throw new ArgumentNullException($"Unable to retrieve the azure resource with id: {resourceId}");
-
-
-            string GetApiVersionForProvider(string resourceId)
-            {
-                const string DEFAULT_API_VERSION = "2020-02-02";
-                if (string.IsNullOrEmpty(resourceId))
-                {
-                    return DEFAULT_API_VERSION;
-                }
-
-                // API specific for Azure App Service
-                if (resourceId.Contains("Microsoft.Web/sites", StringComparison.Ordinal))
-                {
-                    return "2022-09-01";
-                }
-
-                if (resourceId.Contains("Microsoft.LoadTestService", StringComparison.Ordinal))
-                {
-                    return "2022-12-01";
-                }
-
-                // API specific for App Insights
-                if (resourceId.Contains("microsoft.insights/components", StringComparison.Ordinal))
-                {
-                    return "2020-02-02";
-                }
-
-                return DEFAULT_API_VERSION;
-            }
         }
 
         private static void ThrowIfError(Response<GenericResource> genericResourceResponse)

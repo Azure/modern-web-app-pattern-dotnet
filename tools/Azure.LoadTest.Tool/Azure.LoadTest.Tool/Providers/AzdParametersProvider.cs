@@ -57,25 +57,42 @@ namespace Azure.LoadTest.Tool.Providers
             }
         }
 
+        /// <summary>
+        /// Returns the required AZD configuration value AZURE_RESOURCE_GROUP
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when this required configuration has not been set</exception>
         public string GetResourceGroupName()
         {
             const string AZURE_RESOURCE_GROUP = "AZURE_RESOURCE_GROUP";
             return _configuration.GetValue<string>(AZURE_RESOURCE_GROUP) ?? throw new InvalidOperationException($"Missing required configuration {AZURE_RESOURCE_GROUP}");
         }
 
-        internal string GetSubscriptionId()
+        /// <summary>
+        /// Returns the required AZD configuration value AZURE_SUBSCRIPTION_ID
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when this required configuration has not been set</exception>
+        public string GetSubscriptionId()
         {
             const string AZURE_SUBSCRIPTION_ID = "AZURE_SUBSCRIPTION_ID";
             return _configuration.GetValue<string>(AZURE_SUBSCRIPTION_ID) ?? throw new InvalidOperationException($"Missing required configuration {AZURE_SUBSCRIPTION_ID}");
         }
 
-        internal string GetAzureLoadTestServiceName()
+        /// <summary>
+        /// Returns the required AZD configuration value AZURE_LOAD_TEST_NAME
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when this required configuration has not been set</exception>
+        public string GetAzureLoadTestServiceName()
         {
             const string AZURE_LOAD_TEST_NAME = "AZURE_LOAD_TEST_NAME";
             return _configuration.GetValue<string>(AZURE_LOAD_TEST_NAME) ?? throw new InvalidOperationException($"Missing required configuration {AZURE_LOAD_TEST_NAME}");
         }
 
-        internal IEnumerable<string> GetAzureLoadTestAppComponentsResourceIds()
+
+        /// <summary>
+        /// Returns the required AZD configuration value APP_COMPONENTS_RESOURCE_IDS
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when this required configuration has not been set</exception>
+        public IEnumerable<string> GetAzureLoadTestAppComponentsResourceIds()
         {
             const string RESOURCE_IDS = "APP_COMPONENTS_RESOURCE_IDS";
             var resourceIds = _configuration.GetValue<string>(RESOURCE_IDS) ?? throw new InvalidOperationException($"Missing required configuration {RESOURCE_IDS}");
@@ -83,7 +100,12 @@ namespace Azure.LoadTest.Tool.Providers
             return resourceIds.Split(',').AsEnumerable();
         }
 
-        internal string GetPathToJMeterFile()
+
+        /// <summary>
+        /// Returns the required AZD configuration value AZURE_LOAD_TEST_FILE
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when this required configuration has not been set</exception>
+        public string GetPathToJMeterFile()
         {
             const string AZURE_LOAD_TEST_FILE = "AZURE_LOAD_TEST_FILE";
             return _configuration.GetValue<string>(AZURE_LOAD_TEST_FILE) ?? throw new InvalidOperationException($"Missing required configuration {AZURE_LOAD_TEST_FILE}");
@@ -92,8 +114,7 @@ namespace Azure.LoadTest.Tool.Providers
         /// <summary>
         /// Parses the configuration file and returns a dictionary containing any Azure Load Test Environment parameters encoded as AZD parameters with the prefix `ALT_ENV_PARAM_`
         /// </summary>
-        /// <returns></returns>
-        internal Dictionary<string, string> GetLoadTestEnvironmentVars()
+        public Dictionary<string, string> GetLoadTestEnvironmentVars()
         {
             const string AZD_ENCODED_AZURE_LOAD_TEST_PARAM = "ALT_ENV_PARAM_";
 
