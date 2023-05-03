@@ -1,4 +1,12 @@
-﻿## TODO - Add ReadME
+﻿# Azure Load Test Tool
+The Azure.LoadTest.Tool is a project created to use the Azure SDK libraries to upload a JMeter script to the Azure Load Test (ALT) Service.
+
+Bicep and `az cli` do not provide support for configuring a test, uploading a JMeter script, or setting environment variables at this time and
+this console app closes that gap so we can automate steps that could beperformed through the Azure Portal or via GitHub Action.
+
+Note that setting up the pipeline workflow would not align with the project vision of `azd up` to deploy all content.
+
+Learn more about the Azure GitHub Action here: https://github.com/Azure/load-testing
 
 ## Set up instructions
 The console app uses AZD environment variables as input parameters.
