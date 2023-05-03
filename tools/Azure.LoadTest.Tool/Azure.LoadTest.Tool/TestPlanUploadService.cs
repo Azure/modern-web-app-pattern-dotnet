@@ -47,6 +47,8 @@ namespace Azure.LoadTest.Tool
 
             var resourceIds = _azdOperator.GetAzureLoadTestAppComponentsResourceIds();
 
+            #region operation delegated to class not built
+
             var appComponents = new List<AppComponentInfo>();
             foreach (var resourceId in resourceIds)
             {
@@ -62,6 +64,17 @@ namespace Azure.LoadTest.Tool
                     SubscriptionId = subscriptionId
                 });
             }
+
+            var components = new Dictionary<string, AppComponentInfo>();
+            foreach (var serverSideComponent in serverSideComponents)
+            {
+                if (!string.IsNullOrEmpty(serverSideComponent.ResourceId))
+                {
+                    components.Add(serverSideComponent.ResourceId, serverSideComponent);
+                }
+            }
+
+            #endregion
 
             await _altOperator.AssociateAppComponentsAsync(dataPlaneUri, testId, appComponents);
 

@@ -89,7 +89,7 @@ namespace Azure.LoadTest.Tool.Operators
             }
         }
 
-        public async Task AssociateAppComponentsAsync(string loadTestDataPlaneUri, Guid existingTestId, IEnumerable<AppComponentInfo> serverSideComponents)
+        public async Task AssociateAppComponentsAsync(string loadTestDataPlaneUri, Guid existingTestId, Dictionary<string, AppComponentInfo> serverSideComponents)
         {
             if (serverSideComponents == null)
             {
@@ -107,14 +107,6 @@ namespace Azure.LoadTest.Tool.Operators
 
             AssociateAppComponentsRequest CreateAppComponents(Guid testPlanId, IEnumerable<AppComponentInfo> serverSideComponents)
             {
-                var components = new Dictionary<string, AppComponentInfo>();
-                foreach (var serverSideComponent in serverSideComponents)
-                {
-                    if (!string.IsNullOrEmpty(serverSideComponent.ResourceId))
-                    {
-                        components.Add(serverSideComponent.ResourceId, serverSideComponent);
-                    }
-                }
 
                 return new AssociateAppComponentsRequest
                 {
