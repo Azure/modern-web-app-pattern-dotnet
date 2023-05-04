@@ -22,23 +22,23 @@
             }
 
             // API specific for Azure App Service
-            if (resourceId.Contains("Microsoft.Web/sites", StringComparison.Ordinal))
+            if (resourceId.Contains("Microsoft.Web/sites", StringComparison.OrdinalIgnoreCase))
             {
                 return "2022-09-01";
             }
 
-            if (resourceId.Contains("Microsoft.LoadTestService", StringComparison.Ordinal))
+            if (resourceId.Contains("Microsoft.LoadTestService", StringComparison.OrdinalIgnoreCase))
             {
                 return "2022-12-01";
             }
 
             // API specific for App Insights
-            if (resourceId.Contains("microsoft.insights/components", StringComparison.Ordinal))
+            if (resourceId.Contains("Microsoft.Insights/components", StringComparison.OrdinalIgnoreCase))
             {
                 return "2020-02-02";
             }
 
-            throw new InvalidOperationException("Unsupported Azure resource type");
+            throw new InvalidOperationException($"Unsupported Azure resource type: {resourceId}");
         }
     }
 }
