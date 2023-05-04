@@ -17,7 +17,7 @@
 # where this sccript will be invoked as part of the postdeploy process to start a
 # load test after code has been deployed.
 
-Write-Host 'Now building the tool'
+Write-Host 'Now building the tool...'
 
 try {
     $pathToPublishFolder = "../../tools/Azure.LoadTest.Tool/publish"
@@ -28,13 +28,14 @@ try {
     $process.WaitForExit($timeout.TotalMilliseconds)
 
     if ($process.ExitCode -ne 0) {
-        throw "The build command exited with a non-zero code: $($process.ExitCode)"
+        throw "An dotnet publish exited with a non-zero exit code: $($process.ExitCode)"
     }
 }
 catch {
-    throw "An error occurred while running the build command: $($_.Exception.Message)"
+    throw "An error occurred during dotnet publish: $($_.Exception.Message)"
 }
 
+# Assumes the environment has already been created because this runs as part of the azd deploy process
 $azdEnvironment = (azd env list --output json) | ConvertFrom-Json | Where-Object { $_.IsDefault -eq 'true' }
 Write-Host "Discovered AZD environment: $($azdEnvironment.name)"
 
