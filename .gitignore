@@ -353,3 +353,4 @@ MigrationBackup/
 .azure
 
 **/Azure.LoadTest.Tool/publish/
+**/src/**/log*.txt
