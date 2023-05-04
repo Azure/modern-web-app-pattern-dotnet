@@ -3,6 +3,7 @@ using Azure.LoadTest.Tool.Models.AzureLoadTest.AppComponents;
 using Azure.LoadTest.Tool.Operators;
 using Azure.LoadTest.Tool.Providers;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 namespace Azure.LoadTest.Tool
 {
@@ -31,21 +32,30 @@ namespace Azure.LoadTest.Tool
         public async Task CreateTestPlanAsync(CancellationToken cancellation)
         {
             var subscriptionId = _azdOperator.GetSubscriptionId();
+            _logger.LogDebug("Retrieved subscriptionId: {subscriptionId}", subscriptionId);
+
             var resourceGroupName = _azdOperator.GetResourceGroupName();
+            _logger.LogDebug("Retrieved resourceGroupName: {resourceGroupName}", resourceGroupName);
+
             var loadTestName = _azdOperator.GetAzureLoadTestServiceName();
+            _logger.LogDebug("Retrieved loadTestName: {loadTestName}", loadTestName);
+
             var pathToJmx = _azdOperator.GetPathToJMeterFile();
+            if (Debugger.IsAttached)
+            {
+                // overrides AZD environment path which will not match the context
+                // when executing from Visual Studio
+                pathToJmx = "basic-test.jmx";
+            }
+            _logger.LogDebug("Retrieved pathToJmx: {pathToJmx}", pathToJmx);
 
-            _logger.LogDebug("Working with subscriptionId: {subscriptionId}", subscriptionId);
-            _logger.LogDebug("Looking for resourceGroupName: {resourceGroupName}", resourceGroupName);
-            _logger.LogDebug("Configuring loadTestName: {loadTestName}", loadTestName);
-
+            _logger.LogInformation("Retrieving dataPlaneUri");
             var dataPlaneUri = await GetAzureLoadTestDataPlaneUriAsync(resourceGroupName, loadTestName, cancellation);
-
-            _logger.LogDebug("Found the dataPlaneUri: {dataPlaneUri}", dataPlaneUri);
+            _logger.LogInformation("DataPlaneUri: {dataPlaneUri}", dataPlaneUri);
 
             var testId = await _altOperator.CreateLoadTestAsync(dataPlaneUri);
 
-            _logger.LogDebug("Created testId: {testId}", testId);
+            _logger.LogInformation("Created testId: {testId}", testId);
 
             await _altOperator.UploadTestFileAsync(dataPlaneUri, testId, pathToJmx);
 
@@ -58,9 +68,11 @@ namespace Azure.LoadTest.Tool
             await _altOperator.StartLoadTestAsync(dataPlaneUri, testId);
         }
 
-        private async Task<string> GetAzureLoadTestDataPlaneUriAsync(string resourceGroupName, string loadTestName, CancellationToken cancellationToken)
+        private async Task<string> GetAzureLoadTestDataPlaneUriAsync(string resourceGroupName, string loadTestName, CancellationToken cancellation)
         {
-            var azureLoadTestResource = await _azureOperator.GetAzureLoadTestByNameAsync(resourceGroupName, loadTestName, cancellationToken);
+            var azureLoadTestResource = await _azureOperator.GetAzureLoadTestByNameAsync(resourceGroupName, loadTestName, cancellation);
+
+            _logger.LogDebug("Retrieved ALT resource: {id}", azureLoadTestResource.Id);
 
             var stringProperties = (Dictionary<string, object>)azureLoadTestResource.Properties;
 

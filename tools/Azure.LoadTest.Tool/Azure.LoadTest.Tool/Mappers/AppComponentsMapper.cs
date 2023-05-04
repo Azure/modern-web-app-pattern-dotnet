@@ -1,6 +1,7 @@
 ﻿using Azure.LoadTest.Tool.Models.AzureLoadTest.AppComponents;
 using Azure.LoadTest.Tool.Operators;
 using Azure.LoadTest.Tool.Providers;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.LoadTest.Tool.Mappers
 {
@@ -8,6 +9,7 @@ namespace Azure.LoadTest.Tool.Mappers
     {
         private readonly AzureResourceManagerOperator _azureOperator;
         private readonly AzdParametersProvider _azdParametersProvider;
+        private readonly ILogger<AppComponentsMapper> _logger;
 
         /// <summary>
         /// A utility to perform mapping from resourceId strings into fully hydrated AppComponentInfo objects
@@ -15,16 +17,20 @@ namespace Azure.LoadTest.Tool.Mappers
         /// </summary>
         public AppComponentsMapper(
             AzureResourceManagerOperator azureOperator,
-            AzdParametersProvider azdParametersProvider)
+            AzdParametersProvider azdParametersProvider,
+            ILogger<AppComponentsMapper> logger)
         {
             _azureOperator = azureOperator;
             _azdParametersProvider = azdParametersProvider;
+            _logger = logger;
         }
 
         public async Task<Dictionary<string, AppComponentInfo>> MapComponentsAsync(IEnumerable<string> resourceIds, CancellationToken cancellation)
         {
             var resourceGroupName = _azdParametersProvider.GetResourceGroupName();
+            _logger.LogDebug("ResourceGroupName: {resourceGroupName}", resourceGroupName);
             var subscriptionId = _azdParametersProvider.GetSubscriptionId();
+            _logger.LogDebug("SubscriptionId: {subscriptionId}", subscriptionId);
 
             var appComponents = new Dictionary<string, AppComponentInfo>();
             foreach (var resourceId in resourceIds)

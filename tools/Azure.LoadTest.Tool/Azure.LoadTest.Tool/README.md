@@ -16,6 +16,7 @@ command line parameter.
 
 **Command Line Parameters**
 - [environment-name]: Provides the folder name that specifies the azd environment variables that will be used at runtime
+- [debug]: Provides more verbose output to assist with debugging
 
 These params can be set with `azd env set` after an azd environment
 has been created with `azd env new`. Current list of parameters can

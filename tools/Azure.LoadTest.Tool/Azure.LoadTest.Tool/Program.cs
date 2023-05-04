@@ -5,6 +5,7 @@ using Azure.LoadTest.Tool.Providers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
@@ -20,7 +21,10 @@ namespace Azure.LoadTest.Tool
             {
                 new Option<string>(
                     "--environment-name",
-                    description: "An AZD environment name")
+                    description: "An AZD environment name"),
+                new Option<bool>(
+                    "--debug",
+                    description: "Provides more verbose logging")
             };
 
             rootCommand.Handler = CommandHandler.Create<AzureLoadTestToolOptions, CancellationToken>(async (options, token) =>
@@ -36,6 +40,19 @@ namespace Azure.LoadTest.Tool
                         services.AddTransient<UserOutputProvider>();
                         services.AddTransient<AzureResourceApiMapper>();
                         services.AddTransient<AppComponentsMapper>();
+                    })
+                    .UseSerilog((hostingContext, loggerConfiguration) =>
+                    {
+                        if (options.Debug)
+                        {
+                            loggerConfiguration.WriteTo.Console().MinimumLevel.Debug();
+                        }
+                        else
+                        {
+                            loggerConfiguration.WriteTo.Console().MinimumLevel.Error();
+                        }
+
+                        loggerConfiguration.WriteTo.File("log.txt", rollingInterval: RollingInterval.Day).MinimumLevel.Debug();
                     })
                     .Build();
 
