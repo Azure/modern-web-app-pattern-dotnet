@@ -24,7 +24,8 @@ try {
     $pathToCsProj = "../../tools/Azure.LoadTest.Tool/Azure.LoadTest.Tool/Azure.LoadTest.Tool.csproj"
     $process = Start-Process dotnet -ArgumentList "publish --output $pathToPublishFolder $pathToCsProj" -Wait -NoNewWindow -PassThru -ErrorAction Stop
 
-    $process.WaitForExit()
+    $timeout = New-TimeSpan -Seconds 60
+    $process.WaitForExit($timeout.TotalMilliseconds)
 
     if ($process.ExitCode -ne 0) {
         throw "The build command exited with a non-zero code: $($process.ExitCode)"
@@ -43,7 +44,8 @@ try {
     $pathToTool = "../../tools/Azure.LoadTest.Tool/publish/Azure.LoadTest.Tool.exe"
     $process = Start-Process $pathToTool -ArgumentList "--environment-name $($azdEnvironment.name)" -Wait -NoNewWindow -PassThru -ErrorAction Stop
 
-    $process.WaitForExit()
+    $loadTestTimeout = New-TimeSpan -Seconds 120
+    $process.WaitForExit($loadTestTimeout)
 
     if ($process.ExitCode -ne 0) {
         throw "The load test tool app exited with a non-zero code: $($process.ExitCode)"
