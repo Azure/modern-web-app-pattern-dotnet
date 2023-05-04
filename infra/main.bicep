@@ -231,7 +231,7 @@ output AZURE_RESOURCE_GROUP string = primaryResourceGroupName
 output AZURE_LOAD_TEST_NAME string = azureLoadTest.outputs.loadTestServiceName
 
 // path to the file name will be relative to the tool that uploads the file
-output AZURE_LOAD_TEST_FILE string = './assets/loadtest/api-loadtest.jmx'
+output AZURE_LOAD_TEST_FILE string = '../../assets/loadtest/api-loadtest.jmx'
 output APP_COMPONENTS_RESOURCE_IDS string = '${primaryResources.outputs.PUBLIC_API_APP_INSIGHTS_RESOURCEID},${primaryResources.outputs.PUBLIC_API_APP_SERVICE_RESOURCEID}'
 // note that the reqiured param AZURE_SUBSCRIPTION_ID is populated during AZD init
 
