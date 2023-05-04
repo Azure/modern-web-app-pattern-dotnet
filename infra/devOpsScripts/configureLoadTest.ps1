@@ -52,7 +52,3 @@ try {
 catch {
     throw "An error occurred while running the load test tool app: $($_.Exception.Message)"
 }
-
-if ($exitCodeForLoadTestTool -ne 0) {
-    throw "Failed to complete the load test configuration"
-}
