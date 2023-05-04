@@ -1,6 +1,21 @@
-## TODO: Add header
+#Requires -Version 7.0
 
-# Paths in this script are relative to the execution hooks specified in Azure.yml where this sccript will be invoked as part of the postdeploy process to start a load test after code has been deployed
+<#
+.SYNOPSIS
+    Builds and runs the Azure.LoadTest.Tool to validate the deployment of the web app.
+.DESCRIPTION
+    The Azure Load Test Service does not provide a way to run a load test from the command line.
+    We built the Azure.LoadTest.Tool to upload a JMeter file, configure the test plan, associate
+    server-side metrics, define environment variables, and run the load test.
+
+    This workflow is intended to be seamlessly integrated with the AZD deploy operation which
+    will start the load test at the first available opportunity. This also reduces the steps a
+    reader needs to perform to tryout the sample.
+#>
+
+# Paths in this script are relative to the execution hooks specified in Azure.yml
+# where this sccript will be invoked as part of the postdeploy process to start a
+# load test after code has been deployed.
 
 Write-Host 'Now building the tool'
 
