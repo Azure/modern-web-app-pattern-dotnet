@@ -3,7 +3,7 @@
     /// <summary>
     /// owns the responsibility for communicating status to someone executing the tool
     /// </summary>
-    // distinctly separate from ILogger which owns responsibility for communicating messages to a dev that are used to trace/debug behavior
+    // separate from ILogger which owns responsibility for communicating messages to a dev that are used for trace/debug behavior
     public class UserOutputProvider
     {
         public void WriteFatalError(string errorMessage)
