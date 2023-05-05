@@ -27,9 +27,6 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-
   tags: tags
 }
 
-@description('Ensures that the idempotent scripts are executed each time the deployment is executed')
-param uniqueScriptId string = newGuid()
-
 @description('Built in \'Data Reader\' role ID: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles')
 var appConfigDataReaderRoleDefinitionId = '516239f1-63e1-4d78-a4de-a74fb236a071'
 
@@ -246,7 +243,7 @@ resource callcenterWeb 'Microsoft.Web/sites@2021-03-01' = {
     serverFarmId: callCenterAppServicePlan.id
     siteConfig: {
       alwaysOn: true
-      ftpsState: 'FtpsOnly'
+      ftpsState: 'Disabled'
 
       // Set to true to route all outbound app traffic into virtual network (see https://learn.microsoft.com/azure/app-service/overview-vnet-integration#application-routing)
       vnetRouteAllEnabled: false
@@ -320,7 +317,7 @@ resource publicWeb 'Microsoft.Web/sites@2021-03-01' = {
     serverFarmId: publicWebAppServicePlan.id
     siteConfig: {
       alwaysOn: true
-      ftpsState: 'FtpsOnly'
+      ftpsState: 'Disabled'
 
       // Set to true to route all outbound app traffic into virtual network (see https://learn.microsoft.com/azure/app-service/overview-vnet-integration#application-routing)
       vnetRouteAllEnabled: false
@@ -394,7 +391,7 @@ resource callcenterApi 'Microsoft.Web/sites@2021-01-15' = {
     serverFarmId: callCenterApiAppServicePlan.id
     siteConfig: {
       alwaysOn: true
-      ftpsState: 'FtpsOnly'
+      ftpsState: 'Disabled'
 
       // Set to true to route all outbound app traffic into virtual network (see https://learn.microsoft.com/azure/app-service/overview-vnet-integration#application-routing)
       vnetRouteAllEnabled: false
@@ -469,7 +466,7 @@ resource publicApi 'Microsoft.Web/sites@2021-01-15' = {
     serverFarmId: publicApiAppServicePlan.id
     siteConfig: {
       alwaysOn: true
-      ftpsState: 'FtpsOnly'
+      ftpsState: 'Disabled'
 
       // Set to true to route all outbound app traffic into virtual network (see https://learn.microsoft.com/azure/app-service/overview-vnet-integration#application-routing)
       vnetRouteAllEnabled: false
@@ -664,15 +661,12 @@ resource webLogAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2020
   name: 'web-${resourceToken}-log'
   location: location
   tags: tags
-  properties: any({
-    retentionInDays: 30
-    features: {
-      searchVersion: 1
-    }
+  properties: {
     sku: {
       name: 'PerGB2018'
     }
-  })
+    retentionInDays: 30
+  }
 }
 
 module webApplicationInsightsResources './applicationinsights.bicep' = {
@@ -1022,4 +1016,8 @@ resource privateEndpointForKv 'Microsoft.Network/privateEndpoints@2020-07-01' = 
 output WEB_PUBLIC_URI string = publicWeb.properties.defaultHostName
 output WEB_CALLCENTER_URI string = callcenterWeb.properties.defaultHostName
 output PUBLIC_API_URI string = publicApi.properties.defaultHostName
+output PUBLIC_API_APP_INSIGHTS_RESOURCEID string = webApplicationInsightsResources.outputs.APPLICATIONINSIGHTS_RESOURCE_ID
+output PUBLIC_API_APP_SERVICE_RESOURCEID string = publicApi.id
 output CALLCENTER_API_URI string = callcenterApi.properties.defaultHostName
+output KEY_VAULT_NAME string = kv.name
+output APP_CONFIGURATION_SVC_NAME string = appConfigSvc.name

@@ -18,7 +18,10 @@ param sqlAdministratorPassword string
 @description('Ensures that the idempotent scripts are executed each time the deployment is executed')
 param uniqueScriptId string = newGuid()
 
+@description('The Azure location where this solution is deployed')
 param location string
+
+@description('An object collection that contains annotations to describe the deployed azure resources to improve operational visibility')
 param tags object
 
 var sqlServerName = '${resourceToken}-sql-server'

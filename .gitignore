@@ -351,3 +351,6 @@ MigrationBackup/
 
 # Azd folders
 .azure
+
+**/Azure.LoadTest.Tool/publish/
+**/log*.txt

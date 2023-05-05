@@ -17,7 +17,6 @@ using Relecloud.Web.Services.ApiConcertService;
 using Relecloud.Web.Services.MockServices;
 using Relecloud.Web.Services.RelecloudApiServices;
 using System.Diagnostics;
-using System.Security.Claims;
 
 namespace Relecloud.Web.Public
 {
@@ -211,7 +210,7 @@ namespace Relecloud.Web.Public
             catch (Exception ex)
             {
                 var logger = ctx.HttpContext.RequestServices.GetRequiredService<ILogger<Startup>>();
-                logger.LogError(ex, "Unhandled exception from Startup.TransformRoleClaims");
+                logger.LogError(ex, "Unhandled exception from Startup.CreateOrUpdateUserInformation");
             }
         }
 

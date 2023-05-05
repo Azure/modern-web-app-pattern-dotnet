@@ -85,6 +85,16 @@ var secondaryResourceGroupName = '${name}-secondary-rg'
 var primaryResourceToken = toLower(uniqueString(subscription().id, primaryResourceGroupName, location))
 var secondaryResourceToken = toLower(uniqueString(subscription().id, secondaryResourceGroupName, secondaryAzureLocation))
 
+module logAnalyticsForDiagnostics './logAnalyticsWorkspaceForDiagnostics.bicep' = {
+  name: 'logAnalyticsForDiagnostics'
+  scope: primaryResourceGroup
+  params: {
+    tags: tags
+    location: location
+    logAnalyticsWorkspaceNameForDiagnstics: 'diagnostics-${primaryResourceToken}-log'
+  }
+}
+
 resource primaryResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: primaryResourceGroupName
   location: location
@@ -170,14 +180,51 @@ module secondaryResources './resources.bicep' = if (isMultiLocationDeployment) {
   }
 }
 
-module azureFrontDoor './azureFrontDoor.bicep' = if (isMultiLocationDeployment) {
+module azureFrontDoor './azureFrontDoor.bicep' = {
   name: 'frontDoor-${primaryResourceToken}'
+  scope: primaryResourceGroup
+  params: {
+    tags: tags
+    logAnalyticsWorkspaceIdForDiagnostics: logAnalyticsForDiagnostics.outputs.LOG_WORKSPACE_ID
+    primaryBackendAddress: primaryResources.outputs.WEB_CALLCENTER_URI
+    secondaryBackendAddress: isMultiLocationDeployment ? secondaryResources.outputs.WEB_CALLCENTER_URI : 'none'
+  }
+}
+
+module primaryKeyVaultDiagnostics 'azureKeyVaultDiagnostics.bicep' = {
+  name: 'primaryKeyVaultDiagnostics'
+  scope: primaryResourceGroup
+  params: {
+    keyVaultName: primaryResources.outputs.KEY_VAULT_NAME
+    logAnalyticsWorkspaceIdForDiagnostics: logAnalyticsForDiagnostics.outputs.LOG_WORKSPACE_ID
+  }
+}
+
+module secondaryAppConfigSvcFrontDoorUri 'appConfigSvcKeyValue.bicep' = if (isMultiLocationDeployment) {
+  name: 'secondaryKeyValue'
+  scope: secondaryResourceGroup
+  params:{
+    appConfigurationServiceName: isMultiLocationDeployment ? secondaryResources.outputs.APP_CONFIGURATION_SVC_NAME : 'none'
+    frontDoorUri: azureFrontDoor.outputs.HOST_NAME
+  }
+}
+
+module secondaryKeyVaultDiagnostics 'azureKeyVaultDiagnostics.bicep' = if (isMultiLocationDeployment) {
+  name: 'secondaryKeyVaultDiagnostics'
+  scope: secondaryResourceGroup
+  params: {
+    keyVaultName: isMultiLocationDeployment ? secondaryResources.outputs.KEY_VAULT_NAME : 'none'
+    logAnalyticsWorkspaceIdForDiagnostics: logAnalyticsForDiagnostics.outputs.LOG_WORKSPACE_ID
+  }
+}
+
+module azureLoadTest './azureLoadTest.bicep' = {
+  name: 'azureLoadTest'
   scope: primaryResourceGroup
   params: {
     resourceToken: primaryResourceToken
     tags: tags
-    primaryBackendAddress: primaryResources.outputs.WEB_CALLCENTER_URI
-    secondaryBackendAddress: isMultiLocationDeployment ? secondaryResources.outputs.WEB_CALLCENTER_URI : 'none'
+    location: location
   }
 }
 
@@ -198,9 +245,26 @@ resource telemetrydeployment 'Microsoft.Resources/deployments@2021-04-01' = if (
   }
 }
 
-output WEB_URI string = isMultiLocationDeployment ? azureFrontDoor.outputs.WEB_URI : primaryResources.outputs.WEB_CALLCENTER_URI
+output WEB_URI string = 'https://${azureFrontDoor.outputs.HOST_NAME}'
 output AZURE_LOCATION string = location
 
 output DEBUG_IS_MULTI_LOCATION_DEPLOYMENT bool = isMultiLocationDeployment
 output DEBUG_SECONDARY_AZURE_LOCATION string = secondaryAzureLocation
 output DEBUG_IS_PROD bool = isProdBool
+
+// the following settings will be used by the Azure.LoadTest.Tool to configure the Load Test service with a JMX and server side diagnostics to monitor during the test run
+// these details assume the Azure App Service is configured for Active/Passive deployment
+output AZURE_RESOURCE_GROUP string = primaryResourceGroupName
+output AZURE_LOAD_TEST_NAME string = azureLoadTest.outputs.loadTestServiceName
+
+// path to the file name will be relative to the tool that uploads the file
+output AZURE_LOAD_TEST_FILE string = '../../assets/loadtest/api-loadtest.jmx'
+output APP_COMPONENTS_RESOURCE_IDS string = '${primaryResources.outputs.PUBLIC_API_APP_INSIGHTS_RESOURCEID},${primaryResources.outputs.PUBLIC_API_APP_SERVICE_RESOURCEID}'
+// note that the reqiured param AZURE_SUBSCRIPTION_ID is populated during AZD init
+
+// the following settings will be used as environment vars by the 'basic-test.jmx' file
+output ALT_ENV_PARAM_X1 string = 'domain,${primaryResources.outputs.WEB_PUBLIC_URI}'
+output ALT_ENV_PARAM_X2 string = 'duration_in_sec,120'
+output ALT_ENV_PARAM_X3 string = 'protocol,https'
+output ALT_ENV_PARAM_X4 string = 'ramp_up_time,10'
+output ALT_ENV_PARAM_X5 string = 'threads_per_engine,5'
