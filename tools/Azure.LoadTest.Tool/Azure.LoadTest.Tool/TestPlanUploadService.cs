@@ -1,5 +1,4 @@
 ﻿using Azure.LoadTest.Tool.Mappers;
-using Azure.LoadTest.Tool.Models.AzureLoadTest.AppComponents;
 using Azure.LoadTest.Tool.Operators;
 using Azure.LoadTest.Tool.Providers;
 using Microsoft.Extensions.Logging;

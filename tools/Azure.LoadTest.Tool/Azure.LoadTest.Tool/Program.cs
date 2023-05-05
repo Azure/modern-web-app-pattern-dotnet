@@ -62,7 +62,7 @@ namespace Azure.LoadTest.Tool
                 if (string.IsNullOrEmpty(options.EnvironmentName))
                 {
                     userOutput.WriteFatalError("Missing required parameter --environment-name which specifies where the AZD configuration is loaded.");
-                    
+
                     return;
                 }
 
@@ -79,7 +79,7 @@ namespace Azure.LoadTest.Tool
                 {
                     await myService.CreateTestPlanAsync(token);
 
-                    
+
                 }
                 catch (Exception ex)
                 {

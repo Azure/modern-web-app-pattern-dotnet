@@ -49,7 +49,7 @@ namespace Azure.LoadTest.Tool.Operators
             var altEnvironmentVariables = _azdOperator.GetLoadTestEnvironmentVars();
             var newTestPlan = CreteNewTestPlan();
             var response = await GetAdministrationClient(loadTestDataPlaneUri).CreateOrUpdateTestAsync(newTestId.ToString(), RequestContent.Create(newTestPlan));
-            
+
             if (response.IsError)
             {
                 throw new Exception("CreateLoadTestAsync broke: " + response.ReasonPhrase);
