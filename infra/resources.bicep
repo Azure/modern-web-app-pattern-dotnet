@@ -246,7 +246,7 @@ resource callcenterWeb 'Microsoft.Web/sites@2021-03-01' = {
     serverFarmId: callCenterAppServicePlan.id
     siteConfig: {
       alwaysOn: true
-      ftpsState: 'FtpsOnly'
+      ftpsState: 'Disabled'
 
       // Set to true to route all outbound app traffic into virtual network (see https://learn.microsoft.com/azure/app-service/overview-vnet-integration#application-routing)
       vnetRouteAllEnabled: false
@@ -320,7 +320,7 @@ resource publicWeb 'Microsoft.Web/sites@2021-03-01' = {
     serverFarmId: publicWebAppServicePlan.id
     siteConfig: {
       alwaysOn: true
-      ftpsState: 'FtpsOnly'
+      ftpsState: 'Disabled'
 
       // Set to true to route all outbound app traffic into virtual network (see https://learn.microsoft.com/azure/app-service/overview-vnet-integration#application-routing)
       vnetRouteAllEnabled: false
@@ -394,7 +394,7 @@ resource callcenterApi 'Microsoft.Web/sites@2021-01-15' = {
     serverFarmId: callCenterApiAppServicePlan.id
     siteConfig: {
       alwaysOn: true
-      ftpsState: 'FtpsOnly'
+      ftpsState: 'Disabled'
 
       // Set to true to route all outbound app traffic into virtual network (see https://learn.microsoft.com/azure/app-service/overview-vnet-integration#application-routing)
       vnetRouteAllEnabled: false
@@ -469,7 +469,7 @@ resource publicApi 'Microsoft.Web/sites@2021-01-15' = {
     serverFarmId: publicApiAppServicePlan.id
     siteConfig: {
       alwaysOn: true
-      ftpsState: 'FtpsOnly'
+      ftpsState: 'Disabled'
 
       // Set to true to route all outbound app traffic into virtual network (see https://learn.microsoft.com/azure/app-service/overview-vnet-integration#application-routing)
       vnetRouteAllEnabled: false
