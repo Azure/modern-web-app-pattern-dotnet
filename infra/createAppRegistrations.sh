@@ -52,8 +52,14 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+green='\033[0;32m'
+yellow='\e[0;33m'
+red='\e[1;31m'
+clear='\033[0m'
+
 if [[ ${#resourceGroupName} -eq 0 ]]; then
-  echo "FATAL ERROR: Missing required parameter --resource-group" 1>&2
+  printf "${red}FATAL ERROR:${clear} Missing required parameter --resource-group"
+  echo ""
   exit 6
 fi
 
@@ -70,7 +76,8 @@ keyVaultName=$(az keyvault list -g "$resourceGroupName" --query "[?name.starts_w
 appConfigSvcName=$(az appconfig list -g "$resourceGroupName" --query "[].name" -o tsv)
 
 appServiceRootUri='azurewebsites.net' # hard coded because app svc does not return the public endpoint
-frontEndWebAppName=$(az resource list -g "$resourceGroupName" --query "[?tags.\"azd-service-name\"=='web-call-center'].name" -o tsv)
+# updated az resource selection to filter to first based on https://github.com/Azure/azure-cli/issues/25214
+frontEndWebAppName=$(az resource list -g "$resourceGroupName" --query "[?tags.\"azd-service-name\"=='web'].name" -o tsv)
 frontEndWebAppUri="https://$frontEndWebAppName.$appServiceRootUri"
 
 # assumes resourceToken is located in app service frontend web app name
@@ -81,13 +88,21 @@ resourceToken=${frontEndWebAppName:4:13}
 locationOfHyphen=$(echo $resourceGroupName | awk -F "-" '{print length($0)-length($NF)}')
 environmentName=${resourceGroupName:0:$locationOfHyphen-1}
 
+
+frontDoorProfileName=$(az resource list -g $resourceGroupName --query "[? kind=='frontdoor' ].name" -o tsv)
+frontEndWebAppHostName=$(az afd endpoint list -g $resourceGroupName --profile-name $frontDoorProfileName --query "[].hostName" -o tsv --only-show-errors)
+frontEndWebAppUri="https://$frontEndWebAppHostName"
+
 substring="-rg"
 secondaryResourceGroupName=(${resourceGroupName%%$substring*})
 secondaryResourceGroupName+="-secondary-rg"
 group2Exists=$(az group exists -n $secondaryResourceGroupName)
-if [[ $group2Exists -eq 'false' ]]; then
+if [[ $group2Exists == 'false' ]]; then
     secondaryResourceGroupName=''
 fi
+
+# updated az resource selection to filter to first based on https://github.com/Azure/azure-cli/issues/25214
+mySqlServer=$(az resource list -g $resourceGroupName --query "[?type=='Microsoft.Sql/servers'].name" -o tsv)
 
 azdData=$(azd env get-values)
 isProd=''
@@ -111,7 +126,8 @@ echo "secondaryResourceGroupName=$secondaryResourceGroupName"
 echo ""
 
 if [[ ${#keyVaultName} -eq 0 ]]; then
-  echo "FATAL ERROR: Could not find Key Vault resource. Confirm the --resourceGroupName is the one created by the `azd provision` command."  1>&2
+  printf "${red}FATAL ERROR:${clear} Could not find Key Vault resource. Confirm the --resourceGroupName is the one created by the `azd provision` command."
+  echo ""
   exit 7
 fi
 
@@ -126,6 +142,7 @@ echo "apiWebAppName='$apiWebAppName'"
 echo "maxNumberOfRetries=$maxNumberOfRetries"
 
 tenantId=$(az account show --query "tenantId" -o tsv)
+
 userObjectId=$(az account show --query "id" -o tsv)
 
 echo "tenantId='$tenantId'"
@@ -139,8 +156,6 @@ fi
 
 # prod environments do not allow public network access, this must be changed before we can set values
 if [[ $isProd ]]; then
-  mySqlServer=$(az resource list -g $resourceGroupName --query "[?type=='Microsoft.Sql/servers'].name" -o tsv)
-
   # Resolves permission constraint that prevents the deploymentScript from running this command
   # https://github.com/Azure/reliable-web-app-pattern-dotnet/issues/134
   az sql server update -n $mySqlServer -g $resourceGroupName --set publicNetworkAccess="Disabled" > /dev/null
@@ -150,7 +165,8 @@ frontEndWebObjectId=$(az ad app list --filter "displayName eq '$frontEndWebAppNa
 
 if [[ ${#frontEndWebObjectId} -eq 0 ]]; then
 
-    # this web app doesn't exist and must be created    
+    # this web app doesn't exist and must be created
+    
     frontEndWebAppClientId=$(az ad app create \
         --display-name $frontEndWebAppName \
         --sign-in-audience AzureADMyOrg \
@@ -162,21 +178,28 @@ if [[ ${#frontEndWebObjectId} -eq 0 ]]; then
     echo "frontEndWebAppClientId='$frontEndWebAppClientId'"
 
     if [[ ${#frontEndWebAppClientId} -eq 0 ]]; then
-      echo "FATAL ERROR: Failed to create front-end app registration" 1>&2
+      printf "${red}FATAL ERROR:${clear} Unknown Azure AD error. Failed to create front-end app registration."
+      echo ""
+      
       exit 8
     fi
+   
 
     isWebAppCreated=0
     currentRetryCount=0
     while [ $isWebAppCreated -eq 0 ]
     do
       # assumes that we only need to create client secret if the app registration did not exist
-      frontEndWebAppClientSecret=$(az ad app credential reset --id $frontEndWebAppClientId --query "password" -o tsv --only-show-errors 2> /dev/null) 
+      frontEndWebAppClientSecret=$(az ad app credential reset --id $frontEndWebAppClientId --query "password" -o tsv --only-show-errors 2> /dev/null)
       isWebAppCreated=${#frontEndWebAppClientSecret}
   
       currentRetryCount=$((currentRetryCount + 1))
       if [[ $currentRetryCount -gt $maxNumberOfRetries ]]; then
         echo "FATAL ERROR: Tried to create a client secret too many times" 1>&2
+
+        printf "${red}FATAL ERROR:${clear} Unknown Azure AD error. Could not create and retrieve a client secret. Tried to create a client secret too many times"
+        echo ""
+
         exit 14
       fi
 
@@ -190,9 +213,12 @@ if [[ ${#frontEndWebObjectId} -eq 0 ]]; then
       # sleep until the app registration is created
       sleep 3
     done
-
+    
     # prod environments do not allow public network access, this must be changed before we can set values
-    if [[ $isProd ]]; then       
+    if [[ $isProd ]]; then
+        # open the app config so that the local user can access
+        az appconfig update --name $appConfigSvcName --resource-group $resourceGroupName --enable-public-network true > /dev/null
+        
         # open the key vault so that the local user can access
         az keyvault update --name $keyVaultName --resource-group $resourceGroupName  --public-network-access Enabled > /dev/null
     fi
@@ -205,18 +231,22 @@ if [[ ${#frontEndWebObjectId} -eq 0 ]]; then
     az appconfig kv set --name $appConfigSvcName --key 'AzureAd:TenantId' --value $tenantId --yes --only-show-errors > /dev/null
     echo "Set appconfig value for: 'AzureAd:TenantId'"
 
-    #save 'AzureAd:ClientId' to App Config Svc
+    # save 'AzureAd:ClientId' to App Config Svc
     az appconfig kv set --name $appConfigSvcName --key 'AzureAd:ClientId' --value $frontEndWebAppClientId --yes --only-show-errors > /dev/null
     echo "Set appconfig value for: 'AzureAd:ClientId'"
-
+    
     # prod environments do not allow public network access
-    if [[ $isProd ]]; then        
+    if [[ $isProd ]]; then
+        # close the app config so that the local user cannot access
+        az appconfig update --name $appConfigSvcName --resource-group $resourceGroupName --enable-public-network false > /dev/null
+        
         # close the key vault so that the local user cannot access
         az keyvault update --name $keyVaultName --resource-group $resourceGroupName  --public-network-access Disabled > /dev/null
     fi
 else
     echo "frontend app registration objectId=$frontEndWebObjectId already exists. Delete the '$frontEndWebAppName' app registration to recreate or reset the settings."
     frontEndWebAppClientId=$(az ad app show --id $frontEndWebObjectId --query "appId" -o tsv)
+    echo "frontEndWebAppClientId='$frontEndWebAppClientId'"
     canSetSecondAzureLocation=2
 fi
 
@@ -248,7 +278,9 @@ if [[ ${#apiObjectId} -eq 0 ]]; then
       
       currentRetryCount=$((currentRetryCount + 1))
       if [[ $currentRetryCount -gt $maxNumberOfRetries ]]; then
-          echo 'FATAL ERROR: Tried to create retrieve the apiObjectId too many times' 1>&2
+          printf "${red}FATAL ERROR:${clear} Unknown Azure AD error. Tried to create retrieve the apiObjectId too many times."
+          echo ""
+
           exit 15
       fi
 
@@ -285,7 +317,9 @@ if [[ ${#apiObjectId} -eq 0 ]]; then
         currentRetryCount=$((currentRetryCount + 1))
         echo "... trying to add scope attempt #$currentRetryCount"
         if [[ $currentRetryCount -gt $maxNumberOfRetries ]]; then
-            echo 'FATAL ERROR: Tried to set scopes too many times' 1>&2
+            printf "${red}FATAL ERROR:${clear} Unknown Azure AD error. Tried to set scopes too many times."
+            echo ""
+
             exit 16
         fi
       fi
@@ -306,7 +340,9 @@ if [[ ${#apiObjectId} -eq 0 ]]; then
         echo "... trying to retrieve permId attempt #$currentRetryCount"
 
         if [[ $currentRetryCount -gt $maxNumberOfRetries ]]; then
-            echo 'FATAL ERROR: Tried to retrieve permissionId too many times' 1>&2
+            printf "${red}FATAL ERROR:${clear} Unknown Azure AD error. Tried to retrieve permissionId too many times"
+            echo ""
+
             exit 17
         fi
       else
@@ -329,14 +365,16 @@ if [[ ${#apiObjectId} -eq 0 ]]; then
           --headers 'Content-Type=application/json' \
           --body "{api:{preAuthorizedApplications:[{appId:'$preAuthedAppApplicationId',delegatedPermissionIds:['$permId']}]}}" 2> /dev/null
 
-      authorizedApps=$(az ad app show --id $apiObjectId --query "api.preAuthorizedApplications" -o tsv 2> /dev/null)
+      authorizedApps=$(az ad app show --id $apiObjectId --query "api.preAuthorizedApplications[].appId" -o tsv 2> /dev/null)
 
       if [[ ${#authorizedApps} -eq 0 ]]; then
         currentRetryCount=$((currentRetryCount + 1))
         echo "... trying to set front-end app as an preAuthorized client attempt #$currentRetryCount"
 
         if [[ $currentRetryCount -gt $maxNumberOfRetries ]]; then
-            echo 'FATAL ERROR: Tried to authorize the front-end app too many times' 1>&2
+            printf "${red}FATAL ERROR:${clear} Unknown Azure AD error. Tried to authorize the front-end app too many times"
+            echo ""
+
             exit 18
         fi
       else
@@ -346,6 +384,12 @@ if [[ ${#apiObjectId} -eq 0 ]]; then
 
       sleep 3
     done
+    
+    # prod environments do not allow public network access, this must be changed before we can set values
+    if [[ $isProd ]]; then
+        # open the app config so that the local user can access
+        az appconfig update --name $appConfigSvcName --resource-group $resourceGroupName --enable-public-network true > /dev/null
+    fi
 
     # save 'App:RelecloudApi:AttendeeScope' scope for role to App Config Svc
     az appconfig kv set --name $appConfigSvcName --key 'App:RelecloudApi:AttendeeScope' --value "api://$apiWebAppClientId/$scopeName" --yes --only-show-errors > /dev/null
@@ -359,6 +403,11 @@ if [[ ${#apiObjectId} -eq 0 ]]; then
     az appconfig kv set --name $appConfigSvcName --key 'Api:AzureAd:TenantId' --value $tenantId --yes --only-show-errors > /dev/null
     echo "Set appconfig value for: 'Api:AzureAd:TenantId'"
 
+    # prod environments do not allow public network access
+    if [[ $isProd ]]; then
+        # close the app config so that the local user cannot access
+        az appconfig update --name $appConfigSvcName --resource-group $resourceGroupName --enable-public-network false > /dev/null
+    fi
 else
   echo "API app registration objectId=$apiObjectId already exists. Delete the '$apiWebAppName' app registration to recreate or reset the settings."
   canSetSecondAzureLocation=3
@@ -380,15 +429,21 @@ if [[ ${#secondaryResourceGroupName} -gt 0 && $canSetSecondAzureLocation -eq 1 ]
   echo "secondaryAppConfigSvcName=$secondaryAppConfigSvcName"
 
   if [[ ${#secondaryKeyVaultName} -eq 0 ]]; then
-    echo "No secondary vault to configure"
+    echo ""
+    printf "${green}Finished successfully${clear} after configuring 1 Key Vault and 1 App Configuration Service!"
+    echo ""
+    echo ""
     exit 0
   fi
 
   echo ""
   echo "Now configuring secondary key vault"
 
-    # prod environments do not allow public network access, this must be changed before we can set values
+  # prod environments do not allow public network access, this must be changed before we can set values
   if [[ $isProd ]]; then
+      # open the app config so that the local user can access
+      az appconfig update --name $secondaryAppConfigSvcName --resource-group $secondaryResourceGroupName --enable-public-network true > /dev/null
+      
       # open the key vault so that the local user can access
       az keyvault update --name $secondaryKeyVaultName --resource-group $secondaryResourceGroupName  --public-network-access Enabled > /dev/null
   fi
@@ -421,10 +476,17 @@ if [[ ${#secondaryResourceGroupName} -gt 0 && $canSetSecondAzureLocation -eq 1 ]
 
   # prod environments do not allow public network access
   if [[ $isProd ]]; then
+      # close the app config so that the local user cannot access
+      az appconfig update --name $secondaryAppConfigSvcName --resource-group $secondaryResourceGroupName --enable-public-network false > /dev/null
+      
       # close the key vault so that the local user cannot access
       az keyvault update --name $secondaryKeyVaultName --resource-group $secondaryResourceGroupName  --public-network-access Disabled > /dev/null
   fi
 
+  echo ""
+  printf "${green}Finished successfully${clear} after configuring 2 Key Vaults and 2 App Configuration Services!"
+  echo ""
+  echo ""
 elif [[ $canSetSecondAzureLocation -eq 2 ]]; then
   echo ""
   echo "skipped setup for secondary azure location because frontend app registration objectId=$frontEndWebObjectId already exists."
