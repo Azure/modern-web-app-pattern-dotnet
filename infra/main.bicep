@@ -186,8 +186,8 @@ module azureFrontDoor './azureFrontDoor.bicep' = {
   params: {
     tags: tags
     logAnalyticsWorkspaceIdForDiagnostics: logAnalyticsForDiagnostics.outputs.LOG_WORKSPACE_ID
-    primaryBackendAddress: primaryResources.outputs.WEB_PUBLIC_URI
-    secondaryBackendAddress: isMultiLocationDeployment ? secondaryResources.outputs.WEB_PUBLIC_URI : 'none'
+    primaryBackendAddress: primaryResources.outputs.WEB_CALLCENTER_URI
+    secondaryBackendAddress: isMultiLocationDeployment ? secondaryResources.outputs.WEB_CALLCENTER_URI : 'none'
   }
 }
 

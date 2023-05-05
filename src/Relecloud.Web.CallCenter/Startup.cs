@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.TokenCacheProviders.Distributed;
 using Microsoft.Identity.Web.UI;
@@ -171,11 +172,33 @@ namespace Relecloud.Web
                 });
             }
 
+            // this sample uses AFD for the URL registered with Azure AD to make it easier to get started
+            // but we recommend host name preservation for production scenarios
+            // https://learn.microsoft.com/en-us/azure/architecture/best-practices/host-name-preservation
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                // not needed when using host name preservation
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedHost | ForwardedHeaders.XForwardedProto;
+            });
+
             services.Configure<OpenIdConnectOptions>(Configuration.GetSection("AzureAd"));
             services.Configure((Action<MicrosoftIdentityOptions>)(options =>
             {
+                var frontDoorUri = Configuration["App:FrontDoorUri"];
+                var callbackPath = Configuration["AzureAd:CallbackPath"];
+
                 options.Events = new OpenIdConnectEvents
                 {
+                    OnRedirectToIdentityProvider = ctx => {
+                        // not needed when using host name preservation
+                        ctx.ProtocolMessage.RedirectUri = $"https://{frontDoorUri}{callbackPath}";
+                        return Task.CompletedTask;
+                    },
+                    OnRedirectToIdentityProviderForSignOut = ctx => {
+                        // not needed when using host name preservation
+                        ctx.ProtocolMessage.PostLogoutRedirectUri = $"https://{frontDoorUri}";
+                        return Task.CompletedTask;
+                    },
                     OnTokenValidated = async ctx =>
                     {
                         await CreateOrUpdateUserInformation(ctx);
@@ -224,6 +247,12 @@ namespace Relecloud.Web
                 // https://aka.ms/IdentityModel/PII
                 IdentityModelEventSource.ShowPII = true;
             }
+
+            // this sample uses AFD for the URL registered with Azure AD to make it easier to get started
+            // but we recommend host name preservation for production scenarios
+            // https://learn.microsoft.com/en-us/azure/architecture/best-practices/host-name-preservation
+            app.UseForwardedHeaders();
+            app.UseRetryTestingMiddleware();
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
