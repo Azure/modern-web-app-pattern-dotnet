@@ -211,7 +211,7 @@ namespace Relecloud.Web.Public
             catch (Exception ex)
             {
                 var logger = ctx.HttpContext.RequestServices.GetRequiredService<ILogger<Startup>>();
-                logger.LogError(ex, "Unhandled exception from Startup.TransformRoleClaims");
+                logger.LogError(ex, "Unhandled exception from Startup.CreateOrUpdateUserInformation");
             }
         }
 

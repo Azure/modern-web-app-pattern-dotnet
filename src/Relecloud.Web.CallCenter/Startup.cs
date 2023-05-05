@@ -178,7 +178,6 @@ namespace Relecloud.Web
                 {
                     OnTokenValidated = async ctx =>
                     {
-                        TransformRoleClaims(ctx);
                         await CreateOrUpdateUserInformation(ctx);
                     }
                 };
@@ -205,31 +204,7 @@ namespace Relecloud.Web
             catch (Exception ex)
             {
                 var logger = ctx.HttpContext.RequestServices.GetRequiredService<ILogger<Startup>>();
-                logger.LogError(ex, "Unhandled exception from Startup.TransformRoleClaims");
-            }
-        }
-
-        private static void TransformRoleClaims(TokenValidatedContext ctx)
-        {
-            try
-            {
-                const string RoleClaim = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
-                if (ctx.Principal?.Identity is not null)
-                {
-                    // Find all claims of the requested claim type, split their values by spaces
-                    // and then take the ones that aren't yet on the principal individually.
-                    var claims = ctx.Principal.FindAll("extension_AppRoles")
-                    .SelectMany(c => c.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                    .Where(s => !ctx.Principal.HasClaim(RoleClaim, s)).ToList();
-
-                    // Add all new claims to the principal's identity.
-                    ((ClaimsIdentity)ctx.Principal.Identity).AddClaims(claims.Select(s => new Claim(RoleClaim, s)));
-                }
-            }
-            catch (Exception ex)
-            {
-                var logger = ctx.HttpContext.RequestServices.GetRequiredService<ILogger<Startup>>();
-                logger.LogError(ex, "Unhandled exception from Startup.TransformRoleClaims");
+                logger.LogError(ex, "Unhandled exception from Startup.CreateOrUpdateUserInformation");
             }
         }
 
