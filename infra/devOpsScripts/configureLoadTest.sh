@@ -11,8 +11,8 @@
 ################################################################################################
 
 echo 'Now building the tool...'
-csproj_path="./tools/Azure.LoadTest.Tool/Azure.LoadTest.Tool/Azure.LoadTest.Tool.csproj"
-publish_path="./tools/Azure.LoadTest.Tool/publish"
+csproj_path="../../tools/Azure.LoadTest.Tool/Azure.LoadTest.Tool/Azure.LoadTest.Tool.csproj"
+publish_path="../../tools/Azure.LoadTest.Tool/publish"
 nohup dotnet publish "$csproj_path" --output "$publish_path" > dotnet_publish.log 2>&1 &
 
 PID=$!
