@@ -27,9 +27,6 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-
   tags: tags
 }
 
-@description('Ensures that the idempotent scripts are executed each time the deployment is executed')
-param uniqueScriptId string = newGuid()
-
 @description('Built in \'Data Reader\' role ID: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles')
 var appConfigDataReaderRoleDefinitionId = '516239f1-63e1-4d78-a4de-a74fb236a071'
 
@@ -1022,3 +1019,5 @@ output PUBLIC_API_URI string = publicApi.properties.defaultHostName
 output PUBLIC_API_APP_INSIGHTS_RESOURCEID string = webApplicationInsightsResources.outputs.APPLICATIONINSIGHTS_RESOURCE_ID
 output PUBLIC_API_APP_SERVICE_RESOURCEID string = publicApi.id
 output CALLCENTER_API_URI string = callcenterApi.properties.defaultHostName
+output KEY_VAULT_NAME string = kv.name
+output APP_CONFIGURATION_SVC_NAME string = appConfigSvc.name

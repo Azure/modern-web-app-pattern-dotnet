@@ -191,6 +191,33 @@ module azureFrontDoor './azureFrontDoor.bicep' = {
   }
 }
 
+module primaryKeyVaultDiagnostics 'azureKeyVaultDiagnostics.bicep' = {
+  name: 'primaryKeyVaultDiagnostics'
+  scope: primaryResourceGroup
+  params: {
+    keyVaultName: primaryResources.outputs.KEY_VAULT_NAME
+    logAnalyticsWorkspaceIdForDiagnostics: logAnalyticsForDiagnostics.outputs.LOG_WORKSPACE_ID
+  }
+}
+
+module secondaryAppConfigSvcFrontDoorUri 'appConfigSvcKeyValue.bicep' = if (isMultiLocationDeployment) {
+  name: 'secondaryKeyValue'
+  scope: secondaryResourceGroup
+  params:{
+    appConfigurationServiceName: isMultiLocationDeployment ? secondaryResources.outputs.APP_CONFIGURATION_SVC_NAME : 'none'
+    frontDoorUri: azureFrontDoor.outputs.HOST_NAME
+  }
+}
+
+module secondaryKeyVaultDiagnostics 'azureKeyVaultDiagnostics.bicep' = if (isMultiLocationDeployment) {
+  name: 'secondaryKeyVaultDiagnostics'
+  scope: secondaryResourceGroup
+  params: {
+    keyVaultName: isMultiLocationDeployment ? secondaryResources.outputs.KEY_VAULT_NAME : 'none'
+    logAnalyticsWorkspaceIdForDiagnostics: logAnalyticsForDiagnostics.outputs.LOG_WORKSPACE_ID
+  }
+}
+
 module azureLoadTest './azureLoadTest.bicep' = {
   name: 'azureLoadTest'
   scope: primaryResourceGroup
