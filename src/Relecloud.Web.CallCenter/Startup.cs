@@ -16,7 +16,6 @@ using Relecloud.Web.CallCenter.Services.RelecloudApiServices;
 using Relecloud.Web.Models.ConcertContext;
 using Relecloud.Web.Models.Services;
 using System.Diagnostics;
-using System.Security.Claims;
 
 namespace Relecloud.Web
 {
@@ -42,6 +41,7 @@ namespace Relecloud.Web
             AddConcertSearchService(services);
             AddTicketPurchaseService(services);
             AddAzureCacheForRedis(services);
+            services.AddHealthChecks();
 
             // Add support for session state.
             // NOTE: If there is a distibuted cache service (e.g. Redis) then this will be used to store session data.
@@ -263,6 +263,8 @@ namespace Relecloud.Web
             app.UseAuthorization();
 
             app.UseSession(); // required for carts
+
+            app.MapHealthChecks("/healthz");
 
             app.UseEndpoints(endpoints =>
             {
