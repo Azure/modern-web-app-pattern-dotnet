@@ -18,8 +18,8 @@ namespace Azure.LoadTest.Tool.Providers
 
             var pathToConfigDirectory = GetPathToAzdConfigFile(options.EnvironmentName);
 
-            // by default ini configuration provider does not read files with the extension ".env"
-            // so this behavior is overridden
+            // By default, ini configuration provider does not read files with the extension ".env"
+            // So, this behavior is overridden.
             var dotnetConfigurationProvider = new PhysicalFileProvider(pathToConfigDirectory, ExclusionFilters.None);
 
             _configuration = new ConfigurationBuilder()
@@ -27,21 +27,20 @@ namespace Azure.LoadTest.Tool.Providers
                 .Build();
         }
 
+
         /// AZD uses a special directory to store configuration files
         /// the well-known name for this directory is the ".azure" directory
         /// in this folder variables are stored in folders named by environment
         private string GetPathToAzdConfigFile(string environmentName)
         {
             var azdDirectory = GetAzdDirectory(new DirectoryInfo(Directory.GetCurrentDirectory()));
-
             return Path.Combine(azdDirectory.FullName, environmentName);
 
-            /// this operation will recurse upward and locate our azure directory
             DirectoryInfo GetAzdDirectory(DirectoryInfo workingDirectory)
             {
                 const string AZD_DIRECTORY = ".azure";
-
-                var azureDirectory = workingDirectory.GetDirectories().FirstOrDefault(directory => AZD_DIRECTORY.Equals(directory.Name, StringComparison.Ordinal));
+                var azureDirectory = workingDirectory.GetDirectories()
+                    .FirstOrDefault(directory => AZD_DIRECTORY.Equals(directory.Name, StringComparison.Ordinal));
 
                 if (azureDirectory != null)
                 {
@@ -57,6 +56,7 @@ namespace Azure.LoadTest.Tool.Providers
             }
         }
 
+
         /// <summary>
         /// Returns the required AZD configuration value AZURE_RESOURCE_GROUP
         /// </summary>
@@ -64,7 +64,8 @@ namespace Azure.LoadTest.Tool.Providers
         public string GetResourceGroupName()
         {
             const string AZURE_RESOURCE_GROUP = "AZURE_RESOURCE_GROUP";
-            return _configuration.GetValue<string>(AZURE_RESOURCE_GROUP) ?? throw new InvalidOperationException($"Missing required configuration {AZURE_RESOURCE_GROUP}");
+            return _configuration.GetValue<string>(AZURE_RESOURCE_GROUP)
+                   ?? throw new InvalidOperationException($"Missing required configuration {AZURE_RESOURCE_GROUP}");
         }
 
         /// <summary>
@@ -74,7 +75,8 @@ namespace Azure.LoadTest.Tool.Providers
         public string GetSubscriptionId()
         {
             const string AZURE_SUBSCRIPTION_ID = "AZURE_SUBSCRIPTION_ID";
-            return _configuration.GetValue<string>(AZURE_SUBSCRIPTION_ID) ?? throw new InvalidOperationException($"Missing required configuration {AZURE_SUBSCRIPTION_ID}");
+            return _configuration.GetValue<string>(AZURE_SUBSCRIPTION_ID)
+                ?? throw new InvalidOperationException($"Missing required configuration {AZURE_SUBSCRIPTION_ID}");
         }
 
         /// <summary>
@@ -84,7 +86,8 @@ namespace Azure.LoadTest.Tool.Providers
         public string GetAzureLoadTestServiceName()
         {
             const string AZURE_LOAD_TEST_NAME = "AZURE_LOAD_TEST_NAME";
-            return _configuration.GetValue<string>(AZURE_LOAD_TEST_NAME) ?? throw new InvalidOperationException($"Missing required configuration {AZURE_LOAD_TEST_NAME}");
+            return _configuration.GetValue<string>(AZURE_LOAD_TEST_NAME)
+                ?? throw new InvalidOperationException($"Missing required configuration {AZURE_LOAD_TEST_NAME}");
         }
 
 
@@ -95,7 +98,8 @@ namespace Azure.LoadTest.Tool.Providers
         public IEnumerable<string> GetAzureLoadTestAppComponentsResourceIds()
         {
             const string RESOURCE_IDS = "APP_COMPONENTS_RESOURCE_IDS";
-            var resourceIds = _configuration.GetValue<string>(RESOURCE_IDS) ?? throw new InvalidOperationException($"Missing required configuration {RESOURCE_IDS}");
+            var resourceIds = _configuration.GetValue<string>(RESOURCE_IDS)
+                ?? throw new InvalidOperationException($"Missing required configuration {RESOURCE_IDS}");
 
             return resourceIds.Split(',').AsEnumerable();
         }
@@ -108,7 +112,8 @@ namespace Azure.LoadTest.Tool.Providers
         public string GetPathToJMeterFile()
         {
             const string AZURE_LOAD_TEST_FILE = "AZURE_LOAD_TEST_FILE";
-            return _configuration.GetValue<string>(AZURE_LOAD_TEST_FILE) ?? throw new InvalidOperationException($"Missing required configuration {AZURE_LOAD_TEST_FILE}");
+            return _configuration.GetValue<string>(AZURE_LOAD_TEST_FILE)
+                ?? throw new InvalidOperationException($"Missing required configuration {AZURE_LOAD_TEST_FILE}");
         }
 
         /// <summary>
