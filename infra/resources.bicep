@@ -774,6 +774,24 @@ module redisSetup 'azureRedisCache.bicep' = {
   }
 }
 
+var privateEndpointNameForApim = 'privateEndpointForApim'
+module apimSetup 'azureApim.bicep' = {
+  name: 'apimSetup'
+  scope: resourceGroup()
+  params: {
+    isProd: isProd
+    location: location
+    resourceToken: resourceToken
+    tags: tags
+    privateEndpointNameForApim: privateEndpointNameForApim
+    privateEndpointVnetName: vnet.name
+    privateEndpointSubnetName: privateEndpointSubnetName
+    publisherName: 'Kevin P Kraus'
+    publisherEmail: 'kevinpkraus@microsoft.com'
+  }
+}
+
+
 module storageSetup 'azureStorage.bicep' = {
   name: 'storageSetup'
   scope: resourceGroup()
