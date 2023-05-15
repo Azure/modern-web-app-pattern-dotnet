@@ -92,3 +92,5 @@ resource privateDnsZoneNameForApim_link 'Microsoft.Network/privateDnsZones/virtu
 resource vnet 'Microsoft.Network/virtualNetworks@2020-07-01' existing = {
   name: privateEndpointVnetName
 }
+
+output privateDnsZoneId string = privateDnsZoneNameForApim.id
