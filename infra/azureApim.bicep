@@ -53,7 +53,7 @@ resource privateEndpointForApim 'Microsoft.Network/privateEndpoints@2020-07-01' 
         properties: {
           privateLinkServiceId: apiManagementService.id
           groupIds: [
-            'apim'
+            'Gateway'
           ]
         }
       }
@@ -84,9 +84,6 @@ resource privateDnsZoneNameForApim_link 'Microsoft.Network/privateDnsZones/virtu
       id: vnet.id
     }
   }
-  dependsOn: [
-    vnet
-  ]
 }
 
 resource vnet 'Microsoft.Network/virtualNetworks@2020-07-01' existing = {
