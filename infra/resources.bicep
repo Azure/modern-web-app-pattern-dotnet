@@ -786,8 +786,8 @@ module apimSetup 'azureApim.bicep' = {
     privateEndpointNameForApim: privateEndpointNameForApim
     privateEndpointVnetName: vnet.name
     privateEndpointSubnetName: privateEndpointSubnetName
-    publisherName: 'Kevin P Kraus'
-    publisherEmail: 'kevinpkraus@microsoft.com'
+    publisherName: 'Publisher'
+    publisherEmail: 'publisher@microsoft.com'
   }
 }
 
