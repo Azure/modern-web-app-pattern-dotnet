@@ -66,7 +66,9 @@ jobs:
         run: azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}-rg
 
       - name: Azure Dev Deploy
-        run: azd deploy --no-prompt
+        run: |
+          chmod +x ./infra/devOpsScripts/configureLoadTest.sh
+          azd deploy --no-prompt
         env:
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
 
