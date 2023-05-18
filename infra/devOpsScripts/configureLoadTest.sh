@@ -18,6 +18,14 @@ nohup dotnet publish "$csproj_path" --output "$publish_path" > dotnet_publish.lo
 PID=$!
 wait $PID
 
+echo "#### DEBUG - dotnet_publish.log"
+echo "working directory: $(pwd)"
+echo "publish_path: ${publish_path}"
+echo "csproj_path: ${csproj_path}"
+echo "dotnet_publish.log contents:"
+cat dotnet_publish.log
+echo "#### END DEBUG"
+
 if [ $? -ne 0 ]; then
     echo "An error occurred during dotnet publish. The file dotnet_publish.log has more details." >&2
     exit 1
@@ -32,6 +40,14 @@ nohup "$publish_path/Azure.LoadTest.Tool.exe" --environment-name "$azdEnvironmen
 
 PID=$!
 wait $PID
+
+echo "#### DEBUG - cat loadtest_tool.log"
+echo "working directory: $(pwd)"
+echo "publish_path: ${publish_path}"
+echo "csproj_path: ${csproj_path}"
+echo "loadtest_tool.log contents:"
+cat loadtest_tool.log
+echo "#### END DEBUG"
 
 if [ $? -eq 0 ]; then
     echo "An error occurred while running the load test tool app. The file loadtest_tool.log has more details."
