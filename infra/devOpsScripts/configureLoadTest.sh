@@ -36,7 +36,7 @@ azdEnvironmentName=$(azd env list | grep -w true | awk '{print $1}')
 echo "Discovered AZD environment: $azdEnvironmentName"
 
 echo 'Now running the Azure.LoadTest.Tool...'
-nohup "$publish_path/Azure.LoadTest.Tool.exe" --environment-name "$azdEnvironmentName" > loadtest_tool.log 2>&1 &
+nohup "$publish_path/Azure.LoadTest.Tool" --environment-name "$azdEnvironmentName" > loadtest_tool.log 2>&1 &
 
 PID=$!
 wait $PID
