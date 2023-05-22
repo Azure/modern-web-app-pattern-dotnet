@@ -8,10 +8,10 @@ param privateEndpointNameForApim string
 param privateEndpointVnetName string
 param privateEndpointSubnetName string
 
-@description('Ensures that the idempotent scripts are executed each time the deployment is executed')
-param uniqueScriptId string = newGuid()
-
+@description('The Azure region name where these resources will be created')
 param location string
+
+@description('Associated tags to attach to deployed resources')
 param tags object
 
 @description('The email address of the owner of the service')
@@ -23,7 +23,7 @@ param publisherEmail string
 param publisherName string
 
 var apimSkuName = isProd ? 'Standard' : 'Developer'
-var apimSkuCount = isProd ? 2 : 1
+var apimSkuCount = 1
 
 resource apiManagementService 'Microsoft.ApiManagement/service@2021-08-01' = {
   name: '${resourceToken}-apim'
@@ -89,5 +89,3 @@ resource privateDnsZoneNameForApim_link 'Microsoft.Network/privateDnsZones/virtu
 resource vnet 'Microsoft.Network/virtualNetworks@2020-07-01' existing = {
   name: privateEndpointVnetName
 }
-
-output privateDnsZoneId string = privateDnsZoneNameForApim.id
