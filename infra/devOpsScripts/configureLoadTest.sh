@@ -57,6 +57,7 @@ echo "#### END DEBUG"
 
 if [ $? -eq 0 ]; then
     echo "An error occurred while running the load test tool app. The file loadtest_tool.log has more details."
+    exit 1
 else
     echo "Command failed with exit code $?."
 fi
