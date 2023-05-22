@@ -44,6 +44,10 @@ wait $PID
 echo "#### DEBUG - cat loadtest_tool.log"
 echo "Environment name: "
 echo $azdEnvironmentName | sed 's/./& /g'
+echo "ENV file contents (Working directory):"
+cat .azure/$azdEnvironmentName/.env 
+echo "ENV file contents (Parent): "
+cat ../../.azure/$azdEnvironmentName/.env 
 echo "working directory: $(pwd)"
 echo "publish_path: ${publish_path}"
 echo "csproj_path: ${csproj_path}"
