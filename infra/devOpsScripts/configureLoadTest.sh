@@ -42,6 +42,8 @@ PID=$!
 wait $PID
 
 echo "#### DEBUG - cat loadtest_tool.log"
+echo "Environment name: "
+echo $azdEnvironmentName | sed 's/./& /g'
 echo "working directory: $(pwd)"
 echo "publish_path: ${publish_path}"
 echo "csproj_path: ${csproj_path}"
