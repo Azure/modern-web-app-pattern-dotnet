@@ -14,10 +14,12 @@ param location string
 @description('Associated tags to attach to deployed resources')
 param tags object
 
+//This parameter is required for APIM resource creation but is not being used
 @description('The email address of the owner of the service')
 @minLength(1)
 param publisherEmail string
 
+//This parameter is required for APIM resource creation but is not being used
 @description('The name of the owner of the service')
 @minLength(1)
 param publisherName string
