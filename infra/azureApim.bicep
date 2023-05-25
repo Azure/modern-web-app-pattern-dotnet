@@ -8,6 +8,7 @@ param isProd bool
 param privateEndpointNameForApim string
 @description('Name of vnet for private endpoint')
 param privateEndpointVnetName string
+@description('Name of subnet for private endpoint')
 param privateEndpointSubnetName string
 
 @description('The Azure region name where these resources will be created')
