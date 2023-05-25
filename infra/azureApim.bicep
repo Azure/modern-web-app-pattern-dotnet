@@ -4,6 +4,7 @@ param resourceToken string
 @description('Enables the template to choose different SKU by environment')
 param isProd bool
 
+@description('Name for private endpoint')
 param privateEndpointNameForApim string
 param privateEndpointVnetName string
 param privateEndpointSubnetName string
