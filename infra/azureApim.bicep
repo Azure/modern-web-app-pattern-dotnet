@@ -6,6 +6,7 @@ param isProd bool
 
 @description('Name for private endpoint')
 param privateEndpointNameForApim string
+@description('Name of vnet for private endpoint')
 param privateEndpointVnetName string
 param privateEndpointSubnetName string
 
