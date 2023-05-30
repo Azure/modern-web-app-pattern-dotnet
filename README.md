@@ -8,9 +8,6 @@ This reference implementation provides a production-grade web application that u
 - [Azure Architecture Center guidance](#azure-architecture-center-guidance)
 -->
 - [Guidance](guidance.md)
-<!-- no videos at this time
-- [6 videos on the reliable web app pattern for .NET](#videos)
--->
 - [Architecture](#architecture)
 - [Workflow](#workflow)
 - [Steps to deploy the reference implementation](#steps-to-deploy-the-reference-implementation)
@@ -29,7 +26,7 @@ This project has a six-part video series that details the reliable web app patte
 
 ## Architecture
 
-![architecture diagram](./assets/icons/ModernWebAppArchitectureDiagram.png)
+![architecture diagram](./assets/guide/ModernWebAppArchitectureDiagram.png)
 
 ## Workflow
 
