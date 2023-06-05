@@ -57,10 +57,6 @@ echo "#### END DEBUG"
 
 if [ $? -eq 0 ]; then
     echo "An error occurred while running the load test tool app. The file loadtest_tool.log has more details."
-   
-    echo ""
-    echo "loadtest_tool.log contents:"
-    cat loadtest_tool.log
     
     echo ""
     echo "log.txt contents:"

@@ -62,9 +62,13 @@ namespace Azure.LoadTest.Tool
 
             var appComponents = await _appComponentsMapper.MapComponentsAsync(azureResourceIds, cancellation);
 
+            _logger.LogInformation("Associating components for testId: {testId}", testId);
             await _altOperator.AssociateAppComponentsAsync(dataPlaneUri, testId, appComponents);
 
+            _logger.LogInformation("Starting testId: {testId}", testId);
             await _altOperator.StartLoadTestAsync(dataPlaneUri, testId);
+
+            _logger.LogInformation("Test was successfully started");
         }
 
         private async Task<string> GetAzureLoadTestDataPlaneUriAsync(string resourceGroupName, string loadTestName, CancellationToken cancellation)
