@@ -260,7 +260,9 @@ output AZURE_LOAD_TEST_NAME string = azureLoadTest.outputs.loadTestServiceName
 // path to the file name will be relative to the tool that uploads the file
 output AZURE_LOAD_TEST_FILE string = '../../assets/loadtest/api-loadtest.jmx'
 output APP_COMPONENTS_RESOURCE_IDS string = '${primaryResources.outputs.PUBLIC_API_APP_INSIGHTS_RESOURCEID},${primaryResources.outputs.PUBLIC_API_APP_SERVICE_RESOURCEID}'
-// note that the reqiured param AZURE_SUBSCRIPTION_ID is populated during AZD init
+
+// adding AZURE_SUBSCRIPTION_ID output to account for non-interactive exectuions where it does not get populated in env.ini
+output AZURE_SUBSCRIPTION_ID string = subscription().subscriptionId 
 
 // the following settings will be used as environment vars by the 'basic-test.jmx' file
 output ALT_ENV_PARAM_X1 string = 'domain,${primaryResources.outputs.WEB_PUBLIC_URI}'
@@ -268,3 +270,4 @@ output ALT_ENV_PARAM_X2 string = 'duration_in_sec,120'
 output ALT_ENV_PARAM_X3 string = 'protocol,https'
 output ALT_ENV_PARAM_X4 string = 'ramp_up_time,10'
 output ALT_ENV_PARAM_X5 string = 'threads_per_engine,5'
+
