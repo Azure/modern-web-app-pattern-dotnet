@@ -64,7 +64,7 @@ if [ $? -eq 0 ]; then
     
     echo ""
     echo "log.txt contents:"
-    cat log.txt
+    cat $(ls | grep -E "^log[0-9]{8}\.txt$" | tail -n 1)
 
     exit 1
 
