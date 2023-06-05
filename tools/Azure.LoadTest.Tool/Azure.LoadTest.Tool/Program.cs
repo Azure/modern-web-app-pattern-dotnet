@@ -78,8 +78,6 @@ namespace Azure.LoadTest.Tool
                 try
                 {
                     await myService.CreateTestPlanAsync(token);
-
-
                 }
                 catch (Exception ex)
                 {
