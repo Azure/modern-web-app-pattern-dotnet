@@ -265,9 +265,11 @@ output APP_COMPONENTS_RESOURCE_IDS string = '${primaryResources.outputs.PUBLIC_A
 output AZURE_SUBSCRIPTION_ID string = subscription().subscriptionId 
 
 // the following settings will be used as environment vars by the 'basic-test.jmx' file
-output ALT_ENV_PARAM_X1 string = 'domain,${primaryResources.outputs.WEB_PUBLIC_URI}'
-output ALT_ENV_PARAM_X2 string = 'duration_in_sec,120'
+output ALT_ENV_PARAM_X1 string = 'apihost,${primaryResources.outputs.WEB_PUBLIC_URI}'
+output ALT_ENV_PARAM_X2 string = 'duration_seconds,120'
 output ALT_ENV_PARAM_X3 string = 'protocol,https'
-output ALT_ENV_PARAM_X4 string = 'ramp_up_time,10'
+output ALT_ENV_PARAM_X4 string = 'rampup_seconds,10'
 output ALT_ENV_PARAM_X5 string = 'threads_per_engine,5'
-
+output ALT_ENV_PARAM_X6 string = 'virtualusers,5'
+// TODO - as we integrate with APIM we'll need to share an auth token that supports load testing
+output ALT_ENV_PARAM_X7 string = 'authtoken,NaN'
