@@ -10,6 +10,11 @@
 # reader needs to perform to tryout the sample.
 ################################################################################################
 
+green='\033[0;32m'
+yellow='\e[0;33m'
+red='\e[1;31m'
+clear='\033[0m'
+
 echo 'Now building the tool...'
 csproj_path="../../tools/Azure.LoadTest.Tool/Azure.LoadTest.Tool/Azure.LoadTest.Tool.csproj"
 publish_path="../../tools/Azure.LoadTest.Tool/publish"
@@ -55,15 +60,9 @@ echo "loadtest_tool.log contents:"
 cat loadtest_tool.log
 echo "#### END DEBUG"
 
-if [ $? -eq 0 ]; then
-    echo "An error occurred while running the load test tool app. The file loadtest_tool.log has more details."
-    
-    echo ""
-    echo "log.txt contents:"
-    cat $(ls | grep -E "^log[0-9]{8}\.txt$" | tail -n 1)
-
+if [ $? -ene 0 ]; then
+    printf "${red}An error occurred:${clear} The file loadtest_tool.log has more details."
     exit 1
-
 else
-    echo "Command failed with exit code $?."
+    printf "${green}Success:${clear} Load test was uploaded and started"
 fi
