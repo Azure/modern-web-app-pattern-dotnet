@@ -77,9 +77,7 @@ jobs:
         # AZD deploy uses an AZD hook to execute the load test tool that will upload load test files
         # uploading the AZD load test requires a CLI login to authenticate
       - name: Azure Dev Deploy
-        run: |
-          chmod +x ./infra/devOpsScripts/configureLoadTest.sh
-          azd deploy --no-prompt
+        run: azd deploy --no-prompt
         env:
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
 

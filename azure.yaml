@@ -22,7 +22,7 @@ services:
           shell: sh
           interactive: true
           # executes in the context of the root folder
-          run: ../../infra/devOpsScripts/configureLoadTest.sh
+          run: chmod +x ../../infra/devOpsScripts/configureLoadTest.sh && ../../infra/devOpsScripts/configureLoadTest.sh
         windows: 
           shell: pwsh
           interactive: true
