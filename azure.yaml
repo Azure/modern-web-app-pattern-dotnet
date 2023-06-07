@@ -22,11 +22,11 @@ services:
           shell: sh
           interactive: true
           # executes in the context of the root folder
-          run: chmod +x ../../infra/devOpsScripts/configureLoadTest.sh && ../../infra/devOpsScripts/configureLoadTest.sh
+          run: ../../infra/devOpsScripts/configureLoadTest.sh
         windows: 
           shell: pwsh
           interactive: true
-          # executes in the context of the project folder
+          # executes in the context of the root folder
           run: ../../infra/devOpsScripts/configureLoadTest.ps1
   call-center-api:
     project: src/Relecloud.Web.CallCenter.Api

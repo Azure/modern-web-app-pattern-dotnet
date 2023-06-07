@@ -82,9 +82,7 @@ jobs:
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
 
       - name: QA - Validate Deployment
-        run: |
-          chmod +x ./infra/devOpsScripts/validateDeployment.sh
-          ./infra/devOpsScripts/validateDeployment.sh -g ${{ secrets.AZURE_ENV_NAME }}-rg
+        run: ./infra/devOpsScripts/validateDeployment.sh -g ${{ secrets.AZURE_ENV_NAME }}-rg
 
 
   teardown:

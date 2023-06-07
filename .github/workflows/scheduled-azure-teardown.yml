@@ -49,6 +49,4 @@ jobs:
       # https://docs.microsoft.com/en-us/azure/azure-app-configuration/faq#why-can-t-i-create-an-app-configuration-store-with-the-same-name-as-one-that-i-just-deleted
       - name: Purge App Configuration Service
         continue-on-error: true
-        run: |
-          chmod +x ./infra/devOpsScripts/appConfigSvcPurge.sh
-          ./infra/devOpsScripts/appConfigSvcPurge.sh -g ${{ secrets.AZURE_ENV_NAME }}-rg
+        run: ./infra/devOpsScripts/appConfigSvcPurge.sh -g ${{ secrets.AZURE_ENV_NAME }}-rg

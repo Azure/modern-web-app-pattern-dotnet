@@ -46,9 +46,7 @@ jobs:
         run:  azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}qa-rg
 
       - name: Azure QA Deploy
-        run: |
-            chmod +x ./infra/devOpsScripts/configureLoadTest.sh
-            azd deploy --no-prompt
+        run: azd deploy --no-prompt
         env:
           AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}qa
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
@@ -91,9 +89,7 @@ jobs:
         run:  azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}prod-rg
 
       - name: Azure Prod Deploy
-        run: |
-            chmod +x ./infra/devOpsScripts/configureLoadTest.sh
-            azd deploy --no-prompt
+        run: azd deploy --no-prompt
         env:
           AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}prod
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
