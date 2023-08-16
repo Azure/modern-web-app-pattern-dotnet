@@ -24,13 +24,14 @@
 			]
 		}
 	},
-
-	"remoteUser": "vscode",
 	"features": {
+		"ghcr.io/azure/azure-dev/azd:latest": {},
 		"ghcr.io/devcontainers/features/azure-cli:1": {},
 		"ghcr.io/devcontainers/features/common-utils:2": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {},
 		"ghcr.io/devcontainers/features/powershell:1": {},
-		"ghcr.io/devcontainers/features/sshd:1": {},
-		"ghcr.io/devcontainers/features/github-cli:1": {}
-	}
+		"ghcr.io/devcontainers/features/sshd:1": {}
+	},
+	// resolves error: dubious ownership of the workspace folder
+	"postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}"
 }
