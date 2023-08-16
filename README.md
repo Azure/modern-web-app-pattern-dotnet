@@ -1,12 +1,12 @@
 > Disclaimer: this repository is under active development. We are not accepting issues at this time. As we work through the engineering phase this content may not be functional.
 
 # Modern web app pattern for .NET
+This reference implementation provides a production-grade web application that uses best practices from our guidance and gives developers concrete examples to build their own modern web application in Azure.
 
-This reference implementation provides a production-grade web application that uses best practices from our guidance and gives developers concrete examples to build their own Modern Web Application in Azure. It simulates the journey from an on-premises ASP.NET application to a migration to Azure. It shows you what changes to make to maximize the benefits of the cloud in the [Refactor](https://learn.microsoft.com/azure/cloud-adoption-framework/digital-estate/5-rs-of-rationalization#the-five-rs-of-rationalization) phase of cloud adoption. Here's an outline of the contents in this readme:
+The modern web app pattern shows you how business goals influence incremental changes for web apps deployed to the cloud. It defines the implementation guidance you need to modernize web apps the right way. The modern web app pattern demonstrates how existing functionality changes, and is refactored, using the Strangler Fig pattern as business scenarios ask web apps to add new features and update non-functional requirements. It shows you how to use cloud design patterns in your code and choose managed services so that you can rapidly iterate in the cloud. Here's an outline of the contents in this readme:
 
-<!-- content lives in GH until published
+<!-- content lives in GH until published-->
 - [Azure Architecture Center guidance](#azure-architecture-center-guidance)
--->
 - [Guidance](guidance.md)
 - [Architecture](#architecture)
 - [Workflow](#workflow)
