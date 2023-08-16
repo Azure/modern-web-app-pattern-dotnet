@@ -1,0 +1,36 @@
+{
+	"name": "modern-web-app-pattern-dotnet",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"args": { 
+			"VARIANT": "7.0-bullseye"
+		}
+	},
+	"runArgs": ["--init", "--privileged"],
+
+	"customizations": {
+		"vscode": {	
+			"extensions": [
+				"GitHub.copilot",
+				"ms-azuretools.azure-dev",
+				"ms-azuretools.vscode-azureappservice",
+				"ms-azuretools.vscode-azureresourcegroups",
+				"ms-azuretools.vscode-azurestorage",
+				"ms-azuretools.vscode-bicep",
+				"ms-azuretools.vscode-docker",
+				"ms-dotnettools.csharp",
+				"ms-mssql.mssql",
+				"ms-vscode.azure-account"
+			]
+		}
+	},
+
+	"remoteUser": "vscode",
+	"features": {
+		"ghcr.io/devcontainers/features/azure-cli:1": {},
+		"ghcr.io/devcontainers/features/common-utils:2": {},
+		"ghcr.io/devcontainers/features/powershell:1": {},
+		"ghcr.io/devcontainers/features/sshd:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+	}
+}
