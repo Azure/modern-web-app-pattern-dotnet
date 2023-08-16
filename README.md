@@ -26,7 +26,7 @@ This project has a six-part video series that details the reliable web app patte
 
 ## Architecture
 
-![architecture diagram](./assets/guide/ModernWebAppArchitectureDiagram.png)
+![architecture diagram](./docs/images/Modern%20Web%20App%20for%20dotnet-nobg.png)
 
 ## Workflow
 
