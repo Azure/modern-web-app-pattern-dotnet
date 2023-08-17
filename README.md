@@ -18,12 +18,6 @@ The modern web app pattern shows you how business goals influence incremental ch
 
 This project has a [companion article in the Azure Architecture Center](https://aka.ms/eap/rwa/dotnet/doc) that describes design patterns and best practices for migrating to the cloud. We suggest you read it as it will give important context to the considerations applied in this implementation.
 
-<!-- no videos at this time
-## Videos
-
-This project has a six-part video series that details the reliable web app pattern for .NET web app. For more information, see [Reliable web app pattern videos (YouTube)](https://aka.ms/eap/rwa/dotnet/videos).
--->
-
 ## Architecture
 
 ![architecture diagram](./docs/images/Modern%20Web%20App%20for%20dotnet-nobg.png)
@@ -46,13 +40,13 @@ If you do not wish to use a Dev Container, please refer to the [prerequisites](p
 
 ## Steps to deploy the reference implementation
 
-This section describes the deployment steps for the reference implementation of a reliable web application pattern with Java on Microsoft Azure. There are nine steps, including teardown.
+This section describes the deployment steps for the reference implementation of a modern web application pattern with .NET on Microsoft Azure. There are nine steps, including teardown.
 
 For users familiar with the deployment process, you can use the following list of the deployments commands as a quick reference. The commands assume you have logged into Azure through the Azure CLI and Azure Developer CLI and have selected a suitable subscription:
 
 ```shell
 git clone https://github.com/Azure/modern-web-app-pattern-dotnet.git
-cd modern-web-app-pattern-java
+cd modern-web-app-pattern-dotnet
 azd env new eapdotnetmwa
 azd env set DATABASE_PASSWORD "AV@lidPa33word"
 azd env set AZURE_LOCATION westus3
