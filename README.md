@@ -53,7 +53,7 @@ For users familiar with the deployment process, you can use the following list o
 ```shell
 git clone https://github.com/Azure/modern-web-app-pattern-dotnet.git
 cd modern-web-app-pattern-java
-azd env new eap-dotnetmwa
+azd env new eapdotnetmwa
 azd env set DATABASE_PASSWORD "AV@lidPa33word"
 azd env set AZURE_LOCATION westus3
 azd up
@@ -122,7 +122,6 @@ The environment name should be less than 18 characters and must be comprised of 
 Run the following commands to set these values and create a new environment:
 
 ```shell
-azd config set alpha.terraform on
 azd env new eapdotnetmwa
 azd env set DATABASE_PASSWORD "AV@lidPa33word"
 ```
@@ -163,13 +162,29 @@ Make sure the secondary region is a paired region with the primary region (`AZUR
 | westeurope | northeurope |
 | australiaeast | australiasoutheast |
 
-### 6. Provision and deploy the application
+### 6. Provision the application
 
 Run the following command to create the infrastructure:
 
 ```shell
 azd provision --no-prompt
 ```
+
+**Create App Registrations**
+<!-- Todo: as we rearrange bicep templates we want to simplify this step so that we can just run `azd up` -->
+
+Relecloud devs have automated the process of creating Azure
+AD resources that support the authentication features of the
+web app. They use the following command to create two new
+App Registrations within Azure AD. The command is also
+responsible for saving configuration data to Key Vault and
+App Configuration so that the web app can read this data.
+
+```sh
+./infra/createAppRegistrations.sh -g 'eapdotnetmwa-rg'
+```
+
+### 7. Deploy the application
 
 Run the following command to deploy the code to the created infrastructure:
 
@@ -188,7 +203,7 @@ azd deploy
 The provisioning and deployment process can take anywhere from 20 minutes to over an hour, depending on system load and your bandwidth.
 
 
-### 7. Open and use the application
+### 8. Open and use the application
 
 Use the following to find the URL for the Proseware application that you have deployed:
 
@@ -200,7 +215,7 @@ azd env get-values --output json | jq -r .frontdoor_url
 
 It takes approximately 5 minutes for the Azure App Service to respond to requests using the code deployed during step 6.
 
-### 8. Teardown
+### 9. Teardown
 
 To tear down the deployment, run the following command:
 
