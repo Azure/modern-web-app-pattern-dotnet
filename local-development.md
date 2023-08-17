@@ -1,11 +1,11 @@
 # Local Development
 
 ⚠️ Pending Work Item: 1871285
+* Todo - the rest of this document is legacy and needs to be updated.
 
-Relecloud developers use Visual Studio to develop locally and they co-share
-an Azure SQL database for local dev. The team chooses this workflow to
-help them practice early integration of changes as modifying the
-database and other shared resources can impact multiple workstreams.
+Relecloud developers use Visual Studio to develop locally and they use
+dev containers with docker-compose to run local SQL instances that
+allow developers to make schema changes without impacting others.
 
 To connect to the shared database the dev team uses connection strings
 from Key Vault and App Configuration Service. Devs use the following
