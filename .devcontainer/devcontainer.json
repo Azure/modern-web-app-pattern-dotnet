@@ -20,7 +20,8 @@
 				"ms-azuretools.vscode-docker",
 				"ms-dotnettools.csharp",
 				"ms-mssql.mssql",
-				"ms-vscode.azure-account"
+				"ms-vscode.azure-account",
+				"ms-vscode.PowerShell"
 			]
 		}
 	},
