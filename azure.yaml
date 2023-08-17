@@ -16,18 +16,19 @@ services:
     project: src/Relecloud.Web.Public.Api
     language: csharp
     host: appservice
-    hooks:
-      predeploy:
-        posix:
-          shell: sh
-          interactive: true
-          # executes in the context of the root folder
-          run: ../../infra/devOpsScripts/configureLoadTest.sh
-        windows: 
-          shell: pwsh
-          interactive: true
-          # executes in the context of the root folder
-          run: ../../infra/devOpsScripts/configureLoadTest.ps1
+    # disabling hooks until later sprint focused on diagnosing a bug with this feature
+    # hooks:
+    #   predeploy:
+    #     posix:
+    #       shell: sh
+    #       interactive: true
+    #       # executes in the context of the root folder
+    #       run: ../../infra/devOpsScripts/configureLoadTest.sh
+    #     windows: 
+    #       shell: pwsh
+    #       interactive: true
+    #       # executes in the context of the root folder
+    #       run: ../../infra/devOpsScripts/configureLoadTest.ps1
   call-center-api:
     project: src/Relecloud.Web.CallCenter.Api
     language: csharp
