@@ -1,7 +1,7 @@
 # Prerequisites
 
 ```
- If you want to use a VSCode DevContainer see the `VSCode DevContainer prerequisites` section below
+ If you want to use a [VSCode Dev Container](https://code.visualstudio.com/docs/devcontainers/containers#_system-requirements) see the `VSCode Dev Container prerequisites` section below.
 ```
 
 ## Pre-requisites
@@ -58,7 +58,7 @@ The following tools are pre-requisites to running the associated deployment step
 
 ## Platform compatibility
 
-|             |  Native   | DevContainer |
+|             |  Native   | Dev Container |
 |-------------|-----------|--------------|
 | Windows     |    ✅     |      ✅      |
 | Windows WSL |    ✅     |      ✅      |
@@ -66,7 +66,7 @@ The following tools are pre-requisites to running the associated deployment step
 | macOS arm64 |    ✅     |      ✅      |
 | Linux       |    ✅     |      ✅      |
 
-## VSCode DevContainer prerequisites
+## VSCode Dev Container prerequisites
 
 1. Docker Desktop
 1. VSCode
