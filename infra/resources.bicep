@@ -769,21 +769,22 @@ module redisSetup 'azureRedisCache.bicep' = {
 }
 
 var privateEndpointNameForApim = 'privateEndpointForApim'
-module apimSetup 'azureApim.bicep' = {
-  name: 'apimSetup'
-  scope: resourceGroup()
-  params: {
-    isProd: isProd
-    location: location
-    resourceToken: resourceToken
-    tags: tags
-    privateEndpointNameForApim: privateEndpointNameForApim
-    privateEndpointVnetName: vnet.name
-    privateEndpointSubnetName: privateEndpointSubnetName
-    publisherName: 'Publisher'
-    publisherEmail: 'publisher@microsoft.com'
-  }
-}
+// temporarily removed as we focus on testing devcontainer in preparation to refactor bicep templates
+// module apimSetup 'azureApim.bicep' = {
+//   name: 'apimSetup'
+//   scope: resourceGroup()
+//   params: {
+//     isProd: isProd
+//     location: location
+//     resourceToken: resourceToken
+//     tags: tags
+//     privateEndpointNameForApim: privateEndpointNameForApim
+//     privateEndpointVnetName: vnet.name
+//     privateEndpointSubnetName: privateEndpointSubnetName
+//     publisherName: 'Publisher'
+//     publisherEmail: 'publisher@microsoft.com'
+//   }
+// }
 
 
 module storageSetup 'azureStorage.bicep' = {
