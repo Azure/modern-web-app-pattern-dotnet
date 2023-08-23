@@ -2,56 +2,53 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "name": {
-      "value": "${AZURE_ENV_NAME}"
+    "adoOrganizationUrl": {
+        "value": "${AZURE_DEVOPS_ORG_URL}"
+    },
+    "adoToken": {
+        "value": "${AZURE_DEVOPS_TOKEN}"
+    },
+    "clientIpAddress": {
+        "value": "${AZD_IP_ADDRESS}"
+    },
+    "differentiator": {
+        "value": "${AZURE_CI_DIFFERENTIATOR=none}"
+    },
+    "environmentName": {
+        "value": "${AZURE_ENV_NAME}"
+    },
+    "environmentType": {
+        "value": "${AZURE_ENV_TYPE=dev}"
+    },
+    "githubRepositoryUrl": {
+        "value": "${GITHUB_REPO}"
+    },
+    "githubToken": {
+        "value": "${GITHUB_TOKEN}"
     },
     "location": {
-      "value": "${AZURE_LOCATION}"
+        "value": "${AZURE_LOCATION}"
     },
     "principalId": {
-      "value": "${AZURE_PRINCIPAL_ID}"
+        "value": "${AZURE_PRINCIPAL_ID}"
     },
-    "secondaryAzureLocation": {
-      "value": "${SECONDARY_AZURE_LOCATION}"
+    "principalType": {
+        "value": "${AZURE_PRINCIPAL_TYPE=User}"
     },
-    "isProd": {
-      "value": "${IS_PROD}"
+    "deployHubNetwork": {
+        "value": "${DEPLOY_HUB_NETWORK=false}"
     },
-    "isRunAsServicePrincipal": {
-      "value": "${IS_RUN_AS_SERVICEPRINCIPAL=false}"
+    "networkIsolation": {
+        "value": "${NETWORK_ISOLATION=auto}"
     },
-    "azureSqlPassword": {
-      "value": "${AZURE_SQL_PASSWORD}"
+    "ownerEmail": {
+        "value": "${OWNER_EMAIL=noreply@contoso.com}"
     },
-    "frontEndAzureAdB2CApiScope": {
-      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} frontEndAzureAdB2CApiScope)"
+    "ownerName": {
+        "value": "${OWNER_NAME=notset}"
     },
-    "frontEndAzureAdB2cClientId": {
-      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} frontEndAzureAdB2cClientId)"
-    },
-    "frontEndAzureAdB2cClientSecret": {
-      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} frontEndAzureAdB2cClientSecret)"
-    },
-    "apiAzureAdB2cClientId": {
-      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} apiAzureAdB2cClientId)"
-    },
-    "azureAdB2cDomain": {
-      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} azureAdB2cDomain)"
-    },
-    "azureAdB2cInstance": {
-      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} azureAdB2cInstance)"
-    },
-    "azureAdB2cTenantId": {
-      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} azureAdB2cTenantId)"
-    },
-    "azureAdB2cSignupSigninPolicyId": {
-      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} azureAdB2cSignupSigninPolicyId)"
-    },
-    "azureAdB2cResetPolicyId": {
-      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} azureAdB2cResetPolicyId)"
-    },
-    "azureAdB2cSignoutCallback": {
-      "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} azureAdB2cSignoutCallback)"
+    "useCommonAppServicePlan": {
+        "value": "${COMMON_APP_SERVICE_PLAN=auto}"
     },
     "enableTelemetry": {
       "value": "${ENABLE_TELEMETRY=true}"

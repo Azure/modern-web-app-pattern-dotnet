@@ -58,13 +58,12 @@ else {
     Write-Debug "Found resource group named: $ResourceGroupName"
 }
 
-$keyVaultName = (az keyvault list -g "$ResourceGroupName" --query "[? starts_with(name,'rc-')].name" -o tsv)
+$keyVaultName = (az keyvault list -g "$ResourceGroupName" --query "[? starts_with(name,'kv-')].name" -o tsv)
 $appConfigSvcName = (az appconfig list -g "$ResourceGroupName" --query "[].name" -o tsv)
 
-# updated az resource selection to filter to first based on https://github.com/Azure/azure-cli/issues/25214
-$frontEndWebAppName = (az resource list -g "$ResourceGroupName" --query "[? tags.\`"azd-service-name\`" == 'web' ].name | [0]" -o tsv)
+$frontEndWebAppName = (az resource list -g "$ResourceGroupName" --query "[? tags.`"azd-service-name`" == 'web-callcenter-frontend' ].name | [0]" -o tsv)
 
-$resourceToken = $frontEndWebAppName.substring(4, 13)
+$resourceToken = $frontEndWebAppName.substring(15)
 $environmentName = $ResourceGroupName.substring(0, $ResourceGroupName.Length - 3)
 
 $frontDoorProfileName = (az resource list -g $ResourceGroupName --query "[? kind=='frontdoor' ].name | [0]" -o tsv)
@@ -77,7 +76,6 @@ if ($group2Exists -eq 'false') {
     $secondaryResourceGroupName = ''
 }
 
-# updated az resource selection to filter to first based on https://github.com/Azure/azure-cli/issues/25214
 $mySqlServer = (az resource list -g $ResourceGroupName --query "[?type=='Microsoft.Sql/servers'].name | [0]" -o tsv)
 $azdEnvironmentData=(azd env get-values)
 $isProd=($azdEnvironmentData | select-string 'IS_PROD="true"').Count -gt 0
@@ -120,6 +118,9 @@ if ($Debug) {
     Write-Debug "..."
 }
 
+# just testing
+exit 1
+
 # Resolves permission constraint that prevents the deploymentScript from running this command
 # https://github.com/Azure/reliable-web-app-pattern-dotnet/issues/134
 
@@ -131,7 +132,7 @@ $frontEndWebObjectId = (az ad app list --filter "displayName eq '$frontEndWebApp
 
 if ($frontEndWebObjectId.Length -eq 0) {
 
-    # this web app doesn't exist and must be creaed
+    # this web app doesn't exist and must be created
     
     $frontEndWebAppClientId = (az ad app create `
             --display-name $frontEndWebAppName `
