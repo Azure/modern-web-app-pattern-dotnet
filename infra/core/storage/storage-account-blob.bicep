@@ -8,18 +8,44 @@ targetScope = 'resourceGroup'
 ***************************************************************************
 */
 
+// From: infra/types/DiagnosticSettings.bicep
+@description('The diagnostic settings for a resource')
+type DiagnosticSettings = {
+  @description('The number of days to retain log data.')
+  logRetentionInDays: int
+
+  @description('The number of days to retain metric data.')
+  metricRetentionInDays: int
+
+  @description('If true, enable diagnostic logging.')
+  enableLogs: bool
+
+  @description('If true, enable metrics logging.')
+  enableMetrics: bool
+}
+
 // ========================================================================
 // PARAMETERS
 // ========================================================================
 
-@description('The Azure region for the resource.')
-param location string
+@description('The diagnostic settings to use for logging and metrics.')
+param diagnosticSettings DiagnosticSettings
 
 @description('The name of the primary resource')
 param name string
 
+param containers array = []
+
 @description('The tags to associate with this resource.')
 param tags object = {}
+
+param storageAccountId string = ''
+
+/*
+** Dependencies
+*/
+@description('The ID of the Log Analytics workspace to use for diagnostics and logging.')
+param logAnalyticsWorkspaceId string = ''
 
 /*
 ** Settings
@@ -28,18 +54,14 @@ param tags object = {}
 @description('Required for storage accounts where kind = BlobStorage. The access tier is used for billing.')
 @allowed(['Cool', 'Hot', 'Premium' ])
 param accessTier string = 'Hot'
-
-@description('Allow or disallow public access to all blobs or containers in the storage account. The default interpretation is true for this property.')
 param allowBlobPublicAccess bool = true
 
-@description('Allow or disallow cross AAD tenant object replication. The default interpretation is true for this property.')
 param allowCrossTenantReplication bool = true
 
-@description('Indicates whether the storage account permits requests to be authorized with the account access key via Shared Key. If false, then all requests, including shared access signatures, must be authorized with Azure Active Directory (Azure AD). The default value is null, which is equivalent to true.')
 param allowSharedKeyAccess bool = true
 
-@description('Required. Indicates the type of storage account.')
-@allowed(['BlobStorage', 'BlockBlobStorage', 'FileStorage', 'Storage', 'StorageV2' ])
+param deleteRetentionPolicy object = {}
+
 param kind string = 'StorageV2'
 
 param minimumTlsVersion string = 'TLS1_2'
@@ -52,12 +74,17 @@ param networkAcls object = {
 @description('Whether or not public endpoint access is allowed for this server')
 param enablePublicNetworkAccess bool = true
 
-@description('Required. Gets or sets the SKU name.')
 param sku object = { name: 'Standard_LRS' }
 
 // ========================================================================
 // VARIABLES
 // ========================================================================
+
+var logCategories = [
+  'StorageDelete'
+  'StorageRead'
+  'StorageWrite'
+]
 
 var defaultToOAuthAuthentication = false
 var dnsEndpointType = 'Standard'
@@ -65,25 +92,21 @@ var dnsEndpointType = 'Standard'
 // ========================================================================
 // AZURE RESOURCES
 // ========================================================================
-
-resource storage 'Microsoft.Storage/storageAccounts@2022-05-01' = {
-  name: name
-  location: location
-  tags: tags
-  kind: kind
-  sku: sku
+/*
+resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2022-05-01' = if (!empty(containers)) {
   properties: {
-    accessTier: accessTier
-    allowBlobPublicAccess: allowBlobPublicAccess
-    allowCrossTenantReplication: allowCrossTenantReplication
-    allowSharedKeyAccess: allowSharedKeyAccess
-    defaultToOAuthAuthentication: defaultToOAuthAuthentication
-    dnsEndpointType: dnsEndpointType
-    minimumTlsVersion: minimumTlsVersion
-    networkAcls: networkAcls
-    publicNetworkAccess: enablePublicNetworkAccess ? 'Enabled' : 'Disabled'
+    deleteRetentionPolicy: deleteRetentionPolicy
   }
+  resource container 'containers' = [for container in containers: {
+    name: container.name
+    properties: {
+      publicAccess: contains(container, 'publicAccess') ? container.publicAccess : 'None'
+    }
+  }]
 }
 
-output id string = storage.id
+output name string = storage.name
 output primaryEndpoints object = storage.properties.primaryEndpoints
+*/
+
+output containerName string = 'tickets' // container.name

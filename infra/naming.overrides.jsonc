@@ -54,6 +54,8 @@
     // "keyVaultPrivateEndpoint": "",
     // "ownerManagedIdentity": "",
     // "resourceGroup": "",
+    // "storageAccount": "",
+    // "storageAccountContainer": "",
     // "sqlDatabase": "",
     // "sqlDatabasePrivateEndpoint": "",
     // "sqlServer": "",
