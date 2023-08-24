@@ -11,10 +11,10 @@ hooks:
       run: ./infra/scripts/whatsmyip.ps1
 services:
   web-callcenter-service:
-    project: src/Relecloud.Web.CallCenter
+    project: src/Relecloud.Web.CallCenter.Api
     language: csharp
     host: appservice
   web-callcenter-frontend:
-    project: src/Relecloud.Web.CallCenter.Api
+    project: src/Relecloud.Web.CallCenter
     language: csharp
     host: appservice
