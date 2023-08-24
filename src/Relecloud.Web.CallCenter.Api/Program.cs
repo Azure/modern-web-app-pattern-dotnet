@@ -4,14 +4,14 @@ using Relecloud.Web.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var hasRequiredConfigSettings = !string.IsNullOrEmpty(builder.Configuration["Api:AppConfig:Uri"]);
+var hasRequiredConfigSettings = !string.IsNullOrEmpty(builder.Configuration["App:AppConfig:Uri"]);
 
 if (hasRequiredConfigSettings)
 {
     builder.Configuration.AddAzureAppConfiguration(options =>
     {
         options
-            .Connect(new Uri(builder.Configuration["Api:AppConfig:Uri"]), new DefaultAzureCredential())
+            .Connect(new Uri(builder.Configuration["App:AppConfig:Uri"]), new DefaultAzureCredential())
             .ConfigureKeyVault(kv =>
             {
                 // Some of the values coming from Azure App Configuration are stored Key Vault, use
