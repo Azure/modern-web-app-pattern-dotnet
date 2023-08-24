@@ -113,6 +113,9 @@ var moduleTags = union(deploymentSettings.tags, deploymentSettings.workloadTags)
 var createSqlServer = resourceNames.sqlResourceGroup == resourceNames.resourceGroup
 
 
+var appConfigurationKeyValueDefaultContentType = 'charset=utf-8'
+var appConfigurationKeyValueKeyVaultContentType = 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
+
 // Budget amounts
 //  All values are calculated in dollars (rounded to nearest dollar) in the South Central US region.
 var budget = {
@@ -294,7 +297,7 @@ module writeSqlConnectionReference '../core/developer-tools/app-configuration-ke
   params: {
     name: appConfiguration.outputs.name
     keyvalues: [
-      { key: 'App:SqlDatabase:ConnectionString', value: sqlDatabase.outputs.connection_string }
+      { key: 'App:SqlDatabase:ConnectionString', value: sqlDatabase.outputs.connection_string, contentType: appConfigurationKeyValueDefaultContentType }
     ]
   }
 }
@@ -351,6 +354,17 @@ module webService './workload-appservice.bicep' = {
   }
 }
 
+module writeWebServiceBaseUri '../core/developer-tools/app-configuration-keyvalues.bicep'  = {
+  name: 'write-webservice-baseuri-to-app-configuration'
+  scope: resourceGroup
+  params: {
+    name: appConfiguration.outputs.name
+    keyvalues: [
+      { key: 'App:RelecloudApi:BaseUri', value: redis.outputs.connection_string, contentType: appConfigurationKeyValueDefaultContentType }
+    ]
+  }
+}
+
 module webFrontend './workload-appservice.bicep' = {
   name: 'workload-webfrontend'
   scope: resourceGroup
@@ -398,6 +412,38 @@ module webFrontDoorRoute '../core/security/front-door-route.bicep' = {
   }
 }
 
+
+/*
+** Azure Cache for Redis
+*/
+
+module redis '../core/database/redis.bicep' = {
+  name: 'workload-redis'
+  scope: resourceGroup
+}
+
+module writeRedisConfig '../core/developer-tools/app-configuration-keyvalues.bicep' = {
+  name: 'write-redis-config-to-app-configuration'
+  scope: resourceGroup
+  params: {
+    name: appConfiguration.outputs.name
+    keyvalues: [
+      { key: 'App:RedisCache:ConnectionString', value: redis.outputs.connection_string, contentType: appConfigurationKeyValueKeyVaultContentType }
+    ]
+  }
+}
+
+module writeRedisSecret '../core/security/key-vault-secrets.bicep' = {
+  name: 'write-redis-secret-to-app-configuration'
+  scope: resourceGroup
+  params: {
+    name: redis.name
+    secrets: [
+      { key: 'App--RedisCache--ConnectionString', value: redis.outputs.connection_string }
+    ]
+  }
+}
+
 /*
 ** Azure Front Door with Web Application Firewall
 */
@@ -442,7 +488,7 @@ module writeFrontDoorConfig '../core/developer-tools/app-configuration-keyvalues
   params: {
     name: appConfiguration.outputs.name
     keyvalues: [
-      { key: 'App:FrontDoorHostname', value: frontDoor.outputs.hostname }
+      { key: 'App:FrontDoorHostname', value: frontDoor.outputs.hostname, contentType: appConfigurationKeyValueDefaultContentType  }
     ]
   }
 }

@@ -21,6 +21,9 @@ type AppConfigurationKeyValues = {
 
   @description('The value of the config value')
   value: string
+
+  @description('Specifies the content type of the key-value resources. For feature flag, the value should be application/vnd.microsoft.appconfig.ff+json;charset=utf-8. For Key Value reference, the value should be application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8. Otherwise, it\'s optional.')
+  contentType: string
 }
 
 // ========================================================================
@@ -48,7 +51,7 @@ resource keyVaultSecrets 'Microsoft.AppConfiguration/configurationStores/keyValu
   name: keyvalue.key
   parent: appConfiguration
   properties: {
-    contentType: 'text/plain; charset=utf-8'
+    contentType: keyvalue.contentType
     value: keyvalue.value
   }
 }]
