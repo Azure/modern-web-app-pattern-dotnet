@@ -71,7 +71,7 @@ echo "resourceGroupName='$resourceGroupName'"
 echo ""
 
 # assumes there is only one vault deployed to this resource group that will match this filter
-keyVaultName=$(az keyvault list -g "$resourceGroupName" --query "[?name.starts_with(@,'rc-')].name" -o tsv)
+keyVaultName=$(az keyvault list -g "$resourceGroupName" --query "[?name.starts_with(@,'kv-')].name" -o tsv)
 
 appConfigSvcName=$(az appconfig list -g "$resourceGroupName" --query "[].name" -o tsv)
 
@@ -82,7 +82,7 @@ frontEndWebAppUri="https://$frontEndWebAppName.$appServiceRootUri"
 
 # assumes resourceToken is located in app service frontend web app name
 # assumes the uniquestring function from the bicep template always returns a string of length 13
-resourceToken=${frontEndWebAppName:4:13}
+resourceToken=${frontEndWebAppName:16}
 
 # assumes environment name is used to build resourceGroupName
 locationOfHyphen=$(echo $resourceGroupName | awk -F "-" '{print length($0)-length($NF)}')

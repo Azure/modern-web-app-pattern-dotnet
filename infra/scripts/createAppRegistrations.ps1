@@ -63,7 +63,7 @@ $appConfigSvcName = (az appconfig list -g "$ResourceGroupName" --query "[].name"
 
 $frontEndWebAppName = (az resource list -g "$ResourceGroupName" --query "[? tags.`"azd-service-name`" == 'web-callcenter-frontend' ].name | [0]" -o tsv)
 
-$resourceToken = $frontEndWebAppName.substring(15)
+$resourceToken = $frontEndWebAppName.substring(16)
 $environmentName = $ResourceGroupName.substring(0, $ResourceGroupName.Length - 3)
 
 $frontDoorProfileName = (az resource list -g $ResourceGroupName --query "[? kind=='frontdoor' ].name | [0]" -o tsv)
@@ -118,21 +118,10 @@ if ($Debug) {
     Write-Debug "..."
 }
 
-# just testing
-exit 1
-
-# Resolves permission constraint that prevents the deploymentScript from running this command
-# https://github.com/Azure/reliable-web-app-pattern-dotnet/issues/134
-
-if ($isProd) {
-    az sql server update -n $mySqlServer -g $ResourceGroupName --set publicNetworkAccess="Disabled" > $null
-}
-
 $frontEndWebObjectId = (az ad app list --filter "displayName eq '$frontEndWebAppName'" --query "[].id" -o tsv)
 
 if ($frontEndWebObjectId.Length -eq 0) {
-
-    # this web app doesn't exist and must be created
+    '`tFront-end app registration does not exist' | Write-Debug
     
     $frontEndWebAppClientId = (az ad app create `
             --display-name $frontEndWebAppName `
