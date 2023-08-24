@@ -334,7 +334,6 @@ module webService './workload-appservice.bicep' = {
     appConfigurationName: appConfiguration.outputs.name
     applicationInsightsId: applicationInsightsId
     appServicePlanName: useCommonAppServicePlan ? commonAppServicePlan.outputs.name : resourceNames.webAppServicePlan
-    keyVaultName: keyVault.outputs.name
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
     managedIdentityName: appManagedIdentity.outputs.name
 
@@ -365,7 +364,6 @@ module webFrontend './workload-appservice.bicep' = {
     appConfigurationName: appConfiguration.outputs.name
     applicationInsightsId: applicationInsightsId
     appServicePlanName: useCommonAppServicePlan ? commonAppServicePlan.outputs.name : resourceNames.webAppServicePlan
-    keyVaultName: keyVault.outputs.name
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
     managedIdentityName: appManagedIdentity.outputs.name
 
@@ -436,6 +434,17 @@ module approveFrontDoorPrivateLinks '../core/security/front-door-route-approval.
   dependsOn: [
     webFrontDoorRoute
   ]
+}
+
+module writeFrontDoorConfig '../core/developer-tools/app-configuration-keyvalues.bicep' = {
+  name: 'write-front-door-config-to-app-configuration'
+  scope: resourceGroup
+  params: {
+    name: appConfiguration.outputs.name
+    keyvalues: [
+      { key: 'App:FrontDoorHostname', value: frontDoor.outputs.hostname }
+    ]
+  }
 }
 
 module workloadBudget '../core/cost-management/budget.bicep' = {
