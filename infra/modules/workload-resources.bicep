@@ -112,10 +112,6 @@ var moduleTags = union(deploymentSettings.tags, deploymentSettings.workloadTags)
 // If the sqlResourceGroup != the workload resource group, don't create a server.
 var createSqlServer = resourceNames.sqlResourceGroup == resourceNames.resourceGroup
 
-
-var appConfigurationKeyValueDefaultContentType = 'charset=utf-8'
-var appConfigurationKeyValueKeyVaultContentType = 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-
 // Budget amounts
 //  All values are calculated in dollars (rounded to nearest dollar) in the South Central US region.
 var budget = {
@@ -126,6 +122,8 @@ var budget = {
   frontDoor: deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated ? 335 : 38
 }
 var budgetAmount = reduce(map(items(budget), (obj) => obj.value), 0, (total, amount) => total + amount)
+
+var redisConnectionSecretName='App--RedisCache--ConnectionString'
 
 // ========================================================================
 // EXISTING RESOURCES
@@ -165,7 +163,7 @@ module appManagedIdentity '../core/identity/managed-identity.bicep' = {
 /*
 ** App Configuration - used for storing configuration data
 */
-module appConfiguration '../core/developer-tools/app-configuration.bicep' = {
+module appConfiguration '../core/config/app-configuration.bicep' = {
   name: 'workload-app-configuration'
   scope: resourceGroup
   params: {
@@ -190,6 +188,20 @@ module appConfiguration '../core/developer-tools/app-configuration.bicep' = {
     } : null
     readerIdentities: [
       { principalId: appManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
+    ]
+  }
+}
+
+module writeAppConfigAzureAdDefaults '../core/config/app-configuration-keyvalues.bicep' = {
+  name: 'write-app-config-admin-info-to-keyvault'
+  scope: resourceGroup
+  params: {
+    name: appConfiguration.outputs.name
+    keyvalues: [
+      { key: 'Api:AzureAd:Instance', value: 'https://login.microsoftonline.com/' }
+      { key: 'AzureAd:Instance', value: 'https://login.microsoftonline.com/' }
+      { key: 'AzureAd:CallbackPath', value: '/signin-oidc' }
+      { key: 'AzureAd:SignedOutCallbackPath', value: '/signout-oidc' }
     ]
   }
 }
@@ -291,13 +303,13 @@ module writeSqlAdminInfo '../core/security/key-vault-secrets.bicep' = if (create
   }
 }
 
-module writeSqlConnectionReference '../core/developer-tools/app-configuration-keyvalues.bicep' = {
+module writeSqlConnectionReference '../core/config/app-configuration-keyvalues.bicep' = {
   name: 'write-sql-connection-reference-to-app-configuration'
   scope: resourceGroup
   params: {
     name: appConfiguration.outputs.name
     keyvalues: [
-      { key: 'App:SqlDatabase:ConnectionString', value: sqlDatabase.outputs.connection_string, contentType: appConfigurationKeyValueDefaultContentType }
+      { key: 'App:SqlDatabase:ConnectionString', value: sqlDatabase.outputs.connection_string }
     ]
   }
 }
@@ -354,13 +366,13 @@ module webService './workload-appservice.bicep' = {
   }
 }
 
-module writeWebServiceBaseUri '../core/developer-tools/app-configuration-keyvalues.bicep'  = {
+module writeWebServiceBaseUri '../core/config/app-configuration-keyvalues.bicep'  = {
   name: 'write-webservice-baseuri-to-app-configuration'
   scope: resourceGroup
   params: {
     name: appConfiguration.outputs.name
     keyvalues: [
-      { key: 'App:RelecloudApi:BaseUri', value: redis.outputs.connection_string, contentType: appConfigurationKeyValueDefaultContentType }
+      { key: 'App:RelecloudApi:BaseUri', value: redis.outputs.connection_string }
     ]
   }
 }
@@ -422,13 +434,14 @@ module redis '../core/database/redis.bicep' = {
   scope: resourceGroup
 }
 
-module writeRedisConfig '../core/developer-tools/app-configuration-keyvalues.bicep' = {
+module writeRedisConfig '../core/config/app-configuration-keyvault-reference.bicep' = {
   name: 'write-redis-config-to-app-configuration'
   scope: resourceGroup
   params: {
     name: appConfiguration.outputs.name
+    keyvaultname: keyVault.outputs.name
     keyvalues: [
-      { key: 'App:RedisCache:ConnectionString', value: redis.outputs.connection_string, contentType: appConfigurationKeyValueKeyVaultContentType }
+      { key: 'App:RedisCache:ConnectionString', value: redisConnectionSecretName }
     ]
   }
 }
@@ -437,9 +450,44 @@ module writeRedisSecret '../core/security/key-vault-secrets.bicep' = {
   name: 'write-redis-secret-to-app-configuration'
   scope: resourceGroup
   params: {
-    name: redis.name
+    name: keyVault.outputs.name
     secrets: [
-      { key: 'App--RedisCache--ConnectionString', value: redis.outputs.connection_string }
+      { key: redisConnectionSecretName, value: redis.outputs.connection_string }
+    ]
+  }
+}
+
+/*
+** Azure Storage
+*/
+
+module storageAccount '../core/storage/storage-account.bicep' = {
+  name: 'workload-storage-account'
+  scope: resourceGroup
+  params: {
+    location: deploymentSettings.location
+    name: resourceNames.storageAccount
+  }
+}
+
+module storageAccountContainer '../core/storage/storage-account-blob.bicep' = {
+  name: 'workload-storage-account-container'
+  scope: resourceGroup
+  params: {
+    name: resourceNames.storageAccountContainer
+    storageAccountId: storageAccount.outputs.id
+    diagnosticSettings: diagnosticSettings
+  }
+}
+
+module writeStorageConfig '../core/config/app-configuration-keyvalues.bicep' = {
+  scope: resourceGroup
+  name: 'write-storage-config-to-app-configuration'
+  params: {
+    name: appConfiguration.outputs.name
+    keyvalues: [
+      { key: 'App:StorageAccount:Container', value: storageAccountContainer.outputs.containerName }
+      { key: 'App:StorageAccount:Url', value: storageAccount.outputs.primaryEndpoints.blob }
     ]
   }
 }
@@ -482,13 +530,13 @@ module approveFrontDoorPrivateLinks '../core/security/front-door-route-approval.
   ]
 }
 
-module writeFrontDoorConfig '../core/developer-tools/app-configuration-keyvalues.bicep' = {
+module writeFrontDoorConfig '../core/config/app-configuration-keyvalues.bicep' = {
   name: 'write-front-door-config-to-app-configuration'
   scope: resourceGroup
   params: {
     name: appConfiguration.outputs.name
     keyvalues: [
-      { key: 'App:FrontDoorHostname', value: frontDoor.outputs.hostname, contentType: appConfigurationKeyValueDefaultContentType  }
+      { key: 'App:FrontDoorHostname', value: frontDoor.outputs.hostname  }
     ]
   }
 }

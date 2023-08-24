@@ -1,7 +1,7 @@
 targetScope = 'resourceGroup'
 
 /*
-** Write secrets to App Configuration Store
+** Write configuration to App Configuration Store
 ** Copyright (C) 2023 Microsoft, Inc.
 ** All Rights Reserved
 **
@@ -21,9 +21,6 @@ type AppConfigurationKeyValues = {
 
   @description('The value of the config value')
   value: string
-
-  @description('Specifies the content type of the key-value resources. For feature flag, the value should be application/vnd.microsoft.appconfig.ff+json;charset=utf-8. For Key Value reference, the value should be application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8. Otherwise, it\'s optional.')
-  contentType: string
 }
 
 // ========================================================================
@@ -47,11 +44,10 @@ resource appConfiguration 'Microsoft.AppConfiguration/configurationStores@2023-0
   name: name
 }
 
-resource keyVaultSecrets 'Microsoft.AppConfiguration/configurationStores/keyValues@2023-03-01' = [for keyvalue in keyvalues: {
+resource keyValuePairs 'Microsoft.AppConfiguration/configurationStores/keyValues@2023-03-01' = [for keyvalue in keyvalues: {
   name: keyvalue.key
   parent: appConfiguration
   properties: {
-    contentType: keyvalue.contentType
     value: keyvalue.value
   }
 }]
