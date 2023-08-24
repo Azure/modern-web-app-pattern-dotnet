@@ -157,8 +157,6 @@ namespace Relecloud.Web.Api
                 IdentityModelEventSource.ShowPII = true;
             }
 
-            app.UseRetryTestingMiddleware();
-
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
