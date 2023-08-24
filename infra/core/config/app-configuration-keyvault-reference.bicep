@@ -55,6 +55,8 @@ resource keyValuePairs 'Microsoft.AppConfiguration/configurationStores/keyValues
   parent: appConfiguration
   properties: {
     contentType: 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-    value: '${existingKeyVault.properties.vaultUri}secrets/${keyvalue.value}'
+    value: string({
+      uri: '${existingKeyVault.properties.vaultUri}secrets/${keyvalue.value}'
+    })
   }
 }]
