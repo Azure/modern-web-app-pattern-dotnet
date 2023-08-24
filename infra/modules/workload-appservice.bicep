@@ -88,6 +88,9 @@ param tags object = {}
 /*
 ** Dependencies
 */
+@description('The name of the App Configuration store to configure for configuration.')
+param appConfigurationName string
+
 @description('The ID of the Application Insights instance to use for logging.')
 param applicationInsightsId string
 
@@ -138,10 +141,10 @@ var applicationInsights = reference(applicationInsightsId, '2020-02-02')
 // AZURE RESOURCES
 // ========================================================================
 
-// resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing = {
-//   name: applicationInsightsName
-//   scope: resourceGroup(applicationInsightsRG)
-// }
+
+resource appConfigurationStore 'Microsoft.AppConfiguration/configurationStores@2023-03-01' existing = {
+  name: appConfigurationName
+}
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
   name: keyVaultName
@@ -194,6 +197,12 @@ module appService '../core/hosting/app-service.bicep' = {
       XDT_MicrosoftApplicationInsights_BaseExtensions: '~1'
       APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.ConnectionString
       APPLICATIONINSIGHTS_INSTRUMENTATIONKEY: applicationInsights.InstrumentationKey
+
+      // Identity for DefaultAzureCredential connections
+      AZURE_CLIENT_ID: managedIdentity.properties.clientId
+
+      // App Configuration
+      'App:AppConfig:Uri': appConfigurationStore.properties.endpoint
 
       // Key Vault
       'Azure:KeyVault:Endpoint': keyVault.properties.vaultUri

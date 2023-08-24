@@ -160,6 +160,38 @@ module appManagedIdentity '../core/identity/managed-identity.bicep' = {
 }
 
 /*
+** App Configuration - used for storing configuration data
+*/
+module appConfiguration '../core/developer-tools/app-configuration.bicep' = {
+  name: 'workload-app-configuration'
+  scope: resourceGroup
+  params: {
+    name: resourceNames.appConfiguration
+    location: deploymentSettings.location
+    tags: moduleTags
+
+    // Dependencies
+    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
+
+    // Settings
+    diagnosticSettings: diagnosticSettings
+    enablePublicNetworkAccess: !deploymentSettings.isNetworkIsolated
+    ownerIdentities: [
+      { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
+      { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
+    ]
+    privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
+      name: resourceNames.appConfigurationPrivateEndpoint
+      resourceGroupName: resourceNames.spokeResourceGroup
+      subnetId: subnets[resourceNames.spokeStorageSubnet].id
+    } : null
+    readerIdentities: [
+      { principalId: appManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
+    ]
+  }
+}
+
+/*
 ** Key Vault - used for storing configuration secrets
 */
 module keyVault '../core/security/key-vault.bicep' = {
@@ -250,19 +282,19 @@ module writeSqlAdminInfo '../core/security/key-vault-secrets.bicep' = if (create
   params: {
     name: keyVault.outputs.name
     secrets: [
-      { key: 'FieldEngineer--SqlAdministratorUsername', value: administratorUsername }
-      { key: 'FieldEngineer--SqlAdministratorPassword', value: administratorPassword }
+      { key: 'Relecloud--SqlAdministratorUsername', value: administratorUsername }
+      { key: 'Relecloud--SqlAdministratorPassword', value: administratorPassword }
     ]
   }
 }
 
-module writeSqlConnectionString '../core/security/key-vault-secrets.bicep' = {
-  name: 'write-sql-connection-string-to-keyvault'
+module writeSqlConnectionReference '../core/developer-tools/app-configuration-keyvalues.bicep' = {
+  name: 'write-sql-connection-reference-to-app-configuration'
   scope: resourceGroup
   params: {
-    name: keyVault.outputs.name
-    secrets: [
-      { key: 'FieldEngineer--SqlConnectionString', value: sqlDatabase.outputs.connection_string }
+    name: appConfiguration.outputs.name
+    keyvalues: [
+      { key: 'App:SqlDatabase:ConnectionString', value: sqlDatabase.outputs.connection_string }
     ]
   }
 }
@@ -299,6 +331,7 @@ module webService './workload-appservice.bicep' = {
     tags: moduleTags
     
     // Dependencies
+    appConfigurationName: appConfiguration.outputs.name
     applicationInsightsId: applicationInsightsId
     appServicePlanName: useCommonAppServicePlan ? commonAppServicePlan.outputs.name : resourceNames.webAppServicePlan
     keyVaultName: keyVault.outputs.name
@@ -329,6 +362,7 @@ module webFrontend './workload-appservice.bicep' = {
     tags: moduleTags
     
     // Dependencies
+    appConfigurationName: appConfiguration.outputs.name
     applicationInsightsId: applicationInsightsId
     appServicePlanName: useCommonAppServicePlan ? commonAppServicePlan.outputs.name : resourceNames.webAppServicePlan
     keyVaultName: keyVault.outputs.name
