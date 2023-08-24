@@ -252,7 +252,6 @@ namespace Relecloud.Web
             // but we recommend host name preservation for production scenarios
             // https://learn.microsoft.com/en-us/azure/architecture/best-practices/host-name-preservation
             app.UseForwardedHeaders();
-            app.UseRetryTestingMiddleware();
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
