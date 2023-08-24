@@ -1,7 +1,7 @@
 targetScope = 'resourceGroup'
 
 /*
-** Write secrets to Key Vault
+** Write secrets to App Configuration Store
 ** Copyright (C) 2023 Microsoft, Inc.
 ** All Rights Reserved
 **

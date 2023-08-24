@@ -1,13 +1,13 @@
 targetScope = 'resourceGroup'
 
 /*
-** Naming
+** App Configuration Store
 ** Copyright (C) 2023 Microsoft, Inc.
 ** All Rights Reserved
 **
 ***************************************************************************
 **
-** Provides the names of all resources that might be created by this template.
+** Creates an Azure App Configuration Store resource, including permission grants and diagnostics.
 */
 
 // ========================================================================

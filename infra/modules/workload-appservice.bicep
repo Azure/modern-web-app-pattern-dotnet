@@ -97,9 +97,6 @@ param applicationInsightsId string
 @description('The name of the App Service Plan to use for compute resources.')
 param appServicePlanName string
 
-@description('The name of the Key Vault to configure for configuration.')
-param keyVaultName string
-
 @description('The managed identity name to use as the identity of the App Service.')
 param managedIdentityName string
 
@@ -144,10 +141,6 @@ var applicationInsights = reference(applicationInsightsId, '2020-02-02')
 
 resource appConfigurationStore 'Microsoft.AppConfiguration/configurationStores@2023-03-01' existing = {
   name: appConfigurationName
-}
-
-resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
-  name: keyVaultName
 }
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
@@ -203,9 +196,6 @@ module appService '../core/hosting/app-service.bicep' = {
 
       // App Configuration
       'App:AppConfig:Uri': appConfigurationStore.properties.endpoint
-
-      // Key Vault
-      'Azure:KeyVault:Endpoint': keyVault.properties.vaultUri
     }
     diagnosticSettings: diagnosticSettings
     enablePublicNetworkAccess: !deploymentSettings.isNetworkIsolated
