@@ -61,7 +61,7 @@ else {
 $keyVaultName = (az keyvault list -g "$ResourceGroupName" --query "[? starts_with(name,'kv-')].name" -o tsv)
 $appConfigSvcName = (az appconfig list -g "$ResourceGroupName" --query "[].name" -o tsv)
 
-$frontEndWebAppName = (az resource list -g "$ResourceGroupName" --query "[? tags.`"azd-service-name`" == 'web-callcenter-frontend' ].name | [0]" -o tsv)
+$frontEndWebAppName = (az webapp list -g "$ResourceGroupName" --query "[? starts_with(name, 'app-webfrontend')].name" -o tsv)
 
 $resourceToken = $frontEndWebAppName.substring(16)
 $environmentName = $ResourceGroupName.substring(0, $ResourceGroupName.Length - 3)
@@ -83,13 +83,13 @@ $isProd=($azdEnvironmentData | select-string 'IS_PROD="true"').Count -gt 0
 Write-Debug "Derived inputs"
 Write-Debug "----------------------------------------------"
 Write-Debug "isProd=$isProd"
-Write-Debug "keyVaultName=$keyVaultName"
-Write-Debug "appConfigSvcName=$appConfigSvcName"
-Write-Debug "frontDoorProfileName=$frontDoorProfileName"
-Write-Debug "frontEndWebAppUri=$frontEndWebAppUri"
-Write-Debug "resourceToken=$resourceToken"
-Write-Debug "environmentName=$environmentName"
-Write-Debug "secondaryResourceGroupName=$secondaryResourceGroupName"
+Write-Debug "keyVaultName='$keyVaultName'"
+Write-Debug "appConfigSvcName='$appConfigSvcName'"
+Write-Debug "frontDoorProfileName='$frontDoorProfileName'"
+Write-Debug "frontEndWebAppUri='$frontEndWebAppUri'"
+Write-Debug "resourceToken='$resourceToken'"
+Write-Debug "environmentName='$environmentName'"
+Write-Debug "secondaryResourceGroupName='$secondaryResourceGroupName'"
 Write-Debug ""
 
 if ($keyVaultName.Length -eq 0) {
@@ -123,10 +123,12 @@ $frontEndWebObjectId = (az ad app list --filter "displayName eq '$frontEndWebApp
 if ($frontEndWebObjectId.Length -eq 0) {
     '`tFront-end app registration does not exist' | Write-Debug
     
+    $pathToScript="@./infra/scripts/app-roles.json"
+
     $frontEndWebAppClientId = (az ad app create `
             --display-name $frontEndWebAppName `
             --sign-in-audience AzureADMyOrg `
-            --app-roles '"[{ \"allowedMemberTypes\": [ \"User\" ], \"description\": \"Relecloud Administrator\", \"displayName\": \"Relecloud Administrator\", \"isEnabled\": \"true\", \"value\": \"Administrator\" }]"' `
+            --app-roles $pathToScript`
             --web-redirect-uris $frontEndWebAppUri/signin-oidc https://localhost:7227/signin-oidc `
             --enable-id-token-issuance `
             --query appId --output tsv)
@@ -203,6 +205,11 @@ else {
 Write-Host ""
 Write-Host "Finished app registration for front-end"
 Write-Host ""
+
+if ($Debug) {
+    Read-Host -Prompt "Press enter to continue" > $null
+    Write-Debug "..."
+}
 
 $apiObjectId = (az ad app list --filter "displayName eq '$apiWebAppName'" --query "[].id" -o tsv)
 
