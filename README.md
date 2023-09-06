@@ -175,7 +175,7 @@ responsible for saving configuration data to Key Vault and
 App Configuration so that the web app can read this data.
 
 ```sh
-./infra/createAppRegistrations.sh -g 'eapdotnetmwa-rg'
+./infra/scripts/createAppRegistrations.sh -g 'eapdotnetmwa-rg'
 ```
 
 ### 7. Deploy the application
