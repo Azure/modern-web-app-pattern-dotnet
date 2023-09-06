@@ -13,6 +13,11 @@
 #
 # This code may be repurposed for your scenario as desired
 # but is not covered by the guidance in this content.
+#
+# Note that when running in network isolated mode the script would not be able to
+# connect to Azure App Configuration without changing public network access.
+# The suggested approach is to run the code from the jumpbox within the vnet.
+
 
 POSITIONAL_ARGS=()
 
@@ -77,7 +82,7 @@ appConfigSvcName=$(az appconfig list -g "$resourceGroupName" --query "[].name" -
 
 appServiceRootUri='azurewebsites.net' # hard coded because app svc does not return the public endpoint
 # updated az resource selection to filter to first based on https://github.com/Azure/azure-cli/issues/25214
-frontEndWebAppName=$(az resource list -g "$resourceGroupName" --query "[?tags.\"azd-service-name\"=='web'].name" -o tsv)
+frontEndWebAppName=$(az resource list -g "$resourceGroupName" --query "[?tags.\"azd-service-name\"=='web-callcenter-frontend'].name" -o tsv)
 frontEndWebAppUri="https://$frontEndWebAppName.$appServiceRootUri"
 
 # assumes resourceToken is located in app service frontend web app name
