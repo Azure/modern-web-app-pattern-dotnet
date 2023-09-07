@@ -223,9 +223,6 @@ module keyVault '../core/security/key-vault.bicep' = {
     // Settings
     diagnosticSettings: diagnosticSettings
     enablePublicNetworkAccess: !deploymentSettings.isNetworkIsolated
-    firewallRules: !deploymentSettings.isProduction && !empty(clientIpAddress) ? {
-      allowedIpAddresses: [ '${clientIpAddress}/32' ]
-    } : null
     ownerIdentities: [
       { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
