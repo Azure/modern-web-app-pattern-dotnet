@@ -263,6 +263,7 @@ if (!$NoPrompt) {
     }
 }
 
+# default will be overriden by `azd config set defaults.location`
 $defaultAzureLocation = "eastus"
 # if azure location was set then use it, otherwise use the default
 $azureLocation = (azd env get-values -o json | ConvertFrom-Json -Depth 9 -AsHashtable).AZURE_LOCATION
