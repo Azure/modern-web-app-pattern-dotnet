@@ -347,7 +347,7 @@ module webService './workload-appservice.bicep' = {
     applicationInsightsId: applicationInsightsId
     appServicePlanName: useCommonAppServicePlan ? commonAppServicePlan.outputs.name : resourceNames.webAppServicePlan
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
-    managedIdentityName: appManagedIdentity.outputs.name
+    managedIdentityName: ownerManagedIdentity.outputs.name
 
     // Settings
     appServiceName: resourceNames.webAppService
