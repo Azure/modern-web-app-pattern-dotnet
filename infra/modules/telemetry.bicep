@@ -1,13 +1,11 @@
 targetScope = 'subscription'
 
 /*
-** Resource Groups 
+** An App Service running on a App Service Plan
 ** Copyright (C) 2023 Microsoft, Inc.
 ** All Rights Reserved
 **
 ***************************************************************************
-**
-** Creates all the resource groups needed by this deployment
 */
 
 // ========================================================================
@@ -49,50 +47,58 @@ type DeploymentSettings = {
 // PARAMETERS
 // ========================================================================
 
-@description('The global deployment settings')
+@description('The deployment settings to use for this deployment.')
 param deploymentSettings DeploymentSettings
 
-@description('The list of resource names to use')
-param resourceNames object
-
-@description('If true, deploy a hub network')
-param deployHubNetwork bool
+@description('The name of the workload resource group')
+param resourceGroupName string
 
 // ========================================================================
 // VARIABLES
 // ========================================================================
 
-var createHub = deployHubNetwork && resourceNames.hubResourceGroup != resourceNames.resourceGroup
-var createSpoke = deploymentSettings.isNetworkIsolated && resourceNames.spokeResourceGroup != resourceNames.resourceGroup
+var telemetryId = '2e1b35cf-c556-45fd-87d5-bfc08ac2e8ba'
+
+// location replace with differentiator
+// resource group name
+// add telemetry for workload name
+// - capture deployment parameters for workload
+// test if deployment is deleted per group
 
 // ========================================================================
 // AZURE RESOURCES
 // ========================================================================
 
-resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = if (createHub) {
-  name: resourceNames.hubResourceGroup
+resource telemetrySubscription 'Microsoft.Resources/deployments@2021-04-01' = {
+  name: '${telemetryId}-${deploymentSettings.location}'
   location: deploymentSettings.location
-  tags: union(deploymentSettings.tags, {
-    WorkloadName: 'NetworkHub'
-    OpsCommitment: 'Platform operations'
-  })
+  properties: {
+    mode: 'Incremental'
+    template: {
+      '$schema': 'https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#'
+      contentVersion: '1.0.0.0'
+      resources: {}
+    }
+  }
 }
 
-resource spokeResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = if (createSpoke) {
-  name: resourceNames.spokeResourceGroup
-  location: deploymentSettings.location
-  tags: union(deploymentSettings.tags, deploymentSettings.workloadTags)
+resource telemetryResourceGroup 'Microsoft.Resources/deployments@2021-04-01' = {
+  name: '${telemetryId}-${deploymentSettings.workloadTags.WorkloadName}'
+  resourceGroup: resourceGroupName
+  tags:{
+    isNetworkIsolated: deploymentSettings.isNetworkIsolated ? 'true' : 'false'
+    isProduction: deploymentSettings.isProduction ? 'true' : 'false'
+    location: deploymentSettings.location
+    name: deploymentSettings.name
+    principalType: deploymentSettings.principalType
+    stage: deploymentSettings.stage
+  }
+  properties: {
+    mode: 'Incremental'
+    template: {
+      '$schema': 'https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#'
+      contentVersion: '1.0.0.0'
+      resources: {}
+    }
+  }
 }
-
-resource workloadResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
-  name: resourceNames.resourceGroup
-  location: deploymentSettings.location
-  tags: union(deploymentSettings.tags, deploymentSettings.workloadTags)
-}
-
-// ========================================================================
-// OUTPUTS
-// ========================================================================
-
-
-output workload_resource_group_name string = workloadResourceGroup.name

@@ -352,17 +352,11 @@ module buildAgent './modules/build-agent.bicep' = if (installBuildAgent) {
 @description('Enable usage and telemetry feedback to Microsoft.')
 param enableTelemetry bool = true
 
-var telemetryId = '2e1b35cf-c556-45fd-87d5-bfc08ac2e8ba-${location}'
-resource telemetryDeployment 'Microsoft.Resources/deployments@2021-04-01' = if (enableTelemetry) {
-  name: telemetryId
-  location: location
-  properties: {
-    mode: 'Incremental'
-    template: {
-      '$schema': 'https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#'
-      contentVersion: '1.0.0.0'
-      resources: {}
-    }
+module telemetry './modules/telemetry.bicep' = if (enableTelemetry) {
+  name: '${prefix}-telemetry'
+  params: {
+    resourceGroupName: resourceGroups.outputs.workload_resource_group_name
+    deploymentSettings: deploymentSettings
   }
 }
 
