@@ -59,12 +59,6 @@ param resourceGroupName string
 
 var telemetryId = '2e1b35cf-c556-45fd-87d5-bfc08ac2e8ba'
 
-// location replace with differentiator
-// resource group name
-// add telemetry for workload name
-// - capture deployment parameters for workload
-// test if deployment is deleted per group
-
 // ========================================================================
 // AZURE RESOURCES
 // ========================================================================
