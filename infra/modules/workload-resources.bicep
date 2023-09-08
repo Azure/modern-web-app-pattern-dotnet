@@ -363,13 +363,31 @@ module webService './workload-appservice.bicep' = {
   }
 }
 
+module webServiceFrontDoorRoute '../core/security/front-door-route.bicep' = {
+  name: 'web-service-front-door-route'
+  scope: resourceGroup
+  params: {
+    frontDoorEndpointName: frontDoor.outputs.endpoint_name
+    frontDoorProfileName: frontDoor.outputs.profile_name
+    originPath: '/'
+    originPrefix: 'web-service'
+    serviceAddress: webService.outputs.app_service_hostname
+    routePattern: '/api/*'
+    privateLinkSettings: deploymentSettings.isNetworkIsolated ? {
+      privateEndpointResourceId: webService.outputs.app_service_id
+      linkResourceType: 'sites'
+      location: deploymentSettings.location
+    } : {}
+  }
+}
+
 module writeWebServiceBaseUri '../core/config/app-configuration-keyvalues.bicep'  = {
   name: 'write-webservice-baseuri-to-app-configuration'
   scope: resourceGroup
   params: {
     name: appConfiguration.outputs.name
     keyvalues: [
-      { key: 'App:RelecloudApi:BaseUri', value: redis.outputs.connection_string }
+      { key: 'App:RelecloudApi:BaseUri', value: webServiceFrontDoorRoute.outputs.endpoint }
     ]
   }
 }
@@ -404,13 +422,14 @@ module webFrontend './workload-appservice.bicep' = {
   }
 }
 
-module webFrontDoorRoute '../core/security/front-door-route.bicep' = {
-  name: 'web-front-door-route'
+module webFrontendFrontDoorRoute '../core/security/front-door-route.bicep' = {
+  name: 'web-frontend-front-door-route'
   scope: resourceGroup
   params: {
     frontDoorEndpointName: frontDoor.outputs.endpoint_name
     frontDoorProfileName: frontDoor.outputs.profile_name
-    originPrefix: 'web'
+    originPath: '/'
+    originPrefix: 'web-frontend'
     serviceAddress: webFrontend.outputs.app_service_hostname
     routePattern: '/*'
     privateLinkSettings: deploymentSettings.isNetworkIsolated ? {
@@ -523,7 +542,8 @@ module approveFrontDoorPrivateLinks '../core/security/front-door-route-approval.
     managedIdentityName: ownerManagedIdentity.outputs.name
   }
   dependsOn: [
-    webFrontDoorRoute
+    webFrontendFrontDoorRoute
+    webServiceFrontDoorRoute
   ]
 }
 
@@ -562,4 +582,4 @@ output service_managed_identities object[] = [
   { principalId: appManagedIdentity.outputs.principal_id,   principalType: 'ServicePrincipal', role: 'application' }
 ]
 
-output service_web_endpoints string[] = [ webFrontDoorRoute.outputs.endpoint ]
+output service_web_endpoints string[] = [ webFrontendFrontDoorRoute.outputs.endpoint ]

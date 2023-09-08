@@ -42,6 +42,9 @@ param routePattern string
 @description('The host name to use for backend service routing')
 param serviceAddress string
 
+@description('A directory path on the origin that AzureFrontDoor can use to retrieve content from, e.g. contoso.cloudapp.net/originpath')
+param originPath string
+
 // =====================================================================================================================
 //     CALCULATED VARIABLES
 // =====================================================================================================================
@@ -116,6 +119,7 @@ resource route 'Microsoft.Cdn/profiles/afdEndpoints/routes@2021-06-01' = {
     forwardingProtocol: 'HttpsOnly'
     linkToDefaultDomain: 'Enabled'
     httpsRedirect: 'Enabled'
+    originPath: originPath
   }
 }
 
