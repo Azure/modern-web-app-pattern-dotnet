@@ -122,13 +122,11 @@ $frontEndWebObjectId = (az ad app list --filter "displayName eq '$frontEndWebApp
 
 if ($frontEndWebObjectId.Length -eq 0) {
     '`tFront-end app registration does not exist' | Write-Debug
-    
-    $pathToScript="@./infra/scripts/app-roles.json"
 
     $frontEndWebAppClientId = (az ad app create `
             --display-name $frontEndWebAppName `
             --sign-in-audience AzureADMyOrg `
-            --app-roles $pathToScript`
+            --app-roles '"[{ \"allowedMemberTypes\": [ \"User\" ], \"description\": \"Relecloud Administrator\", \"displayName\": \"Relecloud Administrator\", \"isEnabled\": \"true\", \"value\": \"Administrator\" }]"' `
             --web-redirect-uris $frontEndWebAppUri/signin-oidc https://localhost:7227/signin-oidc `
             --enable-id-token-issuance `
             --query appId --output tsv)
