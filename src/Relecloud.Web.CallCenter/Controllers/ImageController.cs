@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 
 using Relecloud.Web.CallCenter.Services;
 
-namespace Relecloud.Web.Api.Controllers;
+namespace Relecloud.Web.CallCenter.Controllers;
 
-[Route("api/[controller]")]
+[Route("webapi/[controller]")]
 [ApiController]
 public class ImageController : ControllerBase
 {
