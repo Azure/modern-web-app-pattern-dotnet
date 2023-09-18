@@ -53,6 +53,7 @@
     // "keyVault": "",
     // "keyVaultPrivateEndpoint": "",
     // "ownerManagedIdentity": "",
+    // "redis": "",
     // "resourceGroup": "",
     // "storageAccount": "",
     // "storageAccountContainer": "",
