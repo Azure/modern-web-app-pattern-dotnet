@@ -384,6 +384,7 @@ module webServiceFrontDoorRoute '../core/security/front-door-route.bicep' = {
   params: {
     frontDoorEndpointName: frontDoor.outputs.endpoint_name
     frontDoorProfileName: frontDoor.outputs.profile_name
+    healthProbeMethod:'GET'
     originPath: '/'
     originPrefix: 'web-service'
     serviceAddress: webService.outputs.app_service_hostname
