@@ -97,7 +97,12 @@ param skuName string = 'standard'
 // VARIABLES
 // ========================================================================
 
+/* https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles */
+
+// Allows full access to App Configuration data.
 var appConfigurationDataOwnerRoleId = '5ae67dd6-50cb-40e7-96ff-dc2bfa4b606b'
+
+// Allows read access to App Configuration data.
 var appConfigurationDataReaderRoleId = '516239f1-63e1-4d78-a4de-a74fb236a071'
 
 var logCategories = [
