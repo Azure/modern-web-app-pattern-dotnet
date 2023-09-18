@@ -65,12 +65,6 @@ param name string
 param tags object = {}
 
 /*
-** Dependencies
-*/
-@description('The ID of the Log Analytics workspace to use for diagnostics and logging.')
-param logAnalyticsWorkspaceId string = ''
-
-/*
 ** Settings
 */
 
@@ -89,9 +83,6 @@ param allowSharedKeyAccess bool = true
 
 @description('The list of application identities to be granted contributor access to the workload resources.')
 param contributorIdentities ApplicationIdentity[] = []
-
-@description('The diagnostic settings to use for logging and metrics.')
-param diagnosticSettings DiagnosticSettings
 
 @description('Whether or not public endpoint access is allowed for this server')
 param enablePublicNetworkAccess bool = true
@@ -169,8 +160,6 @@ resource grantContributorAccess 'Microsoft.Authorization/roleAssignments@2022-04
     principalId: id.principalId
   }
 }]
-
-
 
 module privateEndpoint '../network/private-endpoint.bicep' = if (privateEndpointSettings != null) {
   name: '${name}-private-endpoint'
