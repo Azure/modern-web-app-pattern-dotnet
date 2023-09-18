@@ -6,8 +6,10 @@ metadata:
 hooks:
   preprovision:
     posix:
+      interactive: true
       run: ./infra/scripts/whatsmyip.sh
     windows:
+      interactive: true
       run: ./infra/scripts/whatsmyip.ps1
 services:
   web-callcenter-service:
