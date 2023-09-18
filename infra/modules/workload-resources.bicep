@@ -198,8 +198,8 @@ module writeAppConfigAzureAdDefaults '../core/config/app-configuration-keyvalues
   params: {
     name: appConfiguration.outputs.name
     keyvalues: [
-      { key: 'Api:AzureAd:Instance', value: 'https://login.microsoftonline.com/' }
-      { key: 'AzureAd:Instance', value: 'https://login.microsoftonline.com/' }
+      { key: 'Api:AzureAd:Instance', value: environment().authentication.loginEndpoint }
+      { key: 'AzureAd:Instance', value: environment().authentication.loginEndpoint }
       { key: 'AzureAd:CallbackPath', value: '/signin-oidc' }
       { key: 'AzureAd:SignedOutCallbackPath', value: '/signout-oidc' }
     ]
@@ -440,7 +440,6 @@ module webFrontendFrontDoorRoute '../core/security/front-door-route.bicep' = {
   }
 }
 
-
 /*
 ** Azure Cache for Redis
 */
@@ -448,6 +447,17 @@ module webFrontendFrontDoorRoute '../core/security/front-door-route.bicep' = {
 module redis '../core/database/redis.bicep' = {
   name: 'workload-redis'
   scope: resourceGroup
+  params: {
+    name: resourceNames.redis
+    location: deploymentSettings.location
+    diagnosticSettings: diagnosticSettings
+    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
+    keyVaultName: keyVault.outputs.name
+    keyVaultSecretName: redisConnectionSecretName
+    redisCacheSku : deploymentSettings.isProduction ? 'Standard' : 'Basic'
+    redisCacheFamily : 'C'
+    redisCacheCapacity: deploymentSettings.isProduction ? 1 : 0
+  }
 }
 
 module writeRedisConfig '../core/config/app-configuration-keyvault-reference.bicep' = {
@@ -458,17 +468,6 @@ module writeRedisConfig '../core/config/app-configuration-keyvault-reference.bic
     keyvaultname: keyVault.outputs.name
     keyvalues: [
       { key: 'App:RedisCache:ConnectionString', value: redisConnectionSecretName }
-    ]
-  }
-}
-
-module writeRedisSecret '../core/security/key-vault-secrets.bicep' = {
-  name: 'write-redis-secret-to-app-configuration'
-  scope: resourceGroup
-  params: {
-    name: keyVault.outputs.name
-    secrets: [
-      { key: redisConnectionSecretName, value: redis.outputs.connection_string }
     ]
   }
 }
@@ -484,12 +483,8 @@ module storageAccount '../core/storage/storage-account.bicep' = {
     location: deploymentSettings.location
     name: resourceNames.storageAccount
 
-    // Dependencies
-    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
-
     // Settings
     allowSharedKeyAccess: false
-    diagnosticSettings: diagnosticSettings
     ownerIdentities: [
       { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
@@ -539,7 +534,6 @@ module frontDoor '../core/security/front-door-with-waf.bicep' = {
     frontDoorEndpointName: resourceNames.frontDoorEndpoint
     frontDoorProfileName: resourceNames.frontDoorProfile
     webApplicationFirewallName: resourceNames.webApplicationFirewall
-    location: deploymentSettings.location
     tags: moduleTags
 
     // Dependencies
