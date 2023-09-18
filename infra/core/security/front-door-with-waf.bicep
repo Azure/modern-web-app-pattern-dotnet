@@ -33,9 +33,6 @@ type WAFRuleSet = {
 @description('The diagnostic settings to use for this resource')
 param diagnosticSettings DiagnosticSettings
 
-@description('The Azure region to create the resource in')
-param location string
-
 @description('The tags to associate with the resource')
 param tags object
 
