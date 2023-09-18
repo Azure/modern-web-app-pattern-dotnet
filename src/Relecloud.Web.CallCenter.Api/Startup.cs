@@ -168,6 +168,7 @@ namespace Relecloud.Web.Api
             app.UseAuthentication();
             app.UseAuthorization();
 
+            app.MapGet("/", () => "Default Web API endpoint");
             app.MapControllers();
         }
     }
