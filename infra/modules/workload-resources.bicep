@@ -483,16 +483,37 @@ module storageAccount '../core/storage/storage-account.bicep' = {
   params: {
     location: deploymentSettings.location
     name: resourceNames.storageAccount
+
+    // Dependencies
+    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
+
+    // Settings
+    allowSharedKeyAccess: false
+    diagnosticSettings: diagnosticSettings
+    ownerIdentities: [
+      { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
+      { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
+    ]
+    privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
+      name: resourceNames.keyVaultPrivateEndpoint
+      resourceGroupName: resourceNames.spokeResourceGroup
+      subnetId: subnets[resourceNames.spokeStorageSubnet].id
+    } : null
   }
 }
+
+var ticketContainerName = 'tickets'
 
 module storageAccountContainer '../core/storage/storage-account-blob.bicep' = {
   name: 'workload-storage-account-container'
   scope: resourceGroup
   params: {
     name: resourceNames.storageAccountContainer
-    storageAccountId: storageAccount.outputs.id
+    storageAccountName: storageAccount.outputs.name
     diagnosticSettings: diagnosticSettings
+    containers: [
+      { name: ticketContainerName }
+    ]
   }
 }
 
@@ -502,7 +523,7 @@ module writeStorageConfig '../core/config/app-configuration-keyvalues.bicep' = {
   params: {
     name: appConfiguration.outputs.name
     keyvalues: [
-      { key: 'App:StorageAccount:Container', value: storageAccountContainer.outputs.containerName }
+      { key: 'App:StorageAccount:Container', value: ticketContainerName }
       { key: 'App:StorageAccount:Url', value: storageAccount.outputs.primaryEndpoints.blob }
     ]
   }

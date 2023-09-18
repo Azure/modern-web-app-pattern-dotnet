@@ -9,6 +9,49 @@ targetScope = 'resourceGroup'
 */
 
 // ========================================================================
+// USER-DEFINED TYPES
+// ========================================================================
+
+// From: infra/types/ApplicationIdentity.bicep
+@description('Type describing an application identity.')
+type ApplicationIdentity = {
+  @description('The ID of the identity')
+  principalId: string
+
+  @description('The type of identity - either ServicePrincipal or User')
+  principalType: 'ServicePrincipal' | 'User'
+}
+
+// From: infra/types/DiagnosticSettings.bicep
+@description('The diagnostic settings for a resource')
+type DiagnosticSettings = {
+  @description('The number of days to retain log data.')
+  logRetentionInDays: int
+
+  @description('The number of days to retain metric data.')
+  metricRetentionInDays: int
+
+  @description('If true, enable diagnostic logging.')
+  enableLogs: bool
+
+  @description('If true, enable metrics logging.')
+  enableMetrics: bool
+}
+
+// From: infra/types/PrivateEndpointSettings.bicep
+@description('Type describing the private endpoint settings.')
+type PrivateEndpointSettings = {
+  @description('The name of the private endpoint resource.')
+  name: string
+
+  @description('The name of the resource group to hold the private endpoint.')
+  resourceGroupName: string
+
+  @description('The ID of the subnet to link the private endpoint to.')
+  subnetId: string
+}
+
+// ========================================================================
 // PARAMETERS
 // ========================================================================
 
@@ -20,6 +63,12 @@ param name string
 
 @description('The tags to associate with this resource.')
 param tags object = {}
+
+/*
+** Dependencies
+*/
+@description('The ID of the Log Analytics workspace to use for diagnostics and logging.')
+param logAnalyticsWorkspaceId string = ''
 
 /*
 ** Settings
@@ -38,19 +87,28 @@ param allowCrossTenantReplication bool = true
 @description('Indicates whether the storage account permits requests to be authorized with the account access key via Shared Key. If false, then all requests, including shared access signatures, must be authorized with Azure Active Directory (Azure AD). The default value is null, which is equivalent to true.')
 param allowSharedKeyAccess bool = true
 
+@description('The list of application identities to be granted contributor access to the workload resources.')
+param contributorIdentities ApplicationIdentity[] = []
+
+@description('The diagnostic settings to use for logging and metrics.')
+param diagnosticSettings DiagnosticSettings
+
+@description('Whether or not public endpoint access is allowed for this server')
+param enablePublicNetworkAccess bool = true
+
 @description('Required. Indicates the type of storage account.')
 @allowed(['BlobStorage', 'BlockBlobStorage', 'FileStorage', 'Storage', 'StorageV2' ])
 param kind string = 'StorageV2'
 
+@description('Set the minimum TLS version to be permitted on requests to storage.')
+@allowed(['TLS1_0','TLS1_1','TLS1_2'])
 param minimumTlsVersion string = 'TLS1_2'
 
-param networkAcls object = {
-  bypass: 'AzureServices'
-  defaultAction: 'Allow'
-}
+@description('The list of application identities to be granted owner access to the workload resources.')
+param ownerIdentities ApplicationIdentity[] = []
 
-@description('Whether or not public endpoint access is allowed for this server')
-param enablePublicNetworkAccess bool = true
+@description('If set, the private endpoint settings for this resource')
+param privateEndpointSettings PrivateEndpointSettings?
 
 @description('Required. Gets or sets the SKU name.')
 param sku object = { name: 'Standard_LRS' }
@@ -58,6 +116,14 @@ param sku object = { name: 'Standard_LRS' }
 // ========================================================================
 // VARIABLES
 // ========================================================================
+
+/* https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles */
+
+// Provides full access to Azure Storage blob containers and data, including assigning POSIX access control.
+var storageBlobDataOwnerRoleId = 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
+
+// Read, write, and delete Azure Storage containers and blobs. To learn which actions are required for a given data operation
+var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 
 var defaultToOAuthAuthentication = false
 var dnsEndpointType = 'Standard'
@@ -80,10 +146,50 @@ resource storage 'Microsoft.Storage/storageAccounts@2022-05-01' = {
     defaultToOAuthAuthentication: defaultToOAuthAuthentication
     dnsEndpointType: dnsEndpointType
     minimumTlsVersion: minimumTlsVersion
-    networkAcls: networkAcls
     publicNetworkAccess: enablePublicNetworkAccess ? 'Enabled' : 'Disabled'
   }
 }
 
-output id string = storage.id
+resource grantOwnerAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = [ for id in ownerIdentities: if (!empty(id.principalId)) {
+  name: guid(storageBlobDataOwnerRoleId, id.principalId, storage.id, resourceGroup().name)
+  scope: storage
+  properties: {
+    principalType: id.principalType
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataOwnerRoleId)
+    principalId: id.principalId
+  }
+}]
+
+resource grantContributorAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = [ for id in contributorIdentities: if (!empty(id.principalId)) {
+  name: guid(storageBlobDataContributorRoleId, id.principalId, storage.id, resourceGroup().name)
+  scope: storage
+  properties: {
+    principalType: id.principalType
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataContributorRoleId)
+    principalId: id.principalId
+  }
+}]
+
+
+
+module privateEndpoint '../network/private-endpoint.bicep' = if (privateEndpointSettings != null) {
+  name: '${name}-private-endpoint'
+  scope: resourceGroup(privateEndpointSettings != null ? privateEndpointSettings!.resourceGroupName : resourceGroup().name)
+  params: {
+    name: privateEndpointSettings != null ? privateEndpointSettings!.name : 'pep-${name}'
+    location: location
+    tags: tags
+
+    // Dependencies
+    linkServiceId: storage.id
+    linkServiceName: storage.name
+    subnetId: privateEndpointSettings != null ? privateEndpointSettings!.subnetId : ''
+
+    // Settings
+    dnsZoneName: 'privatelink.vaultcore.azure.net'
+    groupIds: [ 'vault' ]
+  }
+}
+
+output name string = storage.name
 output primaryEndpoints object = storage.properties.primaryEndpoints

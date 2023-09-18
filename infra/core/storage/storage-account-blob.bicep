@@ -34,16 +34,15 @@ param diagnosticSettings DiagnosticSettings
 @description('The name of the primary resource')
 param name string
 
+@description('A collection of objects with each object describing the container name and access level')
 param containers array = []
-
-@description('The tags to associate with this resource.')
-param tags object = {}
-
-param storageAccountId string = ''
 
 /*
 ** Dependencies
 */
+@description('The name of the storage account.')
+param storageAccountName string
+
 @description('The ID of the Log Analytics workspace to use for diagnostics and logging.')
 param logAnalyticsWorkspaceId string = ''
 
@@ -51,52 +50,24 @@ param logAnalyticsWorkspaceId string = ''
 ** Settings
 */
 
-@description('Required for storage accounts where kind = BlobStorage. The access tier is used for billing.')
-@allowed(['Cool', 'Hot', 'Premium' ])
-param accessTier string = 'Hot'
-param allowBlobPublicAccess bool = true
-
-param allowCrossTenantReplication bool = true
-
-param allowSharedKeyAccess bool = true
-
+@description('The blob service properties for blob soft delete.')
 param deleteRetentionPolicy object = {}
-
-param kind string = 'StorageV2'
-
-param minimumTlsVersion string = 'TLS1_2'
-
-param networkAcls object = {
-  bypass: 'AzureServices'
-  defaultAction: 'Allow'
-}
-
-@description('Whether or not public endpoint access is allowed for this server')
-param enablePublicNetworkAccess bool = true
-
-param sku object = { name: 'Standard_LRS' }
-
-// ========================================================================
-// VARIABLES
-// ========================================================================
-
-var logCategories = [
-  'StorageDelete'
-  'StorageRead'
-  'StorageWrite'
-]
-
-var defaultToOAuthAuthentication = false
-var dnsEndpointType = 'Standard'
 
 // ========================================================================
 // AZURE RESOURCES
 // ========================================================================
-/*
+
+resource storage 'Microsoft.Storage/storageAccounts@2022-05-01' existing = {
+  name: storageAccountName
+}
+
 resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2022-05-01' = if (!empty(containers)) {
+  parent: storage
+  name: 'default'
   properties: {
     deleteRetentionPolicy: deleteRetentionPolicy
   }
+
   resource container 'containers' = [for container in containers: {
     name: container.name
     properties: {
@@ -105,8 +76,21 @@ resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2022-05-01
   }]
 }
 
-output name string = storage.name
-output primaryEndpoints object = storage.properties.primaryEndpoints
-*/
 
-output containerName string = 'tickets' // container.name
+resource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (diagnosticSettings != null && !empty(logAnalyticsWorkspaceId)) {
+  name: '${name}-diagnostics'
+  scope: blobServices
+  properties: {
+    workspaceId: logAnalyticsWorkspaceId
+    logs: map([ 'StorageDelete', 'StorageRead', 'StorageWrite' ], (category) => {
+      category: category
+      enabled: diagnosticSettings!.enableLogs
+    })
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: diagnosticSettings!.enableMetrics
+      }
+    ]
+  }
+}
