@@ -125,6 +125,7 @@ var defaultResourceNames = {
   keyVaultPrivateEndpoint: 'pep-kv-${resourceToken}'
   ownerManagedIdentity: 'id-owner-${resourceToken}'
   resourceGroup: '${resourceGroupPrefix}-workload'
+  redis: 'redis-${resourceToken}'
   storageAccount: 'st${deploymentSettings.stage}${resourceToken}${diffPrefix}'
   storageAccountContainer: 'tickets'
   sqlDatabase: 'relecloud-${resourceToken}'
@@ -195,6 +196,7 @@ output resourceNames object = {
   keyVault: contains(overrides, 'keyVault') && !empty(overrides.keyVault) ? overrides.keyVault : defaultResourceNames.keyVault
   keyVaultPrivateEndpoint: contains(overrides, 'keyVaultPrivateEndpoint') && !empty(overrides.keyVaultPrivateEndpoint) ? overrides.keyVaultPrivateEndpoint : defaultResourceNames.keyVaultPrivateEndpoint
   ownerManagedIdentity: contains(overrides, 'ownerManagedIdentity') && !empty(overrides.ownerManagedIdentity) ? overrides.ownerManagedIdentity : defaultResourceNames.ownerManagedIdentity
+  redis: contains(overrides, 'redis') && !empty(overrides.redis) ? overrides.redis : defaultResourceNames.redis
   resourceGroup: contains(overrides, 'resourceGroup') && !empty(overrides.resourceGroup) ? overrides.resourceGroup : defaultResourceNames.resourceGroup
   storageAccount: contains(overrides, 'storageAccount') && !empty(overrides.storageAccount) ? overrides.storageAccount : defaultResourceNames.storageAccount
   storageAccountContainer: contains(overrides, 'storageAccountContainer') && !empty(overrides.storageAccountContainer) ? overrides.storageAccountContainer : defaultResourceNames.storageAccountContainer
