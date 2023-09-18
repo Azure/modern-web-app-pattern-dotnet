@@ -125,6 +125,9 @@ var budgetAmount = reduce(map(items(budget), (obj) => obj.value), 0, (total, amo
 
 var redisConnectionSecretName='App--RedisCache--ConnectionString'
 
+// describes the Azure Storage container where ticket images will be stored after they are rendered during purchase
+var ticketContainerName = 'tickets'
+
 // ========================================================================
 // EXISTING RESOURCES
 // ========================================================================
@@ -202,6 +205,18 @@ module writeAppConfigAzureAdDefaults '../core/config/app-configuration-keyvalues
       { key: 'AzureAd:Instance', value: environment().authentication.loginEndpoint }
       { key: 'AzureAd:CallbackPath', value: '/signin-oidc' }
       { key: 'AzureAd:SignedOutCallbackPath', value: '/signout-oidc' }
+    ]
+  }
+}
+
+module writeAzureAdClientSecretRef '../core/config/app-configuration-keyvault-reference.bicep' = {
+  name: 'write-azuread-keyvault-reference-to-appconfig'
+  scope: resourceGroup
+  params: {
+    name: appConfiguration.outputs.name
+    keyvaultname: keyVault.outputs.name
+    keyvalues: [
+      { key: 'AzureAd:ClientSecret', value: 'AzureAd--ClientSecret' }
     ]
   }
 }
@@ -496,8 +511,6 @@ module storageAccount '../core/storage/storage-account.bicep' = {
     } : null
   }
 }
-
-var ticketContainerName = 'tickets'
 
 module storageAccountContainer '../core/storage/storage-account-blob.bicep' = {
   name: 'workload-storage-account-container'
