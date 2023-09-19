@@ -113,7 +113,7 @@ resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01
   }
   properties: {
     forceUpdateTag: uniqueScriptId
-    azPowerShellVersion: '9.7' 
+    azPowerShellVersion: '10.3' 
     retentionInterval: 'P1D'
     environmentVariables: [
       {
