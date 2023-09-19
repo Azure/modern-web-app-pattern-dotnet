@@ -162,7 +162,7 @@ resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01
         $configStore = Get-AzAppConfigurationStore -Name $Env:APP_CONFIG_SVC_NAME -ResourceGroupName $Env:RESOURCE_GROUP
 
         Write-Host 'Open'
-        Update-AzAppConfigurationStore -Name $Env:APP_CONFIG_SVC_NAME -ResourceGroupName $Env:RESOURCE_GROUP -PublicNetworkAccess $true
+        Update-AzAppConfigurationStore -Name $Env:APP_CONFIG_SVC_NAME -ResourceGroupName $Env:RESOURCE_GROUP -PublicNetworkAccess 'Enabled'
         
         Write-Host 'Set values for backend'
         Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:SqlDatabase:ConnectionString -Value $Env:SQL_CONNECTION_STRING
@@ -184,7 +184,7 @@ resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01
       finally {
         if ($ENABLE_PUBLIC_ACCESS -eq 'false') {
           Write-Host 'Close'
-          Update-AzAppConfigurationStore -Name $Env:APP_CONFIG_SVC_NAME -ResourceGroupName $Env:RESOURCE_GROUP -PublicNetworkAccess $false
+          Update-AzAppConfigurationStore -Name $Env:APP_CONFIG_SVC_NAME -ResourceGroupName $Env:RESOURCE_GROUP -PublicNetworkAccess 'Disabled'
         }
       }
       '''
