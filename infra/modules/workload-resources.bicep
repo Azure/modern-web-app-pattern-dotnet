@@ -128,6 +128,9 @@ var redisConnectionSecretName='App--RedisCache--ConnectionString'
 // describes the Azure Storage container where ticket images will be stored after they are rendered during purchase
 var ticketContainerName = 'tickets'
 
+// Built-in Azure Contributor role
+var contributorRole = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
+
 // ========================================================================
 // EXISTING RESOURCES
 // ========================================================================
@@ -160,6 +163,25 @@ module appManagedIdentity '../core/identity/managed-identity.bicep' = {
     name: resourceNames.appManagedIdentity
     location: deploymentSettings.location
     tags: moduleTags
+  }
+}
+
+module devOpsManagedIdentity '../core/identity/managed-identity.bicep' = {
+  name: 'devops-managed-identity'
+  scope: resourceGroup
+  params: {
+    name: resourceNames.appManagedIdentity
+    location: deploymentSettings.location
+    tags: moduleTags
+  }
+}
+
+module devOpsManagedIdentityRoleAssignment '../core/identity/resource-group-role-assignment.bicep' = {
+  name: 'devops-managed-identity-role-assignment'
+  scope: resourceGroup
+  params: {
+    identityName: devOpsManagedIdentity.outputs.name
+    roleId: contributorRole
   }
 }
 
@@ -205,7 +227,7 @@ module writeAppConfigValues './app-config-values.bicep' = {
     appConfigurationStoreName: appConfiguration.outputs.name
     enablePublicNetworkAccess: deploymentSettings.isNetworkIsolated ? false : true
     location: deploymentSettings.location
-    ownerIdentity: ownerManagedIdentity.outputs.principal_id
+    devopsIdentityName: devOpsManagedIdentity.outputs.name
     relecloudApiBaseUri: webServiceFrontDoorRoute.outputs.endpoint
     redisConnectionSecretName: redisConnectionSecretName
     sqlDatabaseConnectionString: sqlDatabase.outputs.connection_string    
