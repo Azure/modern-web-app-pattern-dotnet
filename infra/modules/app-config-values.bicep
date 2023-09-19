@@ -178,8 +178,8 @@ resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01
         Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:SignedOutCallbackPath -Value /signout-oidc
         
         Write-Host 'Set values for key vault reference'
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:ClientSecret -Value AzureAd--ClientSecret -ContentType application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RedisCache:ConnectionString -Value $Env:REDIS_CONNECTION_SECRET_NAME -ContentType application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8
+        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:ClientSecret -Value AzureAd--ClientSecret -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
+        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RedisCache:ConnectionString -Value $Env:REDIS_CONNECTION_SECRET_NAME -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
       }
       finally {
         if ($ENABLE_PUBLIC_ACCESS -eq 'false') {
