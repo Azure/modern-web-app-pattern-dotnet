@@ -101,7 +101,7 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
 
         private async Task<string> SaveImageAsync(Ticket ticket, MemoryStream ticketImageBlob)
         {
-            var storageUrl = configuration["App:StorageAccount:Url"];
+            var storageUrl = configuration["App:StorageAccount:Uri"];
             var storageContainer = configuration["App:StorageAccount:Container"];
             var blobName = BlobNameFormatString.Replace("{EntityId}", ticket.Id.ToString());
             Uri blobUri = new($"{storageUrl}/{storageContainer}/{blobName}");

@@ -195,29 +195,21 @@ module appConfiguration '../core/config/app-configuration.bicep' = {
   }
 }
 
-module writeAppConfigAzureAdDefaults '../core/config/app-configuration-keyvalues.bicep' = {
-  name: 'write-app-config-admin-info-to-keyvault'
+module writeAppConfigValues './app-config-values.bicep' = {
+  name: 'scripted-write-app-config-store-values'
   scope: resourceGroup
   params: {
-    name: appConfiguration.outputs.name
-    keyvalues: [
-      { key: 'Api:AzureAd:Instance', value: environment().authentication.loginEndpoint }
-      { key: 'AzureAd:Instance', value: environment().authentication.loginEndpoint }
-      { key: 'AzureAd:CallbackPath', value: '/signin-oidc' }
-      { key: 'AzureAd:SignedOutCallbackPath', value: '/signout-oidc' }
-    ]
-  }
-}
-
-module writeAzureAdClientSecretRef '../core/config/app-configuration-keyvault-reference.bicep' = {
-  name: 'write-azuread-keyvault-reference-to-appconfig'
-  scope: resourceGroup
-  params: {
-    name: appConfiguration.outputs.name
-    keyvaultname: keyVault.outputs.name
-    keyvalues: [
-      { key: 'AzureAd:ClientSecret', value: 'AzureAd--ClientSecret' }
-    ]
+    azureFrontDoorHostName: frontDoor.outputs.hostname
+    azureStorageTicketContainerName: ticketContainerName
+    azureStorageTicketUri:storageAccount.outputs.primaryEndpoints.blob
+    appConfigurationStoreName: appConfiguration.outputs.name
+    enablePublicNetworkAccess: deploymentSettings.isNetworkIsolated ? false : true
+    location: deploymentSettings.location
+    ownerIdentity: ownerManagedIdentity.outputs.principal_id
+    relecloudApiBaseUri: webServiceFrontDoorRoute.outputs.endpoint
+    redisConnectionSecretName: redisConnectionSecretName
+    sqlDatabaseConnectionString: sqlDatabase.outputs.connection_string    
+    tags: moduleTags
   }
 }
 
@@ -315,17 +307,6 @@ module writeSqlAdminInfo '../core/security/key-vault-secrets.bicep' = if (create
   }
 }
 
-module writeSqlConnectionReference '../core/config/app-configuration-keyvalues.bicep' = {
-  name: 'write-sql-connection-reference-to-app-configuration'
-  scope: resourceGroup
-  params: {
-    name: appConfiguration.outputs.name
-    keyvalues: [
-      { key: 'App:SqlDatabase:ConnectionString', value: sqlDatabase.outputs.connection_string }
-    ]
-  }
-}
-
 /*
 ** App Services
 */
@@ -397,17 +378,6 @@ module webServiceFrontDoorRoute '../core/security/front-door-route.bicep' = {
   }
 }
 
-module writeWebServiceBaseUri '../core/config/app-configuration-keyvalues.bicep'  = {
-  name: 'write-webservice-baseuri-to-app-configuration'
-  scope: resourceGroup
-  params: {
-    name: appConfiguration.outputs.name
-    keyvalues: [
-      { key: 'App:RelecloudApi:BaseUri', value: webServiceFrontDoorRoute.outputs.endpoint }
-    ]
-  }
-}
-
 module webFrontend './workload-appservice.bicep' = {
   name: 'workload-webfrontend'
   scope: resourceGroup
@@ -476,18 +446,6 @@ module redis '../core/database/redis.bicep' = {
   }
 }
 
-module writeRedisConfig '../core/config/app-configuration-keyvault-reference.bicep' = {
-  name: 'write-redis-config-to-app-configuration'
-  scope: resourceGroup
-  params: {
-    name: appConfiguration.outputs.name
-    keyvaultname: keyVault.outputs.name
-    keyvalues: [
-      { key: 'App:RedisCache:ConnectionString', value: redisConnectionSecretName }
-    ]
-  }
-}
-
 /*
 ** Azure Storage
 */
@@ -522,18 +480,6 @@ module storageAccountContainer '../core/storage/storage-account-blob.bicep' = {
     diagnosticSettings: diagnosticSettings
     containers: [
       { name: ticketContainerName }
-    ]
-  }
-}
-
-module writeStorageConfig '../core/config/app-configuration-keyvalues.bicep' = {
-  scope: resourceGroup
-  name: 'write-storage-config-to-app-configuration'
-  params: {
-    name: appConfiguration.outputs.name
-    keyvalues: [
-      { key: 'App:StorageAccount:Container', value: ticketContainerName }
-      { key: 'App:StorageAccount:Url', value: storageAccount.outputs.primaryEndpoints.blob }
     ]
   }
 }
@@ -574,17 +520,6 @@ module approveFrontDoorPrivateLinks '../core/security/front-door-route-approval.
     webFrontendFrontDoorRoute
     webServiceFrontDoorRoute
   ]
-}
-
-module writeFrontDoorConfig '../core/config/app-configuration-keyvalues.bicep' = {
-  name: 'write-front-door-config-to-app-configuration'
-  scope: resourceGroup
-  params: {
-    name: appConfiguration.outputs.name
-    keyvalues: [
-      { key: 'App:FrontDoorHostname', value: frontDoor.outputs.hostname  }
-    ]
-  }
 }
 
 module workloadBudget '../core/cost-management/budget.bicep' = {

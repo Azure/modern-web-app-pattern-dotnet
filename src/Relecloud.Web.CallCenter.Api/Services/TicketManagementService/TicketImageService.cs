@@ -17,7 +17,7 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
         {
             try
             {
-                var storageUrl = configuration["App:StorageAccount:Url"];
+                var storageUrl = configuration["App:StorageAccount:Uri"];
                 var storageContainer = configuration["App:StorageAccount:Container"];
                 Uri blobUri = new($"{storageUrl}/{storageContainer}/{imageName}");
 
