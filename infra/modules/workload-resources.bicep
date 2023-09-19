@@ -204,6 +204,7 @@ module appConfiguration '../core/config/app-configuration.bicep' = {
     enablePublicNetworkAccess: !deploymentSettings.isNetworkIsolated
     ownerIdentities: [
       { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
+      { principalId: devOpsManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
     ]
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
