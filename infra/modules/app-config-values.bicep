@@ -1,6 +1,5 @@
 targetScope = 'resourceGroup'
 
-
 /*
 ** Sets configuration data in Azure App Configuration Service
 ** Copyright (C) 2023 Microsoft, Inc.
@@ -63,8 +62,8 @@ param azureStorageTicketUri string
 @description('The Azure region for the resource.')
 param location string
 
-@description('The identity that runs the script (requires App Config Data Contributor or Owner)')
-param ownerIdentity string
+@description('The name of the identity that runs the script (requires access to change public network settings on App Configuration)')
+param devopsIdentityName string
 
 @description('Sql database connection string for managed identity connection')
 param sqlDatabaseConnectionString string
@@ -96,6 +95,10 @@ resource appConfigStore 'Microsoft.AppConfiguration/configurationStores@2023-03-
   name: appConfigurationStoreName
 }
 
+resource devopsIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
+  name: devopsIdentityName
+}
+
 resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   name: 'openConfigSvcForEdits'
   location: location
@@ -103,8 +106,9 @@ resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01
   kind: 'AzurePowerShell'
   identity: {
     type: 'UserAssigned'
+    // When the identity property is specified, the script service calls Connect-AzAccount -Identity before invoking the user script.
     userAssignedIdentities: {
-      '${ownerIdentity}': {}
+      '${devopsIdentity.id}': {}
     }
   }
   properties: {
