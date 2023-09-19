@@ -159,30 +159,32 @@ resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01
     ]
     scriptContent: '''
       try {
-        $configStore = Get-AzAppConfigurationStore -Name $APP_CONFIG_SVC_NAME -ResourceGroupName $RESOURCE_GROUP
+        $configStore = Get-AzAppConfigurationStore -Name $Env:APP_CONFIG_SVC_NAME -ResourceGroupName $Env:RESOURCE_GROUP
 
-        Update-AzAppConfigurationStore -Name $APP_CONFIG_SVC_NAME -PublicNetworkAccess $true
-
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:SqlDatabase:ConnectionString -Value $SQL_CONNECTION_STRING
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:AzureAd:Instance -Value $LOGIN_ENDPOINT
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:StorageAccount:Container -Value $AZURE_STORAGE_TICKET_CONTAINER_NAME
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:StorageAccount:Uri -Value $AZURE_STORAGE_TICKET_URI
+        Write-Host 'Open'
+        Update-AzAppConfigurationStore -Name $Env:APP_CONFIG_SVC_NAME -PublicNetworkAccess $true
         
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:FrontDoorHostname -Value $AZURE_FRONT_DOOR_HOST_NAME
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RelecloudApi:BaseUri -Value $RELECLOUD_API_BASE_URI
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:Instance -Value $LOGIN_ENDPOINT
+        Write-Host 'Set values for backend'
+        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:SqlDatabase:ConnectionString -Value $Env:SQL_CONNECTION_STRING
+        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:AzureAd:Instance -Value $Env:LOGIN_ENDPOINT
+        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:StorageAccount:Container -Value $Env:AZURE_STORAGE_TICKET_CONTAINER_NAME
+        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:StorageAccount:Uri -Value $Env:AZURE_STORAGE_TICKET_URI
+        
+        Write-Host 'Set values for frontend'
+        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:FrontDoorHostname -Value $Env:AZURE_FRONT_DOOR_HOST_NAME
+        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RelecloudApi:BaseUri -Value $Env:RELECLOUD_API_BASE_URI
+        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:Instance -Value $Env:LOGIN_ENDPOINT
         Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:CallbackPath -Value /signin-oidc
         Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:SignedOutCallbackPath -Value /signout-oidc
         
+        Write-Host 'Set values for key vault reference'
         Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:ClientSecret -Value AzureAd--ClientSecret -ContentType application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RedisCache:ConnectionString -Value $REDIS_CONNECTION_SECRET_NAME -ContentType application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8
+        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RedisCache:ConnectionString -Value $Env:REDIS_CONNECTION_SECRET_NAME -ContentType application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8
       }
       finally {
-        if ($ENABLE_PUBLIC_ACCESS -eq 'true') {
-          Update-AzAppConfigurationStore -Name $APP_CONFIG_SVC_NAME -PublicNetworkAccess $true
-        }
-        else {
-          Update-AzAppConfigurationStore -Name $APP_CONFIG_SVC_NAME -PublicNetworkAccess $false
+        if ($ENABLE_PUBLIC_ACCESS -eq 'false') {
+          Write-Host 'Close'
+          Update-AzAppConfigurationStore -Name $Env:APP_CONFIG_SVC_NAME -PublicNetworkAccess $false
         }
       }
       '''
