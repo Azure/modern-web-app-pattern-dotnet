@@ -170,7 +170,7 @@ resource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' 
 }
 
 module writeRedisSecret '../security/key-vault-secrets.bicep' = {
-  name: 'write-redis-secret-to-app-configuration'
+  name: 'write-redis-secret-to-keyvault'
   params: {
     name: keyVault.name
     secrets: [
