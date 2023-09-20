@@ -188,22 +188,13 @@ module appManagedIdentity '../core/identity/managed-identity.bicep' = {
   }
 }
 
-module devOpsManagedIdentity '../core/identity/managed-identity.bicep' = {
-  name: 'devops-managed-identity'
+module ownerManagedIdentityRoleAssignment '../core/identity/resource-group-role-assignment.bicep' = {
+  name: 'owner-managed-identity-role-assignment'
   scope: resourceGroup
   params: {
-    name: resourceNames.appManagedIdentity
-    location: deploymentSettings.location
-    tags: moduleTags
-  }
-}
-
-module devOpsManagedIdentityRoleAssignment '../core/identity/resource-group-role-assignment.bicep' = {
-  name: 'devops-managed-identity-role-assignment'
-  scope: resourceGroup
-  params: {
-    identityName: devOpsManagedIdentity.outputs.name
+    identityName: ownerManagedIdentity.outputs.name
     roleId: contributorRole
+    roleDescription: 'Grant the "Contributor" role to the user-assigned managed identity so it can run deployment scripts.'
   }
 }
 
@@ -226,7 +217,6 @@ module appConfiguration '../core/config/app-configuration.bicep' = {
     enablePublicNetworkAccess: !deploymentSettings.isNetworkIsolated
     ownerIdentities: [
       { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
-      { principalId: devOpsManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
     ]
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
@@ -250,7 +240,7 @@ module writeAppConfigValues './app-config-values.bicep' = {
     appConfigurationStoreName: appConfiguration.outputs.name
     enablePublicNetworkAccess: deploymentSettings.isNetworkIsolated ? false : true
     location: deploymentSettings.location
-    devopsIdentityName: devOpsManagedIdentity.outputs.name
+    devopsIdentityName: ownerManagedIdentityRoleAssignment.outputs.identity_name
     relecloudApiBaseUri: 'https://${frontDoorSettings.hostname}/api'
     redisConnectionSecretName: redisConnectionSecretName
     sqlDatabaseConnectionString: sqlDatabase.outputs.connection_string    
@@ -404,7 +394,7 @@ module webService './workload-appservice.bicep' = {
   }
 }
 
-module webServiceFrontDoorRoute '../core/security/front-door-route.bicep' = {
+module webServiceFrontDoorRoute '../core/security/front-door-route.bicep' = if (deploymentSettings.isPrimaryLocation) {
   name: 'web-service-front-door-route'
   scope: resourceGroup
   params: {
@@ -453,7 +443,7 @@ module webFrontend './workload-appservice.bicep' = {
   }
 }
 
-module webFrontendFrontDoorRoute '../core/security/front-door-route.bicep' = {
+module webFrontendFrontDoorRoute '../core/security/front-door-route.bicep' = if (deploymentSettings.isPrimaryLocation) {
   name: 'web-frontend-front-door-route'
   scope: resourceGroup
   params: {
@@ -534,12 +524,12 @@ module approveFrontDoorPrivateLinks '../core/security/front-door-route-approval.
   scope: resourceGroup
   params: {
     location: deploymentSettings.location
-    managedIdentityName: ownerManagedIdentity.outputs.name
+    managedIdentityName: ownerManagedIdentityRoleAssignment.outputs.identity_name
+    webAppIds: deploymentSettings.isPrimaryLocation ? [
+      webFrontendFrontDoorRoute.outputs.endpoint
+      webServiceFrontDoorRoute.outputs.endpoint
+    ] : []
   }
-  dependsOn: [
-    webFrontendFrontDoorRoute
-    webServiceFrontDoorRoute
-  ]
 }
 
 module workloadBudget '../core/cost-management/budget.bicep' = {
@@ -566,4 +556,4 @@ output service_managed_identities object[] = [
   { principalId: appManagedIdentity.outputs.principal_id,   principalType: 'ServicePrincipal', role: 'application' }
 ]
 
-output service_web_endpoints string[] = [ webFrontendFrontDoorRoute.outputs.endpoint ]
+output service_web_endpoints string[] = [ deploymentSettings.isPrimaryLocation ? webFrontendFrontDoorRoute.outputs.endpoint : webFrontend.outputs.app_service_uri ]

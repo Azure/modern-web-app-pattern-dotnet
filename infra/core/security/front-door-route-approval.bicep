@@ -11,12 +11,8 @@ param managedIdentityName string
 @description('Force the deployment script to run')
 param utcValue string = utcNow()
 
-// =====================================================================================================================
-//     VARIABLES
-// =====================================================================================================================
-
-@description('Built in \'Contributor\' role ID: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles')
-var contributerRoleId = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
+@description('A collection of web apps that will be approved for front door private endpoint connection')
+param webAppIds string[]
 
 // =====================================================================================================================
 //     AZURE RESOURCES
@@ -24,15 +20,6 @@ var contributerRoleId = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: managedIdentityName
-}
-
-resource grantContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(contributerRoleId, managedIdentityName, resourceGroup().name)
-  properties: {
-    principalType: 'ServicePrincipal'
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', contributerRoleId)
-    principalId: managedIdentity.properties.principalId
-  }
 }
 
 resource approval 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
@@ -59,7 +46,4 @@ resource approval 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     cleanupPreference: 'OnSuccess'
     retentionInterval: 'PT1H'
   }
-  dependsOn: [
-    grantContributorRole
-  ]
 }
