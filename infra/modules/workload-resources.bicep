@@ -62,6 +62,22 @@ type DiagnosticSettings = {
   enableMetrics: bool
 }
 
+// From: infra/types/FrontDoorSettings.bicep
+@description('Type describing the settings for Azure Front Door.')
+type FrontDoorSettings = {
+  @description('The name of the Azure Front Door endpoint')
+  endpointName: string
+
+  @description('Front Door Id used for traffic restriction')
+  frontDoorId: string
+
+  @description('The hostname that can be used to access Azure Front Door content.')
+  hostname: string
+
+  @description('The profile name that is used for configuring Front Door routes.')
+  profileName: string
+}
+
 // ========================================================================
 // PARAMETERS
 // ========================================================================
@@ -86,6 +102,9 @@ param logAnalyticsWorkspaceId string = ''
 
 @description('The list of subnets that are used for linking into the virtual network if using network isolation.')
 param subnets object = {}
+
+@description('The settings for a pre-configured Azure Front Door that provides WAF for App Services.')
+param frontDoorSettings FrontDoorSettings
 
 /*
 ** Settings
@@ -225,14 +244,14 @@ module writeAppConfigValues './app-config-values.bicep' = {
   name: 'scripted-write-app-config-store-values'
   scope: resourceGroup
   params: {
-    azureFrontDoorHostName: frontDoor.outputs.hostname
+    azureFrontDoorHostName: frontDoorSettings.hostname
     azureStorageTicketContainerName: ticketContainerName
     azureStorageTicketUri:storageAccount.outputs.primaryEndpoints.blob
     appConfigurationStoreName: appConfiguration.outputs.name
     enablePublicNetworkAccess: deploymentSettings.isNetworkIsolated ? false : true
     location: deploymentSettings.location
     devopsIdentityName: devOpsManagedIdentity.outputs.name
-    relecloudApiBaseUri: webServiceFrontDoorRoute.outputs.endpoint
+    relecloudApiBaseUri: 'https://${frontDoorSettings.hostname}/api'
     redisConnectionSecretName: redisConnectionSecretName
     sqlDatabaseConnectionString: sqlDatabase.outputs.connection_string    
     tags: moduleTags
@@ -379,7 +398,7 @@ module webService './workload-appservice.bicep' = {
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokeWebInboundSubnet].id
     } : null
-    restrictToFrontDoor: frontDoor.outputs.front_door_id
+    restrictToFrontDoor: frontDoorSettings.frontDoorId
     servicePrefix: 'web-callcenter-service'
     useExistingAppServicePlan: useCommonAppServicePlan
   }
@@ -389,8 +408,8 @@ module webServiceFrontDoorRoute '../core/security/front-door-route.bicep' = {
   name: 'web-service-front-door-route'
   scope: resourceGroup
   params: {
-    frontDoorEndpointName: frontDoor.outputs.endpoint_name
-    frontDoorProfileName: frontDoor.outputs.profile_name
+    frontDoorEndpointName: frontDoorSettings.endpointName
+    frontDoorProfileName: frontDoorSettings.profileName
     healthProbeMethod:'GET'
     originPath: '/'
     originPrefix: 'web-service'
@@ -428,7 +447,7 @@ module webFrontend './workload-appservice.bicep' = {
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokeWebInboundSubnet].id
     } : null
-    restrictToFrontDoor: frontDoor.outputs.front_door_id
+    restrictToFrontDoor: frontDoorSettings.frontDoorId
     servicePrefix: 'web-callcenter-frontend'
     useExistingAppServicePlan: useCommonAppServicePlan
   }
@@ -438,8 +457,8 @@ module webFrontendFrontDoorRoute '../core/security/front-door-route.bicep' = {
   name: 'web-frontend-front-door-route'
   scope: resourceGroup
   params: {
-    frontDoorEndpointName: frontDoor.outputs.endpoint_name
-    frontDoorProfileName: frontDoor.outputs.profile_name
+    frontDoorEndpointName: frontDoorSettings.endpointName
+    frontDoorProfileName: frontDoorSettings.profileName
     originPath: '/'
     originPrefix: 'web-frontend'
     serviceAddress: webFrontend.outputs.app_service_hostname
@@ -507,31 +526,6 @@ module storageAccountContainer '../core/storage/storage-account-blob.bicep' = {
     containers: [
       { name: ticketContainerName }
     ]
-  }
-}
-
-/*
-** Azure Front Door with Web Application Firewall
-*/
-module frontDoor '../core/security/front-door-with-waf.bicep' = {
-  name: 'workload-front-door-with-waf'
-  scope: resourceGroup
-  params: {
-    frontDoorEndpointName: resourceNames.frontDoorEndpoint
-    frontDoorProfileName: resourceNames.frontDoorProfile
-    webApplicationFirewallName: resourceNames.webApplicationFirewall
-    tags: moduleTags
-
-    // Dependencies
-    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
-
-    // Service settings
-    diagnosticSettings: diagnosticSettings
-    managedRules: deploymentSettings.isProduction ? [
-      { name: 'Microsoft_DefaultRuleSet', version: '2.0' }
-      { name: 'Microsoft_BotManager_RuleSet', version: '1.0' }
-    ] : []
-    sku: deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated ? 'Premium' : 'Standard'
   }
 }
 

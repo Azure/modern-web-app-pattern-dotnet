@@ -347,6 +347,19 @@ module peerVirtualNetworks './modules/peer-networks.bicep' = if (willDeployHubNe
 /*
 ** Create the application resources.
 */
+
+module frontdoor './modules/shared-frontdoor.bicep' = {
+  name: '${prefix}-frontdoor'
+  params: {
+    deploymentSettings: deploymentSettings
+    diagnosticSettings: diagnosticSettings
+    resourceNames: naming.outputs.resourceNames
+
+    // Dependencies
+    logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
+  }
+}
+
 module workload './modules/workload-resources.bicep' = {
   name: '${prefix}-workload'
   params: {
@@ -358,6 +371,7 @@ module workload './modules/workload-resources.bicep' = {
     applicationInsightsId: azureMonitor.outputs.application_insights_id
     logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
     subnets: isNetworkIsolated ? spokeNetwork.outputs.subnets : {}
+    frontDoorSettings: frontdoor.outputs.settings
 
     // Settings
     administratorPassword: administratorPassword
@@ -382,6 +396,7 @@ module workload2 './modules/workload-resources.bicep' =  if (isMultiLocationDepl
     applicationInsightsId: azureMonitor.outputs.application_insights_id
     logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
     subnets: isNetworkIsolated ? spokeNetwork.outputs.subnets : {}
+    frontDoorSettings: frontdoor.outputs.settings
 
     // Settings
     administratorPassword: administratorPassword
