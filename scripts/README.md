@@ -54,7 +54,7 @@ These scripts are used by the engineering team to accelerate the testing process
     > It is encouraged to use a distinct name for each deployment
     
     ```pwsh
-    ./scripts/setup.ps1 -Name reledev7 -NotIsolated -Development -CommonAppServicePlan
+    ./scripts/setup.ps1 -NotIsolated -Development -CommonAppServicePlan -SingleRegion -Name reledev7 
     ```
 
 1. Run a deployment

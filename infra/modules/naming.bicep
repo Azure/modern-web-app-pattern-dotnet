@@ -22,6 +22,9 @@ type DeploymentSettings = {
 
   @description('If \'true\', isolate the workload in a virtual network.')
   isNetworkIsolated: bool
+  
+  @description('If \'false\', then this is a multi-location deployment for the second location.')
+  isPrimaryLocation: bool
 
   @description('The primary Azure region to host resources')
   location: string
@@ -126,7 +129,7 @@ var defaultResourceNames = {
   ownerManagedIdentity: 'id-owner-${resourceToken}'
   resourceGroup: '${resourceGroupPrefix}-workload'
   redis: 'redis-${resourceToken}'
-  storageAccount: 'st${deploymentSettings.stage}${resourceToken}${diffPrefix}'
+  storageAccount: 'st${deploymentSettings.stage}${resourceToken}'
   storageAccountContainer: 'tickets'
   sqlDatabase: 'relecloud-${resourceToken}'
   sqlDatabasePrivateEndpoint: 'pep-sqldb-${resourceToken}'

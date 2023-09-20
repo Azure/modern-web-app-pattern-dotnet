@@ -100,6 +100,10 @@ param deployHubNetwork string = 'auto'
 @description('Deploy the application in network isolation mode.  \'auto\' will deploy in isolation only if deploying to production.')
 param networkIsolation string = 'auto'
 
+// Secondary Azure location - provides the name of the 2nd Azure region. Blank by default to represent a single region deployment.
+@description('Should specify an Azure region. If not set to empty string then deploy to single region, else trigger multiregional deployment. The second region should be different than the `location`. e.g. `westus3`')
+param secondaryAzureLocation string
+
 // Common App Service Plan - determines if a common app service plan should be deployed.
 //  auto = yes in dev, no in prod.
 @allowed([ 'auto', 'false', 'true' ])
@@ -113,6 +117,7 @@ param useCommonAppServicePlan string = 'auto'
 var prefix = '${environmentName}-${environmentType}'
 
 // Boolean to indicate the various values for the deployment settings
+var isMultiLocationDeployment = secondaryAzureLocation == '' ? false : true
 var isProduction = environmentType == 'prod'
 var isNetworkIsolated = networkIsolation == 'true' || (networkIsolation == 'auto' && isProduction)
 var willDeployHubNetwork = isNetworkIsolated && (deployHubNetwork == 'true' || (deployHubNetwork == 'auto' && !isProduction))
@@ -121,6 +126,7 @@ var willDeployCommonAppServicePlan = useCommonAppServicePlan == 'true' || (useCo
 var deploymentSettings = {
   isProduction: isProduction
   isNetworkIsolated: isNetworkIsolated
+  isPrimaryLocation: true
   location: location
   name: environmentName
   principalId: principalId
@@ -140,6 +146,12 @@ var deploymentSettings = {
     OpsCommitment: 'Workload operations'
   }
 }
+
+var secondDeployment = {
+  isPrimaryLocation: false
+}
+// a copy of the deploymentSettings that is aware these details describe a second deployment
+var deploymentSettings2 = union(deploymentSettings, secondDeployment)
 
 var diagnosticSettings = {
   logRetentionInDays: isProduction ? 30 : 3
@@ -168,6 +180,15 @@ module naming './modules/naming.bicep' = {
   }
 }
 
+module naming2 './modules/naming.bicep' = {
+  name: '${prefix}-naming2'
+  params: {
+    deploymentSettings: deploymentSettings
+    differentiator: differentiator != 'none' ? '${differentiator}2' : '2'
+    overrides: loadJsonContent('./naming.overrides.jsonc')
+  }
+}
+
 /*
 ** Resources are organized into one of four resource groups:
 **
@@ -184,6 +205,17 @@ module resourceGroups './modules/resource-groups.bicep' = {
   params: {
     deploymentSettings: deploymentSettings
     resourceNames: naming.outputs.resourceNames
+
+    // Settings
+    deployHubNetwork: willDeployHubNetwork
+  }
+}
+
+module resourceGroups2 './modules/resource-groups.bicep' = if (isMultiLocationDeployment) {
+  name: '${prefix}-resource-groups2'
+  params: {
+    deploymentSettings: deploymentSettings2
+    resourceNames: naming2.outputs.resourceNames
 
     // Settings
     deployHubNetwork: willDeployHubNetwork
@@ -274,6 +306,25 @@ module spokeNetwork './modules/spoke-network.bicep' = if (isNetworkIsolated) {
   ]
 }
 
+module spokeNetwork2 './modules/spoke-network.bicep' = if (isNetworkIsolated && isMultiLocationDeployment) {
+  name: '${prefix}-spoke-network2'
+  params: {
+    deploymentSettings: deploymentSettings2
+    diagnosticSettings: diagnosticSettings
+    resourceNames: naming2.outputs.resourceNames
+
+    // Dependencies
+    logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
+    routeTableId: willDeployHubNetwork ? hubNetwork.outputs.route_table_id : ''
+
+    // Settings
+    createDevopsSubnet: installBuildAgent
+  }
+  dependsOn: [
+    resourceGroups2
+  ]
+}
+
 /*
 ** Now that the networking resources have been created, we need to peer the networks.  This is
 ** only done if the hub network was created in this deployment.  If the hub network was not
@@ -317,6 +368,30 @@ module workload './modules/workload-resources.bicep' = {
   dependsOn: [
     resourceGroups
     spokeNetwork
+  ]
+}
+
+module workload2 './modules/workload-resources.bicep' =  if (isMultiLocationDeployment) {
+  name: '${prefix}-workload2'
+  params: {
+    deploymentSettings: deploymentSettings2
+    diagnosticSettings: diagnosticSettings
+    resourceNames: naming2.outputs.resourceNames
+
+    // Dependencies
+    applicationInsightsId: azureMonitor.outputs.application_insights_id
+    logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
+    subnets: isNetworkIsolated ? spokeNetwork.outputs.subnets : {}
+
+    // Settings
+    administratorPassword: administratorPassword
+    administratorUsername: administratorUsername
+    clientIpAddress: clientIpAddress
+    useCommonAppServicePlan: willDeployCommonAppServicePlan
+  }
+  dependsOn: [
+    resourceGroups2
+    spokeNetwork2
   ]
 }
 

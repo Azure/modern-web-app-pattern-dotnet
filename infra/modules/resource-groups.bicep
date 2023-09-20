@@ -22,6 +22,9 @@ type DeploymentSettings = {
 
   @description('If \'true\', isolate the workload in a virtual network.')
   isNetworkIsolated: bool
+  
+  @description('If \'false\', then this is a multi-location deployment for the second location.')
+  isPrimaryLocation: bool
 
   @description('The primary Azure region to host resources')
   location: string

@@ -42,7 +42,9 @@ Param(
     [string]$Name = "",
     [switch]$Production,
     [switch]$Development,
-    [switch]$NoPrompt
+    [switch]$NoPrompt,
+    [switch]$SingleLocation,
+    [switch]$MultiLocation
 )
 
 function FormatMenu {
@@ -158,6 +160,17 @@ if ($Production -and $Development) {
     exit 1
 }
 
+if ($SingleLocation -and $MultiLocation) {
+    "You cannot specify both -SingleLocation and -MultiLocation"
+    exit 1
+}
+
+if ($Isolated -and $NoHub) {
+    Write-Host 'Warning:' -ForegroundColor Yellow -BackgroundColor Black
+    Write-Host "When deployed with isolation certain features, and access, will only be availble from within the vnet. You must attach a hub to activate these features."
+}
+
+
 # End of parameter checking
 
 # Start of script
@@ -245,12 +258,15 @@ if ($CommonAppServicePlan) {
     $casp = $sCasp -eq "true"
 }
 
+$isMultiLocationDeployment = $MultiLocation -or !$SingleLocation
+
 Write-Host "`nProposed settings:" -ForegroundColor Yellow
 Write-Host "`tOwner name: $ownerName"
 Write-Host "`tEmail address: $emailAddr"
 Write-Host "`tEnvironment name: $environmentName"
 Write-Host "`tEnvironment type: $environmentType"
 Write-Host "`tNetwork isolation: $networkIsolation"
+Write-Host "`tDeploy second location: $isMultiLocationDeployment"
 Write-Host "`tDeploy hub network: $deployHubNetwork"
 Write-Host "`tUse common App Service Plan: $casp"
 
@@ -264,12 +280,20 @@ if (!$NoPrompt) {
 }
 
 # default will be overriden by `azd config set defaults.location`
-$defaultAzureLocation = "eastus"
+$defaultAzureLocation = "westus3"
 # if azure location was set then use it, otherwise use the default
 $azureLocation = (azd env get-values -o json | ConvertFrom-Json -Depth 9 -AsHashtable).AZURE_LOCATION
 
 if ($null -eq $azureLocation || $azureLocation -eq "") {
     $azureLocation = $defaultAzureLocation
+}
+
+$defaultSecondAzureLocation = "eastus"
+# if azure location was set then use it, otherwise use the default
+$secondAzureLocation = (azd env get-values -o json | ConvertFrom-Json -Depth 9 -AsHashtable).SECONDARY_AZURE_LOCATION
+
+if ($null -eq $secondAzureLocation || $secondAzureLocation -eq "") {
+    $secondAzureLocation = $defaultSecondAzureLocation
 }
 
 # Check if any object has the "Name" property equal to "$environmentName"
@@ -303,6 +327,10 @@ azd env set DEPLOY_HUB_NETWORK $(if ($deployHubNetwork) { "true" } else { "false
 azd env set COMMON_APP_SERVICE_PLAN $(if ($casp) { "true" } else { "false" })
 azd env set OWNER_EMAIL $emailAddr
 azd env set OWNER_NAME "$ownerName"
+
+if ($isMultiLocationDeployment) {
+    azd env set SECONDARY_AZURE_LOCATION $secondAzureLocation
+}
 
 if ($NoPrompt) {
     azd provision --no-prompt

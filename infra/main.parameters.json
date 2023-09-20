@@ -14,6 +14,9 @@
     "differentiator": {
         "value": "${AZURE_CI_DIFFERENTIATOR=none}"
     },
+    "enableTelemetry": {
+      "value": "${ENABLE_TELEMETRY=true}"
+    },
     "environmentName": {
         "value": "${AZURE_ENV_NAME}"
     },
@@ -47,11 +50,11 @@
     "ownerName": {
         "value": "${OWNER_NAME=notset}"
     },
+    "secondaryAzureLocation": {
+      "value": "${SECONDARY_AZURE_LOCATION}"
+    },
     "useCommonAppServicePlan": {
         "value": "${COMMON_APP_SERVICE_PLAN=auto}"
-    },
-    "enableTelemetry": {
-      "value": "${ENABLE_TELEMETRY=true}"
     }
   }
 }
