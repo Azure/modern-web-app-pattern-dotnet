@@ -19,6 +19,10 @@ param identityName string
 @description('Azure role id for assignment')
 param roleId string
 
+@description('A description of the purpose for the role assignment')
+param roleDescription string
+
+
 // ========================================================================
 // AZURE RESOURCES
 // ========================================================================
@@ -34,6 +38,12 @@ resource devOpsIdentityRoleAssignment 'Microsoft.Authorization/roleAssignments@2
     principalType: 'ServicePrincipal'
     roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', roleId)
     principalId: managedIdentity.properties.principalId
-    description: 'Grant the "Contributor" role to the user-assigned managed identity so it can run deployment scripts.'
+    description: roleDescription
   }
 }
+
+// ========================================================================
+// OUTPUTS
+// ========================================================================
+
+output identity_name string = identityName
