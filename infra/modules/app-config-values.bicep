@@ -6,6 +6,7 @@ targetScope = 'resourceGroup'
 ** All Rights Reserved
 **
 ***************************************************************************
+** #1876128 details how this script should be adjusted to run from Azure Container Instance
 */
 
 // ========================================================================
