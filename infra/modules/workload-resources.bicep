@@ -465,7 +465,7 @@ module webFrontendFrontDoorRoute '../core/security/front-door-route.bicep' = if 
 ** Azure Cache for Redis
 */
 
-module redis '../core/database/redis.bicep' = {
+module redis '../core/database/azure-cache-for-redis.bicep' = {
   name: 'workload-redis'
   scope: resourceGroup
   params: {
