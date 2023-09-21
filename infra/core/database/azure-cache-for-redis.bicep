@@ -6,6 +6,7 @@ targetScope = 'resourceGroup'
 ** All Rights Reserved
 **
 ***************************************************************************
+** #1881951 details work for evaluating Azure AD connection to replace primaryKey authentication
 **
 ** Creates an Azure Cache for Redis resource, including permission grants and diagnostics.
 */
