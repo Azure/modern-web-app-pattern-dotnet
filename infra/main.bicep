@@ -234,11 +234,8 @@ module azureMonitor './modules/azure-monitor.bicep' = {
   params: {
     deploymentSettings: deploymentSettings
     resourceNames: naming.outputs.resourceNames
-    resourceGroupName: willDeployHubNetwork ? naming.outputs.resourceNames.hubResourceGroup : naming.outputs.resourceNames.resourceGroup
+    resourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : resourceGroups.outputs.workload_resource_group_name
   }
-  dependsOn: [
-    resourceGroups
-  ]
 }
 
 /*

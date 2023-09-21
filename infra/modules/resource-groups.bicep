@@ -99,3 +99,5 @@ resource workloadResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' =
 
 
 output workload_resource_group_name string = workloadResourceGroup.name
+output spoke_resource_group_name string = createSpoke ? spokeResourceGroup.name : 'spoke-not-created'
+output hub_resource_group_name string = createHub ? hubResourceGroup.name : 'hub-not-created'
