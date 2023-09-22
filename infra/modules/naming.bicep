@@ -130,6 +130,7 @@ var defaultResourceNames = {
   resourceGroup: '${resourceGroupPrefix}-workload'
   redis: 'redis-${resourceToken}'
   storageAccount: 'st${deploymentSettings.stage}${resourceToken}'
+  storageAccountPrivateEndpoint: 'pep-st-${resourceToken}'
   storageAccountContainer: 'tickets'
   sqlDatabase: 'relecloud-${resourceToken}'
   sqlDatabasePrivateEndpoint: 'pep-sqldb-${resourceToken}'
@@ -202,6 +203,7 @@ output resourceNames object = {
   redis: contains(overrides, 'redis') && !empty(overrides.redis) ? overrides.redis : defaultResourceNames.redis
   resourceGroup: contains(overrides, 'resourceGroup') && !empty(overrides.resourceGroup) ? overrides.resourceGroup : defaultResourceNames.resourceGroup
   storageAccount: contains(overrides, 'storageAccount') && !empty(overrides.storageAccount) ? overrides.storageAccount : defaultResourceNames.storageAccount
+  storageAccountPrivateEndpoint: contains(overrides, 'storageAccountPrivateEndpoint') && !empty(overrides.storageAccountPrivateEndpoint) ? overrides.storageAccountPrivateEndpoint : defaultResourceNames.storageAccountPrivateEndpoint
   storageAccountContainer: contains(overrides, 'storageAccountContainer') && !empty(overrides.storageAccountContainer) ? overrides.storageAccountContainer : defaultResourceNames.storageAccountContainer
   sqlDatabase: contains(overrides, 'sqlDatabase') && !empty(overrides.sqlDatabase) ? overrides.sqlDatabase : defaultResourceNames.sqlDatabase
   sqlDatabasePrivateEndpoint: contains(overrides, 'sqlDatabasePrivateEndpoint') && !empty(overrides.sqlDatabasePrivateEndpoint) ? overrides.sqlDatabasePrivateEndpoint : defaultResourceNames.sqlDatabasePrivateEndpoint

@@ -499,7 +499,7 @@ module storageAccount '../core/storage/storage-account.bicep' = {
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
     ]
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
-      name: resourceNames.keyVaultPrivateEndpoint
+      name: resourceNames.storageAccountPrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokeStorageSubnet].id
     } : null

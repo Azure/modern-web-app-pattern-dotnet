@@ -175,8 +175,8 @@ module privateEndpoint '../network/private-endpoint.bicep' = if (privateEndpoint
     subnetId: privateEndpointSettings != null ? privateEndpointSettings!.subnetId : ''
 
     // Settings
-    dnsZoneName: 'privatelink.vaultcore.azure.net'
-    groupIds: [ 'vault' ]
+    dnsZoneName: 'privatelink.blob.${environment().suffixes.storage}'
+    groupIds: [ 'blob' ]
   }
 }
 
