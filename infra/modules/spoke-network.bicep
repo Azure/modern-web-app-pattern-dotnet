@@ -102,6 +102,7 @@ param privateDnsZones array = [
   'privatelink${az.environment().suffixes.sqlServerHostname}'
   'privatelink.azurewebsites.net'
   'privatelink.redis.cache.windows.net'
+  'privatelink.azconfig.io'
   'privatelink.blob.${environment().suffixes.storage}'
 ]
 
