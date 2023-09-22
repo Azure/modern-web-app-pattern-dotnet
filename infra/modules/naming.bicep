@@ -129,6 +129,7 @@ var defaultResourceNames = {
   ownerManagedIdentity: 'id-owner-${resourceToken}'
   resourceGroup: '${resourceGroupPrefix}-workload'
   redis: 'redis-${resourceToken}'
+  redisPrivateEndpoint: 'pep-redis-${resourceToken}'
   storageAccount: 'st${deploymentSettings.stage}${resourceToken}'
   storageAccountPrivateEndpoint: 'pep-st-${resourceToken}'
   storageAccountContainer: 'tickets'
@@ -201,6 +202,7 @@ output resourceNames object = {
   keyVaultPrivateEndpoint: contains(overrides, 'keyVaultPrivateEndpoint') && !empty(overrides.keyVaultPrivateEndpoint) ? overrides.keyVaultPrivateEndpoint : defaultResourceNames.keyVaultPrivateEndpoint
   ownerManagedIdentity: contains(overrides, 'ownerManagedIdentity') && !empty(overrides.ownerManagedIdentity) ? overrides.ownerManagedIdentity : defaultResourceNames.ownerManagedIdentity
   redis: contains(overrides, 'redis') && !empty(overrides.redis) ? overrides.redis : defaultResourceNames.redis
+  redisPrivateEndpoint: contains(overrides, 'redisPrivateEndpoint') && !empty(overrides.redisPrivateEndpoint) ? overrides.redisPrivateEndpoint : defaultResourceNames.redisPrivateEndpoint
   resourceGroup: contains(overrides, 'resourceGroup') && !empty(overrides.resourceGroup) ? overrides.resourceGroup : defaultResourceNames.resourceGroup
   storageAccount: contains(overrides, 'storageAccount') && !empty(overrides.storageAccount) ? overrides.storageAccount : defaultResourceNames.storageAccount
   storageAccountPrivateEndpoint: contains(overrides, 'storageAccountPrivateEndpoint') && !empty(overrides.storageAccountPrivateEndpoint) ? overrides.storageAccountPrivateEndpoint : defaultResourceNames.storageAccountPrivateEndpoint

@@ -478,6 +478,12 @@ module redis '../core/database/azure-cache-for-redis.bicep' = {
     redisCacheSku : deploymentSettings.isProduction ? 'Standard' : 'Basic'
     redisCacheFamily : 'C'
     redisCacheCapacity: deploymentSettings.isProduction ? 1 : 0
+    
+    privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
+      name: resourceNames.redisPrivateEndpoint
+      resourceGroupName: resourceNames.spokeResourceGroup
+      subnetId: subnets[resourceNames.spokeStorageSubnet].id
+    } : null
   }
 }
 

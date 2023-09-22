@@ -147,8 +147,8 @@ module privateEndpoint '../network/private-endpoint.bicep' = if (privateEndpoint
     subnetId: privateEndpointSettings != null ? privateEndpointSettings!.subnetId : ''
 
     // Settings
-    dnsZoneName: 'privatelink.vaultcore.azure.net'
-    groupIds: [ 'vault' ]
+    dnsZoneName: 'privatelink.redis.cache.windows.net'
+    groupIds: [ 'redisCache' ]
   }
 }
 
