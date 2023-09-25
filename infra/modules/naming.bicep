@@ -142,7 +142,8 @@ var defaultResourceNames = {
   webAppService: 'app-webservice-${resourceToken}'
   webAppServicePlan: 'asp-web-${resourceToken}'
   webApplicationFirewall: 'waf${resourceToken}'
-  webPrivateEndpoint: 'pep-web-${resourceToken}'
+  webAppFrontendPrivateEndpoint: 'pep-web-frontend-${resourceToken}'
+  webAppServicePrivateEndpoint: 'pep-web-service-${resourceToken}'
 }
 
 // ========================================================================
@@ -217,5 +218,6 @@ output resourceNames object = {
   webAppService: contains(overrides, 'webAppService') && !empty(overrides.webAppService) ? overrides.webAppService : defaultResourceNames.webAppService
   webAppServicePlan: contains(overrides, 'webAppServicePlan') && !empty(overrides.webAppServicePlan) ? overrides.webAppServicePlan : defaultResourceNames.webAppServicePlan
   webApplicationFirewall: contains(overrides, 'webApplicationFirewall') && !empty(overrides.webApplicationFirewall) ? overrides.webApplicationFirewall : defaultResourceNames.webApplicationFirewall
-  webPrivateEndpoint: contains(overrides, 'webPrivateEndpoint') && !empty(overrides.webPrivateEndpoint) ? overrides.webPrivateEndpoint : defaultResourceNames.webPrivateEndpoint
+  webAppFrontendPrivateEndpoint: contains(overrides, 'webAppFrontendPrivateEndpoint') && !empty(overrides.webAppFrontendPrivateEndpoint) ? overrides.webAppFrontendPrivateEndpoint : defaultResourceNames.webAppFrontendPrivateEndpoint
+  webAppServicePrivateEndpoint: contains(overrides, 'webAppServicePrivateEndpoint') && !empty(overrides.webAppServicePrivateEndpoint) ? overrides.webAppServicePrivateEndpoint : defaultResourceNames.webAppServicePrivateEndpoint
 }

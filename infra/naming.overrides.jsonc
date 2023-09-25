@@ -67,7 +67,8 @@
     // "webAppService": "",
     // "webAppServicePlan": "",
     // "webApplicationFirewall": "",
-    // "webPrivateEndpoint": "",
+    // "webAppFrontendPrivateEndpoint": "",
+    // "webwebAppServicePrivateEndpoint": "",
   
     /*
     ** End of file - don't remove the next line as it signifies the end.

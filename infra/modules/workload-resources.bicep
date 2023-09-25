@@ -384,7 +384,7 @@ module webService './workload-appservice.bicep' = {
     appServiceName: resourceNames.webAppService
     outboundSubnetId: deploymentSettings.isNetworkIsolated ? subnets[resourceNames.spokeWebOutboundSubnet].id : ''
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
-      name: resourceNames.webPrivateEndpoint
+      name: resourceNames.webAppServicePrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokeWebInboundSubnet].id
     } : null
@@ -433,7 +433,7 @@ module webFrontend './workload-appservice.bicep' = {
     appServiceName: resourceNames.webAppFrontend
     outboundSubnetId: deploymentSettings.isNetworkIsolated ? subnets[resourceNames.spokeWebOutboundSubnet].id : ''
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
-      name: resourceNames.webPrivateEndpoint
+      name: resourceNames.webAppFrontendPrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokeWebInboundSubnet].id
     } : null
