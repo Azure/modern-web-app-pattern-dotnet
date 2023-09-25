@@ -27,6 +27,11 @@
     If included, use production settings.
 .PARAMETER Development
     If included, use development settings.
+.PARAMETER SingleLocation
+    The default behavior creating an Azure deployment targeting a single Azure region. 
+.PARAMETER MultiLocation
+    If included, do not prompt for any information.  This will use the default
+    settings for all options. 
 .PARAMETER NoPrompt
     If included, do not prompt for any information.  This will use the default
     settings for all options. 
@@ -44,7 +49,9 @@ Param(
     [switch]$Development,
     [switch]$NoPrompt,
     [switch]$SingleLocation,
-    [switch]$MultiLocation
+    [string]$AzureLocation = "",
+    [switch]$MultiLocation,
+    [string]$SecondAzureLocation = ""
 )
 
 function FormatMenu {
@@ -258,7 +265,22 @@ if ($CommonAppServicePlan) {
     $casp = $sCasp -eq "true"
 }
 
-$isMultiLocationDeployment = $MultiLocation -or !$SingleLocation
+# default will be overriden by `azd config set defaults.location`
+$defaultAzureLocation = (azd config list -o json | ConvertFrom-Json -Depth 9 -AsHashtable).defaults.location
+# if azure location was set then use it, otherwise use the default
+$azureLocationCmd = $AzureLocation
+
+if ($null -eq $AzureLocation -or $AzureLocation -eq "") {
+    $azureLocationCmd = $defaultAzureLocation
+}
+
+$defaultSecondAzureLocation = "eastus"
+# if azure location was set then use it, otherwise use the default
+$secondAzureLocationCmd = (azd env get-values -o json | ConvertFrom-Json -Depth 9 -AsHashtable).SECONDARY_AZURE_LOCATION
+
+if ($null -eq $secondAzureLocation || $secondAzureLocation -eq "") {
+    $secondAzureLocationCmd = $defaultSecondAzureLocation
+}
 
 Write-Host "`nProposed settings:" -ForegroundColor Yellow
 Write-Host "`tOwner name: $ownerName"
@@ -266,8 +288,12 @@ Write-Host "`tEmail address: $emailAddr"
 Write-Host "`tEnvironment name: $environmentName"
 Write-Host "`tEnvironment type: $environmentType"
 Write-Host "`tNetwork isolation: $networkIsolation"
-Write-Host "`tDeploy second location: $isMultiLocationDeployment"
 Write-Host "`tDeploy hub network: $deployHubNetwork"
+Write-Host "`tAzure location: $azureLocationCmd"
+Write-Host "`tDeploy second location: $MultiLocation"
+if ($MultiLocation) {
+    Write-Host "`tSecond Azure location: $secondAzureLocationCmd"
+}
 Write-Host "`tUse common App Service Plan: $casp"
 
 if (!$NoPrompt) {
@@ -277,23 +303,6 @@ if (!$NoPrompt) {
     if ($q -eq "false") {
         exit 0
     }
-}
-
-# default will be overriden by `azd config set defaults.location`
-$defaultAzureLocation = "westus3"
-# if azure location was set then use it, otherwise use the default
-$azureLocation = (azd env get-values -o json | ConvertFrom-Json -Depth 9 -AsHashtable).AZURE_LOCATION
-
-if ($null -eq $azureLocation || $azureLocation -eq "") {
-    $azureLocation = $defaultAzureLocation
-}
-
-$defaultSecondAzureLocation = "eastus"
-# if azure location was set then use it, otherwise use the default
-$secondAzureLocation = (azd env get-values -o json | ConvertFrom-Json -Depth 9 -AsHashtable).SECONDARY_AZURE_LOCATION
-
-if ($null -eq $secondAzureLocation || $secondAzureLocation -eq "") {
-    $secondAzureLocation = $defaultSecondAzureLocation
 }
 
 # Check if any object has the "Name" property equal to "$environmentName"
@@ -320,7 +329,7 @@ if ($environmentFound) {
 $azureSubscriptionId = (Get-AzContext).Subscription.Id
 
 azd env set AZURE_SUBSCRIPTION_ID $azureSubscriptionId
-azd env set AZURE_LOCATION $azureLocation
+azd env set AZURE_LOCATION $azureLocationCmd
 azd env set AZURE_ENV_TYPE $environmentType
 azd env set NETWORK_ISOLATION $(if ($networkIsolation) { "true" } else { "false" })
 azd env set DEPLOY_HUB_NETWORK $(if ($deployHubNetwork) { "true" } else { "false" })
@@ -328,8 +337,8 @@ azd env set COMMON_APP_SERVICE_PLAN $(if ($casp) { "true" } else { "false" })
 azd env set OWNER_EMAIL $emailAddr
 azd env set OWNER_NAME "$ownerName"
 
-if ($isMultiLocationDeployment) {
-    azd env set SECONDARY_AZURE_LOCATION $secondAzureLocation
+if ($MultiLocation) {
+    azd env set SECONDARY_AZURE_LOCATION $secondAzureLocationCmd
 }
 
 if ($NoPrompt) {
