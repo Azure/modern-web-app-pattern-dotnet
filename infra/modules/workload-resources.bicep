@@ -222,7 +222,7 @@ module appConfiguration '../core/config/app-configuration.bicep' = {
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
       name: resourceNames.appConfigurationPrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
-      subnetId: subnets[resourceNames.spokeStorageSubnet].id
+      subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
     } : null
     readerIdentities: [
       { principalId: appManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
@@ -272,7 +272,7 @@ module keyVault '../core/security/key-vault.bicep' = {
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
       name: resourceNames.keyVaultPrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
-      subnetId: subnets[resourceNames.spokeStorageSubnet].id
+      subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
     } : null
     readerIdentities: [
       { principalId: appManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
@@ -323,7 +323,7 @@ module sqlDatabase '../core/database/sql-database.bicep' = {
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
       name: resourceNames.sqlDatabasePrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
-      subnetId: subnets[resourceNames.spokeStorageSubnet].id
+      subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
     } : null
     sku: deploymentSettings.isProduction ? 'Premium' : 'Standard'
     zoneRedundant: deploymentSettings.isProduction
@@ -484,7 +484,7 @@ module redis '../core/database/azure-cache-for-redis.bicep' = {
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
       name: resourceNames.redisPrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
-      subnetId: subnets[resourceNames.spokeStorageSubnet].id
+      subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
     } : null
   }
 }
@@ -509,7 +509,7 @@ module storageAccount '../core/storage/storage-account.bicep' = {
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
       name: resourceNames.storageAccountPrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
-      subnetId: subnets[resourceNames.spokeStorageSubnet].id
+      subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
     } : null
   }
 }
