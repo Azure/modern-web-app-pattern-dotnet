@@ -255,11 +255,11 @@ module apiOutboundNSG '../core/network/network-security-group.bicep' = {
   }
 }
 
-module storageNSG '../core/network/network-security-group.bicep' = {
-  name: 'spoke-storage-nsg'
+module privateEndpointNSG '../core/network/network-security-group.bicep' = {
+  name: 'spoke-pep-nsg'
   scope: resourceGroup
   params: {
-    name: resourceNames.spokeStorageNSG
+    name: resourceNames.spokePrivateEndpointNSG
     location: deploymentSettings.location
     tags: moduleTags
 
@@ -331,10 +331,10 @@ module virtualNetwork '../core/network/virtual-network.bicep' = {
     diagnosticSettings: diagnosticSettings
     subnets: union([
       {
-        name: resourceNames.spokeStorageSubnet
+        name: resourceNames.spokePrivateEndpointSubnet
         properties: {
           addressPrefix: subnetPrefixes[0]
-          networkSecurityGroup: { id: storageNSG.outputs.id }
+          networkSecurityGroup: { id: privateEndpointNSG.outputs.id }
           privateEndpointNetworkPolicies: 'Disabled'
         }
       }

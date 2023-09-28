@@ -101,8 +101,8 @@ var defaultResourceNames = {
   spokeDevopsSubnet: 'DevopsBuildAgents'
   spokeDeploymentSubnet: 'Deployment'
   spokeResourceGroup: '${resourceGroupPrefix}-spoke'
-  spokeStorageNSG: 'nsg-storage-${resourceToken}'
-  spokeStorageSubnet: 'Storage'
+  spokePrivateEndpointNSG: 'nsg-pep-${resourceToken}'
+  spokePrivateEndpointSubnet: 'Private-Endpoints'
   spokeVirtualNetwork: 'vnet-spoke-${resourceToken}'
   spokeWebInboundSubnet: 'Web-Inbound'
   spokeWebInboundNSG: 'nsg-web-in-${resourceToken}'
@@ -177,8 +177,8 @@ output resourceNames object = {
   spokeDevopsSubnet: contains(overrides, 'spokeDevopsSubnet') && !empty(overrides.spokeDevopsSubnet) ? overrides.spokeDevopsSubnet : defaultResourceNames.spokeDevopsSubnet
   spokeDeploymentSubnet: contains(overrides, 'spokeDeploymentSubnet') && !empty(overrides.spokeDeploymentSubnet) ? overrides.spokeDeploymentSubnet : defaultResourceNames.spokeDeploymentSubnet
   spokeResourceGroup: contains(overrides, 'spokeResourceGroup') && !empty(overrides.spokeResourceGroup) ? overrides.spokeResourceGroup : defaultResourceNames.spokeResourceGroup
-  spokeStorageNSG: contains(overrides, 'spokeStorageNSG') && !empty(overrides.spokeStorageNSG) ? overrides.spokeStorageNSG : defaultResourceNames.spokeStorageNSG
-  spokeStorageSubnet: contains(overrides, 'spokeStorageSubnet') && !empty(overrides.spokeStorageSubnet) ? overrides.spokeStorageSubnet : defaultResourceNames.spokeStorageSubnet
+  spokePrivateEndpointNSG: contains(overrides, 'spokePrivateEndpointNSG') && !empty(overrides.spokePrivateEndpointNSG) ? overrides.spokePrivateEndpointNSG : defaultResourceNames.spokePrivateEndpointNSG
+  spokePrivateEndpointSubnet: contains(overrides, 'spokePrivateEndpointSubnet') && !empty(overrides.spokePrivateEndpointSubnet) ? overrides.spokePrivateEndpointSubnet : defaultResourceNames.spokePrivateEndpointSubnet
   spokeVirtualNetwork: contains(overrides, 'spokeVirtualNetwork') && !empty(overrides.spokeVirtualNetwork) ? overrides.spokeVirtualNetwork : defaultResourceNames.spokeVirtualNetwork
   spokeWebInboundSubnet: contains(overrides, 'spokeWebInboundSubnet') && !empty(overrides.spokeWebInboundSubnet) ? overrides.spokeWebInboundSubnet : defaultResourceNames.spokeWebInboundSubnet
   spokeWebInboundNSG: contains(overrides, 'spokeWebInboundNSG') && !empty(overrides.spokeWebInboundNSG) ? overrides.spokeWebInboundNSG : defaultResourceNames.spokeWebInboundNSG
