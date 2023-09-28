@@ -202,10 +202,10 @@ var deploymentSubnet = [{
 
 var devopsSubnet = createDevopsSubnet ? [{
   name: resourceNames.spokeDevopsSubnet
-  properties: union({
+  properties: {
     addressPrefix: subnetPrefixes[6]
     privateEndpointNetworkPolicies: 'Disabled'
-  }, routeTableSettings)
+  }
 }] : []
 
 // ========================================================================
