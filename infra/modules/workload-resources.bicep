@@ -378,6 +378,8 @@ module webService './workload-appservice.bicep' = {
     applicationInsightsId: applicationInsightsId
     appServicePlanName: useCommonAppServicePlan ? commonAppServicePlan.outputs.name : resourceNames.webAppServicePlan
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
+    // uses ownerManagedIdentity with code first schema and seeding operations
+    // separate approach will be researched by 1852428
     managedIdentityName: ownerManagedIdentity.outputs.name
 
     // Settings
