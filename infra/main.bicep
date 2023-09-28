@@ -162,6 +162,8 @@ var diagnosticSettings = {
 
 var installBuildAgent = isNetworkIsolated && ((!empty(adoOrganizationUrl) && !empty(adoToken)) || (!empty(githubRepositoryUrl) && !empty(githubToken)))
 
+var spokeAddressPrefix = '10.0.16.0/20'
+
 // ========================================================================
 // BICEP MODULES
 // ========================================================================
@@ -262,13 +264,10 @@ module hubNetwork './modules/hub-network.bicep' = if (willDeployHubNetwork) {
     logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
 
     // Settings
-    administratorPassword: administratorPassword
-    administratorUsername: administratorUsername
     enableBastionHost: true
     enableDDoSProtection: deploymentSettings.isProduction
     enableFirewall: true
-    enableJumpHost: true
-    enableKeyVault: true
+    spokeAddressPrefix: spokeAddressPrefix
   }
   dependsOn: [
     resourceGroups
@@ -296,7 +295,12 @@ module spokeNetwork './modules/spoke-network.bicep' = if (isNetworkIsolated) {
     routeTableId: willDeployHubNetwork ? hubNetwork.outputs.route_table_id : ''
 
     // Settings
-    createDevopsSubnet: installBuildAgent
+    addressPrefix: spokeAddressPrefix
+    administratorPassword: administratorPassword
+    administratorUsername: administratorUsername
+    createDevopsSubnet: true
+    enableJumpHost: true
+    enableKeyVault: true
   }
   dependsOn: [
     resourceGroups
@@ -315,7 +319,12 @@ module spokeNetwork2 './modules/spoke-network.bicep' = if (isNetworkIsolated && 
     routeTableId: willDeployHubNetwork ? hubNetwork.outputs.route_table_id : ''
 
     // Settings
-    createDevopsSubnet: installBuildAgent
+    addressPrefix: spokeAddressPrefix
+    administratorPassword: administratorPassword
+    administratorUsername: administratorUsername
+    createDevopsSubnet: true
+    enableJumpHost: true
+    enableKeyVault: true
   }
   dependsOn: [
     resourceGroups2

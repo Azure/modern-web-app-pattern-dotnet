@@ -87,14 +87,6 @@ param logAnalyticsWorkspaceId string = ''
 /*
 ** Settings
 */
-@secure()
-@minLength(8)
-@description('The password for the administrator account on the jump host.')
-param administratorPassword string = newGuid()
-
-@minLength(8)
-@description('The username for the administrator account on the jump host.')
-param administratorUsername string = 'adminuser'
 
 @description('The CIDR block to use for the address prefix of this virtual network.')
 param addressPrefix string = '10.0.0.0/20'
@@ -108,14 +100,12 @@ param enableDDoSProtection bool = true
 @description('If enabled, an Azure Firewall will be deployed with a public IP address.')
 param enableFirewall bool = true
 
-@description('If enabled, a Windows 11 jump host will be deployed.  Ensure you enable the bastion host as well.')
-param enableJumpHost bool = false
-
-@description('If enabled, a Key Vault will be deployed in the resource group.')
-param enableKeyVault bool = false
-
 @description('The address spaces allowed to connect through the firewall.  By default, we allow all RFC1918 address spaces')
 param internalAddressSpace string[] = [ '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16' ]
+
+// TODO - needs to support multiple spokes
+@description('The CIDR block to use for the address prefix of the spoke virtual network.')
+param spokeAddressPrefix string
 
 // ========================================================================
 // VARIABLES
@@ -148,18 +138,9 @@ var firewallSubnetDefinition = {
   }
 }
 
-var jumphostSubnetDefinition = {
-  name: resourceNames.hubSubnetJumphost
-  properties: {
-    addressPrefix: subnetPrefixes[3]
-    privateEndpointNetworkPolicies: 'Disabled'
-  }
-}
-
 var subnets = union(
   enableBastionHost ? [bastionHostSubnetDefinition] : [],
-  enableFirewall ? [firewallSubnetDefinition] : [],
-  enableJumpHost ? [jumphostSubnetDefinition] : []
+  enableFirewall ? [firewallSubnetDefinition] : []
 )
 
 // Some helpers for the firewall rules
@@ -214,9 +195,58 @@ var applicationRuleCollections = [
   }
 ]
 
-// Our firewall does not use network or NAT rule collections, but you can
-// set them up here.
-var networkRuleCollections = []
+// The subnet prefixes for the individual subnets inside the virtual network
+var spokeSubnetPrefixes = [ for i in range(0, 16): cidrSubnet(spokeAddressPrefix, 26, i)]
+
+var networkRuleCollections = [
+  {
+    name: 'Windows-VM-Connectivity-Requirements'
+    properties: {
+      action: {
+        type: 'allow'
+      }
+      priority: 202
+      rules: [
+        {
+          destinationAddresses: [
+            '20.118.99.224'
+            '40.83.235.53'
+            '23.102.135.246'
+            '51.4.143.248'
+            '23.97.0.13'
+            '52.126.105.2'
+          ]
+          destinationPorts: [
+            '*'
+          ]
+          name: 'allow-kms-activation'
+          protocols: [
+            'Any'
+          ]
+          sourceAddresses: [
+            spokeSubnetPrefixes[6]
+          ]
+        }
+        {
+          destinationAddresses: [
+            '*'
+          ]
+          destinationPorts: [                
+            '123'
+            '12000'
+          ]
+          name: 'allow-ntp'
+          protocols: [
+            'Any'
+          ]
+          sourceAddresses: [
+            spokeSubnetPrefixes[6]
+          ]
+        }
+      ]
+    }
+  }]
+// Our firewall does not use NAT rule collections, but you can set them up here.
 var natRuleCollections = []
 
 // Budget amounts
@@ -257,25 +287,6 @@ module ddosProtectionPlan '../core/network/ddos-protection-plan.bicep' = if (ena
     name: resourceNames.hubDDoSProtectionPlan
     location: deploymentSettings.location
     tags: moduleTags
-  }
-}
-
-module keyVault '../core/security/key-vault.bicep' = if (enableJumpHost || enableKeyVault) {
-  name: 'hub-key-vault'
-  scope: resourceGroup
-  params: {
-    name: resourceNames.hubKeyVault
-    location: deploymentSettings.location
-    tags: moduleTags
-
-    // Dependencies
-    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
-
-    // Settings
-    diagnosticSettings: diagnosticSettings
-    ownerIdentities: [
-      { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
-    ]
   }
 }
 
@@ -366,39 +377,6 @@ module bastionHost '../core/network/bastion-host.bicep' = if (enableBastionHost)
   }
 }
 
-module jumphost '../core/compute/windows-jumphost.bicep' = if (enableJumpHost) {
-  name: 'hub-jumphost'
-  scope: resourceGroup
-  params: {
-    name: resourceNames.hubJumphost
-    location: deploymentSettings.location
-    tags: moduleTags
-
-    // Dependencies
-    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
-    subnetId: virtualNetwork.outputs.subnets[resourceNames.hubSubnetJumphost].id
-
-    // Settings
-    administratorPassword: administratorPassword
-    administratorUsername: administratorUsername
-    diagnosticSettings: diagnosticSettings
-    
-  }
-}
-
-module writeJumpHostCredentials '../core/security/key-vault-secrets.bicep' = if (enableJumpHost) {
-  name: 'hub-write-jumphost-credentials'
-  scope: resourceGroup
-  params: {
-    name: keyVault.outputs.name
-    secrets: [
-      { key: 'Jumphost--AdministratorPassword', value: administratorPassword          }
-      { key: 'Jumphost--AdministratorUsername', value: administratorUsername          }
-      { key: 'Jumphost--ComputerName',          value: jumphost.outputs.computer_name }
-    ]
-  }
-}
-
 module hubBudget '../core/cost-management/budget.bicep' = {
   name: 'hub-budget'
   scope: resourceGroup
@@ -421,8 +399,6 @@ module hubBudget '../core/cost-management/budget.bicep' = {
 output bastion_hostname string = enableBastionHost ? bastionHost.outputs.hostname : ''
 output firewall_hostname string = enableFirewall ? firewall.outputs.hostname : ''
 output firewall_ip_address string = enableFirewall ? firewall.outputs.internal_ip_address : ''
-output jumphost_computer_name string = enableJumpHost ? jumphost.outputs.computer_name : ''
-output key_vault_id string = enableJumpHost || enableKeyVault ? keyVault.outputs.id : ''
 output route_table_id string = enableFirewall ? routeTable.outputs.id : ''
 output virtual_network_id string = virtualNetwork.outputs.id
 output virtual_network_name string = virtualNetwork.outputs.name
