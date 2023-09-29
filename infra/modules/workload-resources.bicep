@@ -220,9 +220,11 @@ module appConfiguration '../core/config/app-configuration.bicep' = {
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
     ]
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
+      dnsResourceGroupName: resourceNames.hubResourceGroup
       name: resourceNames.appConfigurationPrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+
     } : null
     readerIdentities: [
       { principalId: appManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
@@ -270,6 +272,7 @@ module keyVault '../core/security/key-vault.bicep' = {
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
     ]
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
+      dnsResourceGroupName: resourceNames.hubResourceGroup
       name: resourceNames.keyVaultPrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
@@ -321,6 +324,7 @@ module sqlDatabase '../core/database/sql-database.bicep' = {
     diagnosticSettings: diagnosticSettings
     dtuCapacity: deploymentSettings.isProduction ? 125 : 10
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
+      dnsResourceGroupName: resourceNames.hubResourceGroup
       name: resourceNames.sqlDatabasePrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
@@ -386,6 +390,7 @@ module webService './workload-appservice.bicep' = {
     appServiceName: resourceNames.webAppService
     outboundSubnetId: deploymentSettings.isNetworkIsolated ? subnets[resourceNames.spokeWebOutboundSubnet].id : ''
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
+      dnsResourceGroupName: resourceNames.hubResourceGroup
       name: resourceNames.webAppServicePrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokeWebInboundSubnet].id
@@ -435,6 +440,7 @@ module webFrontend './workload-appservice.bicep' = {
     appServiceName: resourceNames.webAppFrontend
     outboundSubnetId: deploymentSettings.isNetworkIsolated ? subnets[resourceNames.spokeWebOutboundSubnet].id : ''
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
+      dnsResourceGroupName: resourceNames.hubResourceGroup
       name: resourceNames.webAppFrontendPrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokeWebInboundSubnet].id
@@ -482,6 +488,7 @@ module redis '../core/database/azure-cache-for-redis.bicep' = {
     redisCacheCapacity: deploymentSettings.isProduction ? 1 : 0
     
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
+      dnsResourceGroupName: resourceNames.hubResourceGroup
       name: resourceNames.redisPrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
@@ -507,6 +514,7 @@ module storageAccount '../core/storage/storage-account.bicep' = {
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
     ]
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
+      dnsResourceGroupName: resourceNames.hubResourceGroup
       name: resourceNames.storageAccountPrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id

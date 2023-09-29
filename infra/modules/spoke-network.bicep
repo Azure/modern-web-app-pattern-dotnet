@@ -111,15 +111,6 @@ param enableJumpHost bool = false
 @description('If enabled, a Key Vault will be deployed in the resource group.')
 param enableKeyVault bool = false
 
-@description('The list of private DNS zones to create in this virtual network.')
-param privateDnsZones array = [
-  'privatelink.vaultcore.azure.net'
-  'privatelink${az.environment().suffixes.sqlServerHostname}'
-  'privatelink.azurewebsites.net'
-  'privatelink.redis.cache.windows.net'
-  'privatelink.azconfig.io'
-  'privatelink.blob.${environment().suffixes.storage}'
-]
 
 // ========================================================================
 // VARIABLES
@@ -374,17 +365,6 @@ module virtualNetwork '../core/network/virtual-network.bicep' = {
       }], deploymentSubnet, devopsSubnet)
   }
 }
-
-module dnsZones '../core/network/private-dns-zone.bicep' = [ for dnsZoneName in privateDnsZones: {
-  name: 'dns-zone-${dnsZoneName}'
-  scope: resourceGroup
-  params: {
-    name: dnsZoneName
-    tags: moduleTags
-    virtualNetworkId: virtualNetwork.outputs.id
-  }
-}]
-
 
 module jumphost '../core/compute/windows-jumphost.bicep' = if (enableJumpHost) {
   name: 'hub-jumphost'

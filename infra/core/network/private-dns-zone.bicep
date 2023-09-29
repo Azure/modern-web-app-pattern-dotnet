@@ -24,8 +24,8 @@ param tags object = {}
 /*
 ** Dependencies
 */
-@description('The ID of the virtual network to link this DNS zone to.')
-param virtualNetworkId string = ''
+@description('Array of custom objects describing vNet links of the DNS zone. Each object should contain vnetName, vnetId, registrationEnabled')
+param virtualNetworkLinks array = []
 
 // ========================================================================
 // AZURE RESOURCES
@@ -35,19 +35,19 @@ resource privateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   name: name
   location: 'global'
   tags: tags
+}
 
-  resource virtualNetworkLink 'virtualNetworkLinks' = {
-    name: '${name}-link'
-    location: 'global'
-    tags: tags
-    properties: {
-      registrationEnabled: false
-      virtualNetwork: {
-        id: virtualNetworkId
-      }
+resource privateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = [ for vnet in virtualNetworkLinks: {
+  parent: privateDnsZone
+  name:  '${vnet.vnetName}-link'
+  location: 'global'
+  properties: {
+    registrationEnabled: vnet.registrationEnabled
+    virtualNetwork: {
+      id: vnet.vnetId
     }
   }
-}
+}]
 
 // ========================================================================
 // OUTPUTS

@@ -38,6 +38,10 @@ param subnetId string
 /*
 ** Settings
 */
+
+@description('The resourceGroup where the Private DNS zone is located')
+param dnsRsourceGroupName string
+
 @description('The DNS zone name that will be used for registering the private link.')
 param dnsZoneName string
 
@@ -76,7 +80,7 @@ resource dnsGroupName 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2
       {
         name: 'config1'
         properties: {
-          privateDnsZoneId: resourceId('Microsoft.Network/privateDnsZones', dnsZoneName)
+          privateDnsZoneId: dnsRsourceGroupName == '' ? resourceId('Microsoft.Network/privateDnsZones', dnsZoneName) : resourceId(dnsRsourceGroupName, 'Microsoft.Network/privateDnsZones', dnsZoneName)
         }
       }
     ]

@@ -65,6 +65,9 @@ type DiagnosticSettings = {
 // From: infra/types/PrivateEndpointSettings.bicep
 @description('Type describing the private endpoint settings.')
 type PrivateEndpointSettings = {
+  @description('The name of the resource group to hold the Private DNS Zone. By default, this uses the same resource group as the resource.')
+  dnsResourceGroupName: string
+  
   @description('The name of the private endpoint resource.  By default, this uses a prefix of \'pe-\' followed by the name of the resource.')
   name: string?
 
