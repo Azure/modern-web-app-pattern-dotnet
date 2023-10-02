@@ -69,11 +69,26 @@ type DiagnosticSettings = {
 // PARAMETERS
 // ========================================================================
 
+/*
+** Passwords - specify these!
+*/
+@secure()
+@minLength(8)
+@description('The password for the administrator account.  This will be used for the jump host, SQL server, and anywhere else a password is needed for creating a resource.')
+param administratorPassword string = newGuid()
+
+@minLength(8)
+@description('The username for the administrator account on the jump host.')
+param administratorUsername string = 'adminuser'
+
 @description('The deployment settings to use for this deployment.')
 param deploymentSettings DeploymentSettings
 
 @description('The diagnostic settings to use for this deployment.')
 param diagnosticSettings DiagnosticSettings
+
+@description('If enabled, a Windows 11 jump host will be deployed.  Ensure you enable the bastion host as well.')
+param enableJumpHost bool = false
 
 @description('The resource names for the resources to be created.')
 param resourceNames object
@@ -377,6 +392,39 @@ module bastionHost '../core/network/bastion-host.bicep' = if (enableBastionHost)
   }
 }
 
+
+module operationsKeyVault '../core/security/key-vault.bicep' = if (enableJumpHost) {
+  name: 'operations-key-vault'
+  scope: resourceGroup
+  params: {
+    name: resourceNames.hubKeyVault
+    location: deploymentSettings.location
+    tags: moduleTags
+
+    // Dependencies
+    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
+
+    // Settings
+    diagnosticSettings: diagnosticSettings
+    ownerIdentities: [
+      { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
+    ]
+  }
+}
+
+module writeJumpHostCredentials '../core/security/key-vault-secrets.bicep' = if (enableJumpHost) {
+  name: 'hub-write-jumphost-credentials'
+  scope: resourceGroup
+  params: {
+    name: operationsKeyVault.outputs.name
+    secrets: [
+      { key: 'Jumphost--AdministratorPassword', value: administratorPassword          }
+      { key: 'Jumphost--AdministratorUsername', value: administratorUsername          }
+      { key: 'Jumphost--ComputerName',          value: resourceNames.hubJumphost }
+    ]
+  }
+}
+
 module hubBudget '../core/cost-management/budget.bicep' = {
   name: 'hub-budget'
   scope: resourceGroup
@@ -402,3 +450,4 @@ output firewall_ip_address string = enableFirewall ? firewall.outputs.internal_i
 output route_table_id string = enableFirewall ? routeTable.outputs.id : ''
 output virtual_network_id string = virtualNetwork.outputs.id
 output virtual_network_name string = virtualNetwork.outputs.name
+output key_vault_id string = enableJumpHost ? operationsKeyVault.outputs.id : ''

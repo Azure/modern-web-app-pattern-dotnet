@@ -108,9 +108,6 @@ param createDevopsSubnet bool = false
 @description('If enabled, a Windows 11 jump host will be deployed.  Ensure you enable the bastion host as well.')
 param enableJumpHost bool = false
 
-@description('If enabled, a Key Vault will be deployed in the resource group.')
-param enableKeyVault bool = false
-
 
 // ========================================================================
 // VARIABLES
@@ -386,39 +383,6 @@ module jumphost '../core/compute/windows-jumphost.bicep' = if (enableJumpHost) {
   }
 }
 
-
-module operationsKeyVault '../core/security/key-vault.bicep' = if (enableJumpHost || enableKeyVault) {
-  name: 'operations-key-vault'
-  scope: resourceGroup
-  params: {
-    name: resourceNames.hubKeyVault
-    location: deploymentSettings.location
-    tags: moduleTags
-
-    // Dependencies
-    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
-
-    // Settings
-    diagnosticSettings: diagnosticSettings
-    ownerIdentities: [
-      { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
-    ]
-  }
-}
-
-module writeJumpHostCredentials '../core/security/key-vault-secrets.bicep' = if (enableJumpHost) {
-  name: 'hub-write-jumphost-credentials'
-  scope: resourceGroup
-  params: {
-    name: operationsKeyVault.outputs.name
-    secrets: [
-      { key: 'Jumphost--AdministratorPassword', value: administratorPassword          }
-      { key: 'Jumphost--AdministratorUsername', value: administratorUsername          }
-      { key: 'Jumphost--ComputerName',          value: jumphost.outputs.computer_name }
-    ]
-  }
-}
-
 // ========================================================================
 // OUTPUTS
 // ========================================================================
@@ -427,4 +391,3 @@ output virtual_network_id string = virtualNetwork.outputs.id
 output virtual_network_name string = virtualNetwork.outputs.name
 output subnets object = virtualNetwork.outputs.subnets
 output jumphost_computer_name string = enableJumpHost ? jumphost.outputs.computer_name : ''
-output key_vault_id string = enableJumpHost || enableKeyVault ? operationsKeyVault.outputs.id : ''

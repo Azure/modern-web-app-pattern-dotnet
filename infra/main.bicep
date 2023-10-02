@@ -264,9 +264,12 @@ module hubNetwork './modules/hub-network.bicep' = if (willDeployHubNetwork) {
     logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
 
     // Settings
+    administratorPassword: administratorPassword
+    administratorUsername: administratorUsername
     enableBastionHost: true
     enableDDoSProtection: deploymentSettings.isProduction
     enableFirewall: true
+    enableJumpHost: willDeployHubNetwork
     spokeAddressPrefix: spokeAddressPrefix
   }
   dependsOn: [
@@ -298,9 +301,8 @@ module spokeNetwork './modules/spoke-network.bicep' = if (isNetworkIsolated) {
     addressPrefix: spokeAddressPrefix
     administratorPassword: administratorPassword
     administratorUsername: administratorUsername
-    createDevopsSubnet: true
+    createDevopsSubnet: isNetworkIsolated
     enableJumpHost: true
-    enableKeyVault: true
   }
   dependsOn: [
     resourceGroups
@@ -324,7 +326,6 @@ module spokeNetwork2 './modules/spoke-network.bicep' = if (isNetworkIsolated && 
     administratorUsername: administratorUsername
     createDevopsSubnet: true
     enableJumpHost: true
-    enableKeyVault: true
   }
   dependsOn: [
     resourceGroups2
