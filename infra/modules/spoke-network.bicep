@@ -180,14 +180,6 @@ var routeTableSettings = !empty(routeTableId) ? {
   routeTable: { id: routeTableId }
 } : {}
 
-var deploymentSubnet = [{
-  name: resourceNames.spokeDeploymentSubnet
-  properties: union({
-    addressPrefix: subnetPrefixes[5]
-    privateEndpointNetworkPolicies: 'Disabled'
-  }, routeTableSettings)
-}]
-
 var devopsSubnet = createDevopsSubnet ? [{
   name: resourceNames.spokeDevopsSubnet
   properties: {
@@ -359,7 +351,7 @@ module virtualNetwork '../core/network/virtual-network.bicep' = {
           networkSecurityGroup: { id: webOutboundNSG.outputs.id }
           privateEndpointNetworkPolicies: 'Enabled'
         }, routeTableSettings)
-      }], deploymentSubnet, devopsSubnet)
+      }], devopsSubnet)
   }
 }
 
