@@ -1,5 +1,3 @@
-#Requires -Version 7.0
-
 <#
 .SYNOPSIS
     Creates Azure AD app registrations for the call center web and api applications
