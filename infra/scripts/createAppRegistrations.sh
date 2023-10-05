@@ -93,7 +93,6 @@ resourceToken=${frontEndWebAppName:16}
 locationOfHyphen=$(echo $resourceGroupName | awk -F "-" '{print length($0)-length($NF)}')
 environmentName=${resourceGroupName:0:$locationOfHyphen-1}
 
-
 frontDoorProfileName=$(az resource list -g $resourceGroupName --query "[? kind=='frontdoor' ].name" -o tsv)
 frontEndWebAppHostName=$(az afd endpoint list -g $resourceGroupName --profile-name $frontDoorProfileName --query "[].hostName" -o tsv --only-show-errors)
 frontEndWebAppUri="https://$frontEndWebAppHostName"
@@ -106,22 +105,8 @@ if [[ $group2Exists == 'false' ]]; then
     secondaryResourceGroupName=''
 fi
 
-# updated az resource selection to filter to first based on https://github.com/Azure/azure-cli/issues/25214
-mySqlServer=$(az resource list -g $resourceGroupName --query "[?type=='Microsoft.Sql/servers'].name" -o tsv)
-
-azdData=$(azd env get-values)
-isProd=''
-if [[ $azdData =~ 'IS_PROD="true"' ]]; then
-  isProd=true
-fi
-
 echo "Derived inputs"
 echo "----------------------------------------------"
-if [[ $isProd ]]; then
-  echo "isProd=true"
-else
-  echo "isProd=false"
-fi
 echo "keyVaultName=$keyVaultName"
 echo "appConfigSvcName=$appConfigSvcName"
 echo "frontEndWebAppUri=$frontEndWebAppUri"
@@ -211,15 +196,6 @@ if [[ ${#frontEndWebObjectId} -eq 0 ]]; then
       # sleep until the app registration is created
       sleep 3
     done
-    
-    # prod environments do not allow public network access, this must be changed before we can set values
-    if [[ $isProd ]]; then
-        # open the app config so that the local user can access
-        az appconfig update --name $appConfigSvcName --resource-group $resourceGroupName --enable-public-network true > /dev/null
-        
-        # open the key vault so that the local user can access
-        az keyvault update --name $keyVaultName --resource-group $resourceGroupName  --public-network-access Enabled > /dev/null
-    fi
 
     # save 'AzureAd:ClientSecret' to Key Vault
     az keyvault secret set --name 'AzureAd--ClientSecret' --vault-name $keyVaultName --value $frontEndWebAppClientSecret --only-show-errors > /dev/null
@@ -233,14 +209,6 @@ if [[ ${#frontEndWebObjectId} -eq 0 ]]; then
     az appconfig kv set --name $appConfigSvcName --key 'AzureAd:ClientId' --value $frontEndWebAppClientId --yes --only-show-errors > /dev/null
     echo "Set appconfig value for: 'AzureAd:ClientId'"
     
-    # prod environments do not allow public network access
-    if [[ $isProd ]]; then
-        # close the app config so that the local user cannot access
-        az appconfig update --name $appConfigSvcName --resource-group $resourceGroupName --enable-public-network false > /dev/null
-        
-        # close the key vault so that the local user cannot access
-        az keyvault update --name $keyVaultName --resource-group $resourceGroupName  --public-network-access Disabled > /dev/null
-    fi
 else
     echo "frontend app registration objectId=$frontEndWebObjectId already exists. Delete the '$frontEndWebAppName' app registration to recreate or reset the settings."
     frontEndWebAppClientId=$(az ad app show --id $frontEndWebObjectId --query "appId" -o tsv)
@@ -382,12 +350,6 @@ if [[ ${#apiObjectId} -eq 0 ]]; then
 
       sleep 3
     done
-    
-    # prod environments do not allow public network access, this must be changed before we can set values
-    if [[ $isProd ]]; then
-        # open the app config so that the local user can access
-        az appconfig update --name $appConfigSvcName --resource-group $resourceGroupName --enable-public-network true > /dev/null
-    fi
 
     # save 'App:RelecloudApi:AttendeeScope' scope for role to App Config Svc
     az appconfig kv set --name $appConfigSvcName --key 'App:RelecloudApi:AttendeeScope' --value "api://$apiWebAppClientId/$scopeName" --yes --only-show-errors > /dev/null
@@ -401,11 +363,6 @@ if [[ ${#apiObjectId} -eq 0 ]]; then
     az appconfig kv set --name $appConfigSvcName --key 'Api:AzureAd:TenantId' --value $tenantId --yes --only-show-errors > /dev/null
     echo "Set appconfig value for: 'Api:AzureAd:TenantId'"
 
-    # prod environments do not allow public network access
-    if [[ $isProd ]]; then
-        # close the app config so that the local user cannot access
-        az appconfig update --name $appConfigSvcName --resource-group $resourceGroupName --enable-public-network false > /dev/null
-    fi
 else
   echo "API app registration objectId=$apiObjectId already exists. Delete the '$apiWebAppName' app registration to recreate or reset the settings."
   canSetSecondAzureLocation=3
@@ -437,15 +394,6 @@ if [[ ${#secondaryResourceGroupName} -gt 0 && $canSetSecondAzureLocation -eq 1 ]
   echo ""
   echo "Now configuring secondary key vault"
 
-  # prod environments do not allow public network access, this must be changed before we can set values
-  if [[ $isProd ]]; then
-      # open the app config so that the local user can access
-      az appconfig update --name $secondaryAppConfigSvcName --resource-group $secondaryResourceGroupName --enable-public-network true > /dev/null
-      
-      # open the key vault so that the local user can access
-      az keyvault update --name $secondaryKeyVaultName --resource-group $secondaryResourceGroupName  --public-network-access Enabled > /dev/null
-  fi
-
   # save 'AzureAd:ClientSecret' to Key Vault
   az keyvault secret set --name 'AzureAd--ClientSecret' --vault-name $secondaryKeyVaultName --value $frontEndWebAppClientSecret --only-show-errors > /dev/null
   echo "... Set keyvault value for: 'AzureAd--ClientSecret'"
@@ -471,15 +419,6 @@ if [[ ${#secondaryResourceGroupName} -gt 0 && $canSetSecondAzureLocation -eq 1 ]
   # save 'Api:AzureAd:TenantId' to App Config Svc
   az appconfig kv set --name $secondaryAppConfigSvcName --key 'Api:AzureAd:TenantId' --value $tenantId --yes --only-show-errors > /dev/null
   echo "... Set appconfig value for: 'Api:AzureAd:TenantId'"
-
-  # prod environments do not allow public network access
-  if [[ $isProd ]]; then
-      # close the app config so that the local user cannot access
-      az appconfig update --name $secondaryAppConfigSvcName --resource-group $secondaryResourceGroupName --enable-public-network false > /dev/null
-      
-      # close the key vault so that the local user cannot access
-      az keyvault update --name $secondaryKeyVaultName --resource-group $secondaryResourceGroupName  --public-network-access Disabled > /dev/null
-  fi
 
   echo ""
   printf "${green}Finished successfully${clear} after configuring 2 Key Vaults and 2 App Configuration Services!"
