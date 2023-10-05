@@ -115,13 +115,14 @@ $frontEndWebObjectId = (az ad app list --filter "displayName eq '$frontEndWebApp
 if ($frontEndWebObjectId.Length -eq 0) {
     '`tFront-end app registration does not exist' | Write-Debug
 
+    #handle shell double parsing https://github.com/Azure/azure-cli/blob/dev/doc/quoting-issues-with-powershell.md
     $frontEndWebAppClientId = (az ad app create `
-            --display-name $frontEndWebAppName `
-            --sign-in-audience AzureADMyOrg `
-            --app-roles "[{ allowedMemberTypes: [ 'User' ], description: 'Relecloud Administrator', displayName: 'Relecloud Administrator', isEnabled: 'true', value: 'Administrator' }]" `
-            --web-redirect-uris $frontEndWebAppUri/signin-oidc https://localhost:7227/signin-oidc `
-            --enable-id-token-issuance `
-            --query appId --output tsv)
+        --display-name $frontEndWebAppName `
+        --sign-in-audience AzureADMyOrg `
+        --app-roles '[{ allowedMemberTypes: [ ''User'' ], description: ''Relecloud Administrator'', displayName: ''Relecloud Administrator'', isEnabled: ''true'', value: ''Administrator'' }]' `
+        --web-redirect-uris $frontEndWebAppUri/signin-oidc https://localhost:7227/signin-oidc `
+        --enable-id-token-issuance `
+        --query appId --output tsv)
 
     Write-Host "frontEndWebAppClientId='$frontEndWebAppClientId'"
 
@@ -192,7 +193,7 @@ if ( $apiObjectId.Length -eq 0 ) {
     $apiWebAppClientId = (az ad app create `
             --display-name $apiWebAppName `
             --sign-in-audience AzureADMyOrg `
-            --app-roles "[{ allowedMemberTypes: [ 'User' ], description: 'Relecloud Administrator', displayName: 'Relecloud Administrator', isEnabled: 'true', value: 'Administrator' }]" `
+            --app-roles '[{ allowedMemberTypes: [ ''User'' ], description: ''Relecloud Administrator'', displayName: ''Relecloud Administrator'', isEnabled: ''true'', value: ''Administrator'' }]' `
             --query appId --output tsv)
 
     Write-Debug "apiWebAppClientId='$apiWebAppClientId'"
