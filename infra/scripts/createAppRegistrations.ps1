@@ -193,7 +193,7 @@ if ( $apiObjectId.Length -eq 0 ) {
     $apiWebAppClientId = (az ad app create `
             --display-name $apiWebAppName `
             --sign-in-audience AzureADMyOrg `
-            --app-roles '[{ allowedMemberTypes: [ ''User'' ], description: ''Relecloud Administrator'', displayName: ''Relecloud Administrator'', isEnabled: ''true'', value: ''Administrator'' }]' `
+            --app-roles '[{ ''allowedMemberTypes'': [ ''User'' ], ''description'': ''Relecloud Administrator'', ''displayName'': ''Relecloud Administrator'', ''isEnabled'': ''true'', ''value'': ''Administrator'' }]' `
             --query appId --output tsv)
 
     Write-Debug "apiWebAppClientId='$apiWebAppClientId'"
