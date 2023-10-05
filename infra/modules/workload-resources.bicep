@@ -458,6 +458,7 @@ module webFrontendFrontDoorRoute '../core/security/front-door-route.bicep' = if 
   params: {
     frontDoorEndpointName: frontDoorSettings.endpointName
     frontDoorProfileName: frontDoorSettings.profileName
+    healthProbeMethod:'GET'
     originPath: '/'
     originPrefix: 'web-frontend'
     serviceAddress: webFrontend.outputs.app_service_hostname
