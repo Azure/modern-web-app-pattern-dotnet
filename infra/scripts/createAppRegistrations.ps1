@@ -74,37 +74,36 @@ if ($group2Exists -eq 'false') {
     $secondaryResourceGroupName = ''
 }
 
-Write-Debug "Derived inputs"
-Write-Debug "----------------------------------------------"
-Write-Debug "keyVaultName='$keyVaultName'"
-Write-Debug "appConfigSvcName='$appConfigSvcName'"
-Write-Debug "frontDoorProfileName='$frontDoorProfileName'"
-Write-Debug "frontEndWebAppUri='$frontEndWebAppUri'"
-Write-Debug "resourceToken='$resourceToken'"
-Write-Debug "environmentName='$environmentName'"
-Write-Debug "secondaryResourceGroupName='$secondaryResourceGroupName'"
-Write-Debug ""
+Write-Host "Derived inputs"
+Write-Host "----------------------------------------------"
+Write-Host "keyVaultName='$keyVaultName'"
+Write-Host "appConfigSvcName='$appConfigSvcName'"
+Write-Host "frontDoorProfileName='$frontDoorProfileName'"
+Write-Host "frontEndWebAppUri='$frontEndWebAppUri'"
+Write-Host "resourceToken='$resourceToken'"
+Write-Host "environmentName='$environmentName'"
+Write-Host "secondaryResourceGroupName='$secondaryResourceGroupName'"
+Write-Host ""
 
 if ($keyVaultName.Length -eq 0) {
     Write-Error "FATAL ERROR: Could not find Key Vault resource. Confirm the --ResourceGroupName is the one created by the ``azd provision`` command."
     exit 7
 }
 
-Write-Debug "Runtime values"
-Write-Debug "----------------------------------------------"
+Write-Host "Runtime values"
+Write-Host "----------------------------------------------"
 $frontEndWebAppName = "$environmentName-$resourceToken-frontend"
 $apiWebAppName = "$environmentName-$resourceToken-api"
 $maxNumberOfRetries = 20
 
-Write-Debug "frontEndWebAppName='$frontEndWebAppName'"
-Write-Debug "apiWebAppName='$apiWebAppName'"
-Write-Debug "maxNumberOfRetries=$maxNumberOfRetries"
+Write-Host "frontEndWebAppName='$frontEndWebAppName'"
+Write-Host "apiWebAppName='$apiWebAppName'"
+Write-Host "maxNumberOfRetries=$maxNumberOfRetries"
 
 $tenantId = (az account show --query "tenantId" -o tsv)
-$userObjectId = (az account show --query "id" -o tsv)
 
-Write-Debug "tenantId='$tenantId'"
-Write-Debug ""
+Write-Host "tenantId='$tenantId'"
+Write-Host ""
 
 if ($Debug) {
     Read-Host -Prompt "Press enter to continue" > $null
@@ -146,7 +145,7 @@ if ($frontEndWebObjectId.Length -eq 0) {
         }
 
         if ($isWebAppCreated -eq 0) {
-            Write-Debug "... trying to create clientSecret for front-end attempt #$currentRetryCount"
+            Write-Host "... trying to create clientSecret for front-end attempt #$currentRetryCount"
         }
         else {
             Write-Host "... created clientSecret for front-end"
@@ -193,7 +192,7 @@ if ( $apiObjectId.Length -eq 0 ) {
     $apiWebAppClientId = (az ad app create `
             --display-name $apiWebAppName `
             --sign-in-audience AzureADMyOrg `
-            --app-roles '[{ \"allowedMemberTypes\": [ \"User\" ], \"description\": \"Relecloud Administrator\", \"displayName\": \"Relecloud Administrator\", \"isEnabled\": \"true\", \"value\": \"Administrator\" }]' `
+            --app-roles "[{ allowedMemberTypes: [ 'User' ], description: 'Relecloud Administrator', displayName: 'Relecloud Administrator', isEnabled: 'true', value: 'Administrator' }]" `
             --query appId --output tsv)
 
     Write-Debug "apiWebAppClientId='$apiWebAppClientId'"
@@ -213,10 +212,10 @@ if ( $apiObjectId.Length -eq 0 ) {
         }
 
         if ($isApiCreated -eq 0) {
-            Write-Debug "... trying to retrieve apiObjectId attempt #$currentRetryCount"
+            Write-Host "... trying to retrieve apiObjectId attempt #$currentRetryCount"
         }
         else {
-            Write-Debug "... retrieved apiObjectId='$apiObjectId'"
+            Write-Host "... retrieved apiObjectId='$apiObjectId'"
         }
         
         Start-Sleep -Seconds 3
@@ -242,7 +241,7 @@ if ( $apiObjectId.Length -eq 0 ) {
 
         if ($createdScope -eq $scopeName) {
             $isScopeAdded = 1
-            Write-Debug "... added scope $scopeName"
+            Write-Host "... added scope $scopeName"
         }
         else {
             $currentRetryCount++
@@ -265,7 +264,7 @@ if ( $apiObjectId.Length -eq 0 ) {
 
         if ($permId.Length -eq 0 ) {
             $currentRetryCount++
-            Write-Debug "... trying to retrieve permId attempt #$currentRetryCount"
+            Write-Host "... trying to retrieve permId attempt #$currentRetryCount"
 
             if ($currentRetryCount -gt $maxNumberOfRetries) {
                 Write-Error 'FATAL ERROR: Tried to retrieve permissionId too many times'
@@ -273,7 +272,7 @@ if ( $apiObjectId.Length -eq 0 ) {
             }
         }
         else {
-            Write-Debug "... retrieved permId=$permId"
+            Write-Host "... retrieved permId=$permId"
         }
   
         Start-Sleep -Seconds 3
@@ -295,7 +294,7 @@ if ( $apiObjectId.Length -eq 0 ) {
 
         if ($authorizedApps.Length -eq 0) {
             $currentRetryCount++
-            Write-Debug "... trying to set front-end app as an preAuthorized client attempt #$currentRetryCount"
+            Write-Host "... trying to set front-end app as an preAuthorized client attempt #$currentRetryCount"
 
             if ($currentRetryCount -gt $maxNumberOfRetries) {
                 Write-Error 'FATAL ERROR: Tried to authorize the front-end app too many times'
@@ -336,14 +335,14 @@ if ($secondaryResourceGroupName.Length -gt 0 -and $canSetSecondAzureLocation -eq
 
   $secondaryAppConfigSvcName = (az appconfig list -g "$secondaryResourceGroupName" --query "[].name" -o tsv)
 
-  Write-Debug ""
-  Write-Debug "Derived inputs for second azure location"
-  Write-Debug "----------------------------------------------"
-  Write-Debug "secondaryKeyVaultName=$secondaryKeyVaultName"
-  Write-Debug "secondaryAppConfigSvcName=$secondaryAppConfigSvcName"
+  Write-Host ""
+  Write-Host "Derived inputs for second azure location"
+  Write-Host "----------------------------------------------"
+  Write-Host "secondaryKeyVaultName=$secondaryKeyVaultName"
+  Write-Host "secondaryAppConfigSvcName=$secondaryAppConfigSvcName"
 
   if ($secondaryKeyVaultName.Length -eq 0) {
-    Write-Debug "No secondary vault to configure"
+    Write-Host "No secondary vault to configure"
     exit 0
   }
 
