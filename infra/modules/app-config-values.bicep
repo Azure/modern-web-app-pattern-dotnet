@@ -169,6 +169,18 @@ resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01
         Write-Host 'Open'
         Update-AzAppConfigurationStore -Name $Env:APP_CONFIG_SVC_NAME -ResourceGroupName $Env:RESOURCE_GROUP -PublicNetworkAccess 'Enabled'
         
+        # Loop until the response is not empty (ie: the asynchronous firewall operation change is completed)
+        while (-not $response) {
+            # Attempt to set the key-value pair in Azure App Configuration
+            $response = Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:CallbackPath -Value /signin-oidc
+
+
+            if (-not $response) {
+                Write-Host "Retrying to set the key-value pair..."
+                Start-Sleep -Seconds 3 # Adjust the sleep duration as needed
+            }
+        }
+
         Write-Host 'Set values for backend'
         Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:SqlDatabase:ConnectionString -Value $Env:SQL_CONNECTION_STRING
         Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:AzureAd:Instance -Value $Env:LOGIN_ENDPOINT
@@ -179,7 +191,6 @@ resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01
         Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:FrontDoorHostname -Value $Env:AZURE_FRONT_DOOR_HOST_NAME
         Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RelecloudApi:BaseUri -Value $Env:RELECLOUD_API_BASE_URI
         Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:Instance -Value $Env:LOGIN_ENDPOINT
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:CallbackPath -Value /signin-oidc
         Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:SignedOutCallbackPath -Value /signout-oidc
         
         Write-Host 'Set values for key vault reference'
@@ -187,7 +198,7 @@ resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01
         Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RedisCache:ConnectionString -Value $Env:REDIS_CONNECTION_SECRET_NAME -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
       }
       finally {
-        if ($ENABLE_PUBLIC_ACCESS -eq 'false') {
+        if ($Env:ENABLE_PUBLIC_ACCESS -eq 'false') {
           Write-Host 'Close'
           Update-AzAppConfigurationStore -Name $Env:APP_CONFIG_SVC_NAME -ResourceGroupName $Env:RESOURCE_GROUP -PublicNetworkAccess 'Disabled'
         }
