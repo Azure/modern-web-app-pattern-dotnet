@@ -43,17 +43,19 @@ azd provision
     1. `mkdir \dev`
     1. `cd \dev`
     1. `git clone https://github.com/Azure/modern-web-app-pattern-dotnet`
+    1. `cd .\modern-web-app-pattern-dotnet`
 1. Authenticate
     1. Sign into Edge (if required by your AD tenant) and choose "Allow my organization to manage my device"
     1. `az login --scope https://graph.microsoft.com//.default`
     1. `az account set --subscription <azure subscription for Relecloud deployment>`
     1. `azd auth login`
-1. Create the Azure AD app registration from the new terminal
-    1. `.\infra\scripts\createAppRegistrations.ps1 -g '<name from Azure portal for workload resource group>'`
+1. Switch branch <!-- todo remove this -->
+    1. `git checkout -b infra-refactor origin/kschlobohm/infra-refactor`
 1. Set required AZD variables
     1. `azd env new <name from devcontainer terminal>`
-    1. `azd env set AZURE_ENV_NAME <name from devcontainer terminal>`
     1. `azd env set AZURE_LOCATION <location from devcontainer terminal>`
     1. `azd env set AZURE_SUBSCRIPTION_ID <subscription id from devcontainer terminal>`
+1. Create the Azure AD app registration from the new terminal
+    1. `.\infra\scripts\createAppRegistrations.ps1 -g '<name from Azure portal for workload resource group>'`
 1. Deploy the code from the jump host
     1. `azd deploy`
