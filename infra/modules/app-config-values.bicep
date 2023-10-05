@@ -63,11 +63,14 @@ param azureStorageTicketContainerName string
 @description('URI for the Azure storage account where ticket images will be stored')
 param azureStorageTicketUri string
 
-@description('The Azure region for the resource.')
-param location string
-
 @description('The name of the identity that runs the script (requires access to change public network settings on App Configuration)')
 param devopsIdentityName string
+
+@description('The URI for the key vault that stores the key vault referenced secrets')
+param keyVaultUri string
+
+@description('The Azure region for the resource.')
+param location string
 
 @description('Sql database connection string for managed identity connection')
 param sqlDatabaseConnectionString string
@@ -142,6 +145,10 @@ resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01
         value: enablePublicNetworkAccess ? 'true' : 'false'
       }
       {
+        name: 'KEY_VAULT_URI'
+        value: keyVaultUri 
+      }
+      {
         name: 'LOGIN_ENDPOINT'
         value: environment().authentication.loginEndpoint 
       }
@@ -194,8 +201,8 @@ resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01
         Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:SignedOutCallbackPath -Value /signout-oidc
         
         Write-Host 'Set values for key vault reference'
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:ClientSecret -Value AzureAd--ClientSecret -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RedisCache:ConnectionString -Value $Env:REDIS_CONNECTION_SECRET_NAME -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
+        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:ClientSecret -Value "{'uri':'https://$Env:KEY_VAULT_URI/secrets/AzureAd--ClientSecret}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
+        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RedisCache:ConnectionString -Value "{'uri':'https://$Env:KEY_VAULT_URI/secrets/$Env:REDIS_CONNECTION_SECRET_NAME}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
       }
       finally {
         if ($Env:ENABLE_PUBLIC_ACCESS -eq 'false') {

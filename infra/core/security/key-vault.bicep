@@ -203,3 +203,4 @@ resource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' 
 
 output id string = keyVault.id
 output name string = keyVault.name
+output vaultUri string = keyVault.properties.vaultUri

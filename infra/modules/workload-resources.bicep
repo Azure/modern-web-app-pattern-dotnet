@@ -240,9 +240,10 @@ module writeAppConfigValues './app-config-values.bicep' = {
     azureStorageTicketContainerName: ticketContainerName
     azureStorageTicketUri:storageAccount.outputs.primaryEndpoints.blob
     appConfigurationStoreName: appConfiguration.outputs.name
-    enablePublicNetworkAccess: deploymentSettings.isNetworkIsolated ? false : true
-    location: deploymentSettings.location
     devopsIdentityName: ownerManagedIdentityRoleAssignment.outputs.identity_name
+    enablePublicNetworkAccess: deploymentSettings.isNetworkIsolated ? false : true
+    keyVaultUri: keyVault.outputs.vaultUri
+    location: deploymentSettings.location
     relecloudApiBaseUri: 'https://${frontDoorSettings.hostname}/api'
     redisConnectionSecretName: redisConnectionSecretName
     sqlDatabaseConnectionString: sqlDatabase.outputs.connection_string    
