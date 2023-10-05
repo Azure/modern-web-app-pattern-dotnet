@@ -409,7 +409,7 @@ module webServiceFrontDoorRoute '../core/security/front-door-route.bicep' = if (
     frontDoorEndpointName: frontDoorSettings.endpointName
     frontDoorProfileName: frontDoorSettings.profileName
     healthProbeMethod:'GET'
-    originPath: '/'
+    originPath: '/api/'
     originPrefix: 'web-service'
     serviceAddress: webService.outputs.app_service_hostname
     routePattern: '/api/*'
