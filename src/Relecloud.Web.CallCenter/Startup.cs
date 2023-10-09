@@ -143,7 +143,7 @@ namespace Relecloud.Web
 
         private void AddConcertContextService(IServiceCollection services)
         {
-            string baseUri = Configuration["App:RelecloudApi:BaseUri"];
+            var baseUri = Configuration["App:RelecloudApi:BaseUri"];
             if (string.IsNullOrWhiteSpace(baseUri))
             {
                 services.AddScoped<IConcertContextService, MockConcertContextService>();
