@@ -244,7 +244,7 @@ var networkRuleCollections = [
           protocols: [
             'Any'
           ]
-          sourceAddresses: deploymentSettings. ? [ spokeSubnetPrefixesFromPrimary[6] ] : [ spokeSubnetPrefixesFromPrimary[6], spokeSubnetPrefixesFromSecondary[6] ]
+          sourceAddresses: deploymentSettings.isMultiLocationDeployment ? [ spokeSubnetPrefixesFromPrimary[6] ] : [ spokeSubnetPrefixesFromPrimary[6], spokeSubnetPrefixesFromSecondary[6] ]
         }
         {
           destinationAddresses: [
@@ -258,9 +258,7 @@ var networkRuleCollections = [
           protocols: [
             'Any'
           ]
-          sourceAddresses: [
-            spokeSubnetPrefixes[6]
-          ]
+          sourceAddresses: deploymentSettings.isMultiLocationDeployment ? [ spokeSubnetPrefixesFromPrimary[6] ] : [ spokeSubnetPrefixesFromPrimary[6], spokeSubnetPrefixesFromSecondary[6] ]
         }
       ]
     }
