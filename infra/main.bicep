@@ -340,8 +340,8 @@ module spokeNetwork2 './modules/spoke-network.bicep' = if (isNetworkIsolated && 
 ** only done if the hub network was created in this deployment.  If the hub network was not
 ** deployed, then a manual peering process needs to be done.
 */
-module peerVirtualNetworks './modules/peer-networks.bicep' = if (willDeployHubNetwork && isNetworkIsolated) {
-  name: '${prefix}-peer-networks'
+module peerHubAndPrimarySpokeVirtualNetworks './modules/peer-networks.bicep' = if (willDeployHubNetwork && isNetworkIsolated) {
+  name: '${prefix}-peer-hub-primary-networks'
   params: {
     hubNetwork: {
       name: willDeployHubNetwork ? hubNetwork.outputs.virtual_network_name : ''
@@ -350,6 +350,36 @@ module peerVirtualNetworks './modules/peer-networks.bicep' = if (willDeployHubNe
     spokeNetwork: {
       name: isNetworkIsolated ? spokeNetwork.outputs.virtual_network_name : ''
       resourceGroupName: naming.outputs.resourceNames.spokeResourceGroup
+    }
+  }
+}
+
+/* peer the hub and spoke for secondary region if it was deployed */
+module peerHubAndSecondarySpokeVirtualNetworks './modules/peer-networks.bicep' = if (willDeployHubNetwork && isNetworkIsolated && isMultiLocationDeployment) {
+  name: '${prefix}-peer-hub-secondary-networks'
+  params: {
+    hubNetwork: {
+      name: isMultiLocationDeployment ? hubNetwork.outputs.virtual_network_name : ''
+      resourceGroupName: naming.outputs.resourceNames.hubResourceGroup
+    }
+    spokeNetwork: {
+      name: isMultiLocationDeployment ? spokeNetwork2.outputs.virtual_network_name : ''
+      resourceGroupName: isMultiLocationDeployment ? naming2.outputs.resourceNames.spokeResourceGroup : ''
+    }
+  }
+}
+
+/* peer the two spoke vnets so that replication is not forced through the hub */
+module peerSpokeVirtualNetworks './modules/peer-networks.bicep' = if (willDeployHubNetwork && isNetworkIsolated && isMultiLocationDeployment) {
+  name: '${prefix}-peer-spoke-and-spoke-networks'
+  params: {
+    hubNetwork: {
+      name: isNetworkIsolated ? spokeNetwork.outputs.virtual_network_name : ''
+      resourceGroupName: naming.outputs.resourceNames.spokeResourceGroup
+    }
+    spokeNetwork: {
+      name: isNetworkIsolated ? spokeNetwork.outputs.virtual_network_name : ''
+      resourceGroupName: isMultiLocationDeployment ? naming2.outputs.resourceNames.spokeResourceGroup : ''
     }
   }
 }
