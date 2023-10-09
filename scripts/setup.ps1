@@ -275,10 +275,7 @@ if ($null -eq $AzureLocation -or $AzureLocation -eq "") {
 }
 
 $defaultSecondAzureLocation = "eastus"
-# if azure location was set then use it, otherwise use the default
-$secondAzureLocationCmd = (azd env get-values -o json | ConvertFrom-Json -Depth 9 -AsHashtable).SECONDARY_AZURE_LOCATION
-
-if ($null -eq $secondAzureLocation || $secondAzureLocation -eq "") {
+if ($null -eq $SecondAzureLocation -or $SecondAzureLocation -eq "") {
     $secondAzureLocationCmd = $defaultSecondAzureLocation
 }
 
