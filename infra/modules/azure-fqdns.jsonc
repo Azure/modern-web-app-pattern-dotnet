@@ -45,6 +45,7 @@
         "*.portal.azure.net",
         "appservice.azureedge.net",
         "*.azurewebsites.net",
-        "edge.management.azure.com"
+        "edge.management.azure.com",
+        "*.azurefd.net"
     ]
 }
