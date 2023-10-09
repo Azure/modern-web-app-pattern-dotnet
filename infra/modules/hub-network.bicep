@@ -18,6 +18,9 @@ targetScope = 'subscription'
 // From: infra/types/DeploymentSettings.bicep
 @description('Type that describes the global deployment settings')
 type DeploymentSettings = {
+  @description('If \'true\', then two regional deployments will be performed.')
+  isMultiLocationDeployment: bool
+  
   @description('If \'true\', use production SKUs and settings.')
   isProduction: bool
 
@@ -118,9 +121,11 @@ param enableFirewall bool = true
 @description('The address spaces allowed to connect through the firewall.  By default, we allow all RFC1918 address spaces')
 param internalAddressSpace string[] = [ '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16' ]
 
-// TODO - needs to support multiple spokes
-@description('The CIDR block to use for the address prefix of the spoke virtual network.')
-param spokeAddressPrefix string
+@description('The CIDR block to use for the address prefix of the primary spoke virtual network.')
+param spokeAddressPrefixPrimary string
+
+@description('The CIDR block to use for the address prefix of the secondary spoke virtual network.')
+param spokeAddressPrefixSecondary string
 
 // ========================================================================
 // VARIABLES
@@ -211,7 +216,8 @@ var applicationRuleCollections = [
 ]
 
 // The subnet prefixes for the individual subnets inside the virtual network
-var spokeSubnetPrefixes = [ for i in range(0, 16): cidrSubnet(spokeAddressPrefix, 26, i)]
+var spokeSubnetPrefixesFromPrimary = [ for i in range(0, 16): cidrSubnet(spokeAddressPrefixPrimary, 26, i)]
+var spokeSubnetPrefixesFromSecondary = [ for i in range(0, 16): cidrSubnet(spokeAddressPrefixSecondary, 26, i)]
 
 var networkRuleCollections = [
   {
@@ -238,9 +244,7 @@ var networkRuleCollections = [
           protocols: [
             'Any'
           ]
-          sourceAddresses: [
-            spokeSubnetPrefixes[6]
-          ]
+          sourceAddresses: deploymentSettings. ? [ spokeSubnetPrefixesFromPrimary[6] ] : [ spokeSubnetPrefixesFromPrimary[6], spokeSubnetPrefixesFromSecondary[6] ]
         }
         {
           destinationAddresses: [

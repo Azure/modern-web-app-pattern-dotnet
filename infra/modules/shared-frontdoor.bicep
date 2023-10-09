@@ -15,6 +15,9 @@ targetScope = 'subscription'
 // From: infra/types/DeploymentSettings.bicep
 @description('Type that describes the global deployment settings')
 type DeploymentSettings = {
+  @description('If \'true\', then two regional deployments will be performed.')
+  isMultiLocationDeployment: bool
+  
   @description('If \'true\', use production SKUs and settings.')
   isProduction: bool
 

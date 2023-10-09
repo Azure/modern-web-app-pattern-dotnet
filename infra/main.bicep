@@ -124,6 +124,7 @@ var willDeployHubNetwork = isNetworkIsolated && (deployHubNetwork == 'true' || (
 var willDeployCommonAppServicePlan = useCommonAppServicePlan == 'true' || (useCommonAppServicePlan == 'auto' && !isProduction)
 
 var deploymentSettings = {
+  isMultiLocationDeployment: isMultiLocationDeployment
   isProduction: isProduction
   isNetworkIsolated: isNetworkIsolated
   isPrimaryLocation: true
@@ -162,7 +163,8 @@ var diagnosticSettings = {
 
 var installBuildAgent = isNetworkIsolated && ((!empty(adoOrganizationUrl) && !empty(adoToken)) || (!empty(githubRepositoryUrl) && !empty(githubToken)))
 
-var spokeAddressPrefix = '10.0.16.0/20'
+var spokeAddressPrefixPrimary = '10.0.16.0/20'
+var spokeAddressPrefixSecondary = '10.0.32.0/20'
 
 // ========================================================================
 // BICEP MODULES
@@ -270,7 +272,8 @@ module hubNetwork './modules/hub-network.bicep' = if (willDeployHubNetwork) {
     enableDDoSProtection: deploymentSettings.isProduction
     enableFirewall: true
     enableJumpHost: willDeployHubNetwork
-    spokeAddressPrefix: spokeAddressPrefix
+    spokeAddressPrefixPrimary: spokeAddressPrefixPrimary
+    spokeAddressPrefixSecondary: spokeAddressPrefixSecondary
   }
   dependsOn: [
     resourceGroups
@@ -298,7 +301,7 @@ module spokeNetwork './modules/spoke-network.bicep' = if (isNetworkIsolated) {
     routeTableId: willDeployHubNetwork ? hubNetwork.outputs.route_table_id : ''
 
     // Settings
-    addressPrefix: spokeAddressPrefix
+    addressPrefix: spokeAddressPrefixPrimary
     administratorPassword: administratorPassword
     administratorUsername: administratorUsername
     createDevopsSubnet: isNetworkIsolated
@@ -321,7 +324,7 @@ module spokeNetwork2 './modules/spoke-network.bicep' = if (isNetworkIsolated && 
     routeTableId: willDeployHubNetwork ? hubNetwork.outputs.route_table_id : ''
 
     // Settings
-    addressPrefix: spokeAddressPrefix
+    addressPrefix: spokeAddressPrefixSecondary
     administratorPassword: administratorPassword
     administratorUsername: administratorUsername
     createDevopsSubnet: true
