@@ -158,7 +158,7 @@ if ($frontEndWebObjectId.Length -eq 0) {
     }
 
     # save 'AzureAd:ClientSecret' to Key Vault
-    az keyvault secret set --name 'AzureAd--ClientSecret' --vault-name $keyVaultName --value $frontEndWebAppClientSecret --only-show-errors > $null
+    az keyvault secret set --name 'AzureAd--ClientSecret' --vault-name $keyVaultName --value "$frontEndWebAppClientSecret" --only-show-errors > $null
     Write-Host "Set keyvault value for: 'AzureAd--ClientSecret'"
 
     # save 'AzureAd:TenantId' to App Config Svc
