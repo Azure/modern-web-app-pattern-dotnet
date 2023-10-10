@@ -378,7 +378,7 @@ module peerSpokeVirtualNetworks './modules/peer-networks.bicep' = if (willDeploy
       resourceGroupName: naming.outputs.resourceNames.spokeResourceGroup
     }
     spokeNetwork: {
-      name: isNetworkIsolated ? spokeNetwork.outputs.virtual_network_name : ''
+      name: isNetworkIsolated ? spokeNetwork2.outputs.virtual_network_name : ''
       resourceGroupName: isMultiLocationDeployment ? naming2.outputs.resourceNames.spokeResourceGroup : ''
     }
   }
