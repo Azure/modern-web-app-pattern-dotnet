@@ -410,6 +410,7 @@ module workload './modules/workload-resources.bicep' = {
     // Dependencies
     applicationInsightsId: azureMonitor.outputs.application_insights_id
     logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
+    dnsResourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : ''
     subnets: isNetworkIsolated ? spokeNetwork.outputs.subnets : {}
     frontDoorSettings: frontdoor.outputs.settings
 
@@ -435,6 +436,7 @@ module workload2 './modules/workload-resources.bicep' =  if (isMultiLocationDepl
     // Dependencies
     applicationInsightsId: azureMonitor.outputs.application_insights_id
     logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
+    dnsResourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : ''
     subnets: isNetworkIsolated ? spokeNetwork.outputs.subnets : {}
     frontDoorSettings: frontdoor.outputs.settings
 

@@ -100,6 +100,9 @@ param resourceNames object
 @description('The ID of the Application Insights resource to use for App Service logging.')
 param applicationInsightsId string = ''
 
+@description('When deploying a hub, the private endpoints will need this parameter to specify the resource group that holds the Private DNS zones')
+param dnsResourceGroupName string = ''
+
 @description('The ID of the Log Analytics workspace to use for diagnostics and logging.')
 param logAnalyticsWorkspaceId string = ''
 
@@ -223,7 +226,7 @@ module appConfiguration '../core/config/app-configuration.bicep' = {
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
     ]
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
-      dnsResourceGroupName: resourceNames.hubResourceGroup
+      dnsResourceGroupName: dnsResourceGroupName
       name: resourceNames.appConfigurationPrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
@@ -276,7 +279,7 @@ module keyVault '../core/security/key-vault.bicep' = {
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
     ]
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
-      dnsResourceGroupName: resourceNames.hubResourceGroup
+      dnsResourceGroupName: dnsResourceGroupName
       name: resourceNames.keyVaultPrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
@@ -328,7 +331,7 @@ module sqlDatabase '../core/database/sql-database.bicep' = {
     diagnosticSettings: diagnosticSettings
     dtuCapacity: deploymentSettings.isProduction ? 125 : 10
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
-      dnsResourceGroupName: resourceNames.hubResourceGroup
+      dnsResourceGroupName: dnsResourceGroupName
       name: resourceNames.sqlDatabasePrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
@@ -394,7 +397,7 @@ module webService './workload-appservice.bicep' = {
     appServiceName: resourceNames.webAppService
     outboundSubnetId: deploymentSettings.isNetworkIsolated ? subnets[resourceNames.spokeWebOutboundSubnet].id : ''
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
-      dnsResourceGroupName: resourceNames.hubResourceGroup
+      dnsResourceGroupName: dnsResourceGroupName
       name: resourceNames.webAppServicePrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokeWebInboundSubnet].id
@@ -444,7 +447,7 @@ module webFrontend './workload-appservice.bicep' = {
     appServiceName: resourceNames.webAppFrontend
     outboundSubnetId: deploymentSettings.isNetworkIsolated ? subnets[resourceNames.spokeWebOutboundSubnet].id : ''
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
-      dnsResourceGroupName: resourceNames.hubResourceGroup
+      dnsResourceGroupName: dnsResourceGroupName
       name: resourceNames.webAppFrontendPrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokeWebInboundSubnet].id
@@ -493,7 +496,7 @@ module redis '../core/database/azure-cache-for-redis.bicep' = {
     redisCacheCapacity: deploymentSettings.isProduction ? 1 : 0
     
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
-      dnsResourceGroupName: resourceNames.hubResourceGroup
+      dnsResourceGroupName: dnsResourceGroupName
       name: resourceNames.redisPrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
@@ -519,7 +522,7 @@ module storageAccount '../core/storage/storage-account.bicep' = {
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
     ]
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
-      dnsResourceGroupName: resourceNames.hubResourceGroup
+      dnsResourceGroupName: dnsResourceGroupName
       name: resourceNames.storageAccountPrivateEndpoint
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
