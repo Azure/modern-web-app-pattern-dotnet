@@ -437,7 +437,7 @@ module workload2 './modules/workload-resources.bicep' =  if (isMultiLocationDepl
     applicationInsightsId: azureMonitor.outputs.application_insights_id
     logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
     dnsResourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : ''
-    subnets: isNetworkIsolated ? spokeNetwork.outputs.subnets : {}
+    subnets: isNetworkIsolated ? spokeNetwork2.outputs.subnets : {}
     frontDoorSettings: frontdoor.outputs.settings
 
     // Settings

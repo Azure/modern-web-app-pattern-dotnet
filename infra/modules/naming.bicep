@@ -107,9 +107,9 @@ var defaultResourceNames = {
   spokePrivateEndpointNSG: 'nsg-pep-${resourceToken}'
   spokePrivateEndpointSubnet: 'Private-Endpoints'
   spokeVirtualNetwork: 'vnet-spoke-${resourceToken}'
-  spokeWebInboundSubnet: 'Web-Inbound'
+  spokeWebInboundSubnet: 'Web-Inbound-${resourceToken}'
   spokeWebInboundNSG: 'nsg-web-in-${resourceToken}'
-  spokeWebOutboundSubnet: 'Web-Outbound'
+  spokeWebOutboundSubnet: 'Web-Outbound-${resourceToken}'
   spokeWebOutboundNSG: 'nsg-web-out-${resourceToken}'
 
   // Common resources - may be in hub or workload resource group
