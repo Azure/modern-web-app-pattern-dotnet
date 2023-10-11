@@ -98,6 +98,13 @@ param enablePublicNetworkAccess bool = true
 param uniqueScriptId string = newGuid()
 
 // ========================================================================
+// VARIABLES
+// ========================================================================
+
+// will often be 'login.microsoft.com' but is set dynamically so that it can be modified for government clouds
+var microsoftAzureAdLoginEndpoint = environment().authentication.loginEndpoint 
+
+// ========================================================================
 // AZURE RESOURCES
 // ========================================================================
 
@@ -153,7 +160,7 @@ resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01
       }
       {
         name: 'LOGIN_ENDPOINT'
-        value: environment().authentication.loginEndpoint 
+        value: microsoftAzureAdLoginEndpoint
       }
       {
         name: 'REDIS_CONNECTION_SECRET_NAME'
@@ -172,47 +179,6 @@ resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01
         value: sqlDatabaseConnectionString
       }
     ]
-    scriptContent: '''
-      try {
-        $configStore = Get-AzAppConfigurationStore -Name $Env:APP_CONFIG_SVC_NAME -ResourceGroupName $Env:RESOURCE_GROUP
-
-        Write-Host 'Open'
-        Update-AzAppConfigurationStore -Name $Env:APP_CONFIG_SVC_NAME -ResourceGroupName $Env:RESOURCE_GROUP -PublicNetworkAccess 'Enabled'
-        
-        # Loop until the response is not empty (ie: the asynchronous firewall operation change is completed)
-        while (-not $response) {
-            # Attempt to set the key-value pair in Azure App Configuration
-            $response = Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:CallbackPath -Value /signin-oidc
-
-
-            if (-not $response) {
-                Write-Host "Retrying to set the key-value pair..."
-                Start-Sleep -Seconds 3 # Adjust the sleep duration as needed
-            }
-        }
-
-        Write-Host 'Set values for backend'
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:SqlDatabase:ConnectionString -Value $Env:SQL_CONNECTION_STRING
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:AzureAd:Instance -Value $Env:LOGIN_ENDPOINT
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:StorageAccount:Container -Value $Env:AZURE_STORAGE_TICKET_CONTAINER_NAME
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:StorageAccount:Uri -Value $Env:AZURE_STORAGE_TICKET_URI
-        
-        Write-Host 'Set values for frontend'
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:FrontDoorHostname -Value $Env:AZURE_FRONT_DOOR_HOST_NAME
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RelecloudApi:BaseUri -Value $Env:RELECLOUD_API_BASE_URI
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:Instance -Value $Env:LOGIN_ENDPOINT
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:SignedOutCallbackPath -Value /signout-oidc
-        
-        Write-Host 'Set values for key vault reference'
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:ClientSecret -Value "{'uri':''$($Env:KEY_VAULT_URI)secrets/AzureAd--ClientSecret}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-        Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RedisCache:ConnectionString -Value "{'uri':''$($Env:KEY_VAULT_URI)secrets/$Env:REDIS_CONNECTION_SECRET_NAME}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-      }
-      finally {
-        if ($Env:ENABLE_PUBLIC_ACCESS -eq 'false') {
-          Write-Host 'Close'
-          Update-AzAppConfigurationStore -Name $Env:APP_CONFIG_SVC_NAME -ResourceGroupName $Env:RESOURCE_GROUP -PublicNetworkAccess 'Disabled'
-        }
-      }
-      '''
+    scriptContent: loadTextContent('./scripts/update-app-config-values.ps1')
   }
 }
