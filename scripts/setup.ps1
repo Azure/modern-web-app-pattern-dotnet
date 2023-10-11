@@ -336,6 +336,7 @@ $azureSubscriptionId = (Get-AzContext).Subscription.Id
 
 azd env set AZURE_SUBSCRIPTION_ID $azureSubscriptionId
 azd env set AZURE_LOCATION $azureLocationCmd
+azd env set ADMIN_PASSWORD (New-Guid).ToString()
 azd env set AZURE_ENV_TYPE $environmentType
 azd env set NETWORK_ISOLATION $(if ($networkIsolation) { "true" } else { "false" })
 azd env set DEPLOY_HUB_NETWORK $(if ($deployHubNetwork) { "true" } else { "false" })
