@@ -123,10 +123,10 @@ azd env set ADMIN_PASSWORD "AV@lidPa33word"
 
 Substitute the environment name and database password for your own values.
 
-By default, Azure resources are sized for a "development" mode. If doing a Production deployment, set the `APP_ENVIRONMENT` to `prod` using the following code:
+By default, Azure resources are sized for a "development" mode. If doing a Production deployment, set the `AZURE_ENV_TYPE` to `prod` using the following code:
 
 ```shell
-azd env set APP_ENVIRONMENT prod
+azd env set AZURE_ENV_TYPE prod
 ```
 
 ### 5. Select a region for deployment
