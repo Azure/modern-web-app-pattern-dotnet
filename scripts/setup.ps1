@@ -137,9 +137,18 @@ if (!(Get-Command "azd" -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-if (!(Get-Command "Get-AzContext" -ErrorAction SilentlyContinue)) {
-    # also covers the `Get-AzAdUser` command
-    "You must install, or import, the Az.Accounts module to connect to Azure."
+if ((Get-Module -ListAvailable -Name Az) -and (Get-Module -Name Az -ErrorAction SilentlyContinue)) {
+    Write-Debug "The 'Az' module is installed and imported."
+    if (Get-AzContext -ErrorAction SilentlyContinue) {
+        Write-Debug "The user is authenticated with Azure."
+    }
+    else {
+        Write-Error "You are not authenticated with Azure. Please run 'Connect-AzAccount' to authenticate before running this script."
+        exit 1
+    }
+}
+else {
+    Write-Error "The 'Az' module is not installed or imported. Please install and import the 'Az' module before running this script."
     exit 1
 }
 
