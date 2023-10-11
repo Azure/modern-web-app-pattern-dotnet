@@ -166,7 +166,6 @@ azd provision --no-prompt
 ```
 
 **Create App Registrations**
-<!-- Todo: as we rearrange bicep templates we want to simplify this step so that we can just run `azd up` -->
 
 Relecloud devs have automated the process of creating Azure
 AD resources that support the authentication features of the
