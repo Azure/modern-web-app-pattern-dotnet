@@ -179,6 +179,6 @@ resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01
         value: sqlDatabaseConnectionString
       }
     ]
-    scriptContent: loadTextContent('./scripts/update-app-config-values.ps1')
+    scriptContent: loadTextContent('../scripts/update-app-config-values.ps1')
   }
 }
