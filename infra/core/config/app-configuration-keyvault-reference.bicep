@@ -8,6 +8,7 @@ targetScope = 'resourceGroup'
 ***************************************************************************
 **
 ** Writes a set of key values to the connected App Configuration store.
+** Requires that the App Configuration store be public network enabled.
 */
 
 // ========================================================================
