@@ -23,6 +23,12 @@
     be cleaned up.
 .PARAMETER AsJob
     Use The -AsJob parameter to delete the resource groups in the background.
+.EXAMPLE
+    .\cleanup.ps1 -AsJob -Prefix rg-rele231011v1-dev-westus3-workload
+    This command will clean up the Azure environment with the prefix "myenv".
+.NOTES
+    This command requires that Az modules are installed and imported. It also requires that you have an
+    active Azure session.  If you are not authenticated with Azure, you will be prompted to authenticate.
 #>
 
 Param(
@@ -33,8 +39,22 @@ Param(
     [switch]$AsJob = $false
 )
 
+if ((Get-Module -ListAvailable -Name Az) -and (Get-Module -Name Az -ErrorAction SilentlyContinue)) {
+    Write-Debug "The 'Az' module is installed and imported."
+    if (Get-AzContext -ErrorAction SilentlyContinue) {
+        Write-Debug "The user is authenticated with Azure."
+    }
+    else {
+        Write-Error "You are not authenticated with Azure. Please run 'Connect-AzAccount' to authenticate before running this script."
+        exit 1
+    }
+}
+else {
+    Write-Error "The 'Az' module is not installed or imported. Please install and import the 'Az' module before running this script."
+    exit 1
+}
+
 # Default Settings
-$CleanupAzureDirectory = $false
 $rgPrefix = ""
 $rgWorkload = ""
 $rgSpoke = ""
