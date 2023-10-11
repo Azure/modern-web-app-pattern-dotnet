@@ -496,7 +496,7 @@ module privateDnsZones './modules/private-dns-zones.bicep' = if (willDeployHubNe
   params:{
     deploymentSettings: deploymentSettings
     hubResourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : ''
-    virtualNetworkLinks: virtualNetworkLinks
+    virtualNetworkLinks: willDeployHubNetwork ? virtualNetworkLinks : []
   }
 }
 
