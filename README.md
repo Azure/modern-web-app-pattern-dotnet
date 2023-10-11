@@ -118,7 +118,7 @@ Run the following commands to set these values and create a new environment:
 
 ```shell
 azd env new eapdotnetmwa
-azd env set DATABASE_PASSWORD "AV@lidPa33word"
+azd env set ADMIN_PASSWORD "AV@lidPa33word"
 ```
 
 Substitute the environment name and database password for your own values.
