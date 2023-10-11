@@ -274,8 +274,7 @@ if ($CommonAppServicePlan) {
     $casp = $sCasp -eq "true"
 }
 
-# default will be overriden by `azd config set defaults.location`
-$defaultAzureLocation = (azd config list -o json | ConvertFrom-Json -Depth 9 -AsHashtable).defaults.location
+$defaultAzureLocation = "westus3"
 # if azure location was set then use it, otherwise use the default
 $azureLocationCmd = $AzureLocation
 
