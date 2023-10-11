@@ -61,6 +61,6 @@ azd provision
     1. `azd env set AZURE_SUBSCRIPTION_ID <subscription id from devcontainer terminal>`
     1. `azd env set AZURE_RESOURCE_GROUP <name of workload resource group from Azure portal>`
 1. Create the Azure AD app registration from the new terminal
-    1. `.\infra\scripts\createAppRegistrations.ps1 -g '<name from Azure portal for workload resource group>'`
+    1. `.\infra\scripts\create-app-registrations.ps1 -g '<name from Azure portal for workload resource group>'`
 1. Deploy the code from the jump host
     1. `azd deploy`
