@@ -1,8 +1,7 @@
 # Prerequisites
 
-```
  If you want to use a [VSCode Dev Container](https://code.visualstudio.com/docs/devcontainers/containers#_system-requirements) see the `VSCode Dev Container prerequisites` section below.
-```
+
 
 ## Pre-requisites
 
