@@ -1,4 +1,21 @@
-# Steps to deploy the reference implementation
+# Steps to deploy the Network Isolated implementation
+This pattern comes with feature flags that enable different deployment scenarios. The primary difference between this approach, and the one outlined in the readme, are the virtual networks that provide a network isolation boundary for the web app. This approach shows how traffic between resources can be secured and how resources can limit or eliminate public network access.
+
+## Prerequisites
+
+We recommend that you use a Dev Container to deploy this application.  The requirements are as follows:
+
+- [Azure Subscription](https://azure.microsoft.com/pricing/member-offers/msdn-benefits-details/).
+- [Visual Studio Code](https://code.visualstudio.com/).
+- [Docker Desktop](https://www.docker.com/get-started/).
+- [Permissions to register an application in Azure AD](https://learn.microsoft.com/azure/active-directory/develop/quickstart-register-app).
+- Visual Studio Code [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
+
+If you do not wish to use a Dev Container, please refer to the [prerequisites](prerequisites.md) for detailed information on how to set up your development system to build, run, and deploy the application.
+
+> ⚠️ We are using version 1.3.0 for AZD while awaiting feedback on a known bicep issue.
+
+## Steps to deploy the reference implementation
 
 This section describes the deployment steps for the reference implementation of a modern web application pattern with .NET on Microsoft Azure. These steps guide you through using the jump host that is deployed when performing a network isolated deployment because access to resources will be restricted from public network access and must be performed from a machine connected to the vnet.
 
