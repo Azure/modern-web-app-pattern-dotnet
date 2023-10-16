@@ -1,18 +1,86 @@
 trigger:
-- main
+  branches:
+    exclude:
+    - "*"
+
+pr:
+  branches:
+    include:
+    - "*"
+
+schedules:
+- cron: "0 12 * * *"
+  displayName: 'Daily Build'
+  always: true
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
 
 variables:
-  buildConfiguration: 'Release'
-  dotNetFramework: 'net6.0'
-  dotNetVersion: '6.0.x'
+  AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+  AZURE_TENANT_ID: $(AZURE_TENANT_ID)
+  AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+  AZURE_ENV_NAME: $(AZURE_ENV_NAME)
+  AZURE_LOCATION: $(AZURE_LOCATION)
+  AZURE_LOCATION2: $(AZURE_LOCATION2)
 
-steps:
-- task: UseDotNet@2
-  inputs:
-    version: $(dotNetVersion)
-    includePreviewVersions: true
-- script: dotnet build --configuration $(buildConfiguration)
-  displayName: 'Build Relecloud Web App'
+stages:
+- stage: build
+  jobs:
+  - job: build
+    container: mcr.microsoft.com/azure-dev-cli-apps:latest
+    steps:
+    - checkout: self
+    - task: UseDotNet@2
+      inputs:
+        version: '7.0.x'
+        performMultiLevelLookup: true
+
+    - script: |
+        azd auth login \
+          --client-id "$(AZURE_CLIENT_ID)" \
+          --federated-credential-provider "github" \
+          --tenant-id "$(AZURE_TENANT_ID)"
+      displayName: 'Log in with Azure (Federated Credentials)'
+      condition: ne(variables['AZURE_CLIENT_ID'], '')
+      
+    - script: azd provision --no-prompt
+      displayName: 'Azure Dev Provision'
+      
+    - script: |
+        azd auth login \
+          --client-id "$(AZURE_CLIENT_ID)" \
+          --federated-credential-provider "github" \
+          --tenant-id "$(AZURE_TENANT_ID)"
+      displayName: 'Log in with Azure (Federated Credentials) Again'
+      
+    - script: azd env set AZURE_RESOURCE_GROUP $(AZURE_ENV_NAME)-rg
+      displayName: 'Set AZD resource group'
+
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: 'Your Azure Subscription'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: azd deploy --no-prompt
+
+    - script: ./infra/devOpsScripts/validateDeployment.sh -g $(AZURE_ENV_NAME)-rg
+      displayName: 'QA - Validate Deployment'
+
+- stage: teardown
+  condition: eq(variables['run_tear_down'], 'true')
+  dependsOn: build
+  jobs:
+  - job: teardown
+    container: mcr.microsoft.com/azure-dev-cli-apps:latest
+    steps:
+    - checkout: self
+    - script: |
+        azd login \
+          --client-id "$(AZURE_CLIENT_ID)" \
+          --federated-credential-provider "github" \
+          --tenant-id "$(AZURE_TENANT_ID)"
+      displayName: 'Log in with azd (Federated Credentials)'
+
+    - script: azd down --force --purge --no-prompt
+      displayName: 'Azure Dev Down'
