@@ -49,13 +49,12 @@ stages:
       
     - script: azd env set AZURE_RESOURCE_GROUP $(AZURE_ENV_NAME)-rg
       displayName: 'Set AZD resource group'
-
     - task: AzureCLI@2
       inputs:
-        azureSubscription: 'Your Azure Subscription'
+        azureSubscription: 'Azure DevEx Growth R&D(6ad866ae-f77e-4d58-8f02-a00a75a0e21b)'
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
-        inlineScript: azd deploy --no-prompt
+        inlineScript: 'azd deploy --no-prompt'
 
     - script: ./infra/devOpsScripts/validateDeployment.sh -g $(AZURE_ENV_NAME)-rg
       displayName: 'QA - Validate Deployment'
