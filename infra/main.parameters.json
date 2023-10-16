@@ -14,6 +14,9 @@
     "clientIpAddress": {
         "value": "${AZD_IP_ADDRESS}"
     },
+    "databasePassword": {
+        "value": "${DATABASE_PASSWORD}"
+    },
     "differentiator": {
         "value": "${AZURE_CI_DIFFERENTIATOR=none}"
     },

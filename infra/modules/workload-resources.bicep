@@ -118,7 +118,7 @@ param frontDoorSettings FrontDoorSettings
 @secure()
 @minLength(8)
 @description('The password for the administrator account on the SQL Server.')
-param administratorPassword string
+param databasePassword string
 
 @minLength(8)
 @description('The username for the administrator account on the SQL Server.')
@@ -310,7 +310,7 @@ module sqlServer '../core/database/sql-server.bicep' = if (createSqlServer) {
     } : null
     diagnosticSettings: diagnosticSettings
     enablePublicNetworkAccess: !deploymentSettings.isNetworkIsolated
-    sqlAdministratorPassword: administratorPassword
+    sqlAdministratorPassword: databasePassword
     sqlAdministratorUsername: administratorUsername
   }
 }
@@ -348,7 +348,7 @@ module writeSqlAdminInfo '../core/security/key-vault-secrets.bicep' = if (create
     name: keyVault.outputs.name
     secrets: [
       { key: 'Relecloud--SqlAdministratorUsername', value: administratorUsername }
-      { key: 'Relecloud--SqlAdministratorPassword', value: administratorPassword }
+      { key: 'Relecloud--SqlAdministratorPassword', value: databasePassword }
     ]
   }
 }

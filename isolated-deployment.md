@@ -30,8 +30,23 @@ azd env set DEPLOY_HUB_NETWORK true
 azd env set COMMON_APP_SERVICE_PLAN false
 azd env set OWNER_NAME <a name listed as resource owner in Azure tags>
 azd env set OWNER_EMAIL <an email address alerted by Azure budget>
-azd env set DATABASE_PASSWORD "AV@lidPa33word"
 azd env set AZURE_LOCATION westus3
+```
+
+Set a password for the Azure jumphost VM where code will be deployed from:
+> ⚠️ Password must be longer than 12 (no more than 123) and have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character.
+```
+azd env set ADMIN_PASSWORD "AV@lidPa33word"
+```
+
+Set a password for the Azure SQL Database.
+> ⚠️ Password must be longer than 8 (no more than 128) and have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character.
+```
+azd env set DATABASE_PASSWORD "AV@lidPa33word"
+```
+
+Provision the Azure resources
+```
 azd provision
 ```
 

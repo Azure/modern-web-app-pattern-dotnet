@@ -45,8 +45,14 @@ param principalType string = 'ServicePrincipal'
 */
 @secure()
 @minLength(8)
-@description('The password for the administrator account.  This will be used for the jump host, SQL server, and anywhere else a password is needed for creating a resource.')
+@description('The password for the jump host administrator account.')
 param administratorPassword string = newGuid()
+
+
+@secure()
+@minLength(8)
+@description('The password for the SQL administrator account. This will be used for the jump host, SQL server, and anywhere else a password is needed for creating a resource.')
+param databasePassword string = newGuid()
 
 @minLength(8)
 @description('The username for the administrator account.  This will be used for the jump host, SQL server, and anywhere else a password is needed for creating a resource.')
@@ -415,8 +421,8 @@ module workload './modules/workload-resources.bicep' = {
     frontDoorSettings: frontdoor.outputs.settings
 
     // Settings
-    administratorPassword: administratorPassword
     administratorUsername: administratorUsername
+    databasePassword: databasePassword
     clientIpAddress: clientIpAddress
     useCommonAppServicePlan: willDeployCommonAppServicePlan
   }
@@ -441,8 +447,8 @@ module workload2 './modules/workload-resources.bicep' =  if (isMultiLocationDepl
     frontDoorSettings: frontdoor.outputs.settings
 
     // Settings
-    administratorPassword: administratorPassword
     administratorUsername: administratorUsername
+    databasePassword: databasePassword
     clientIpAddress: clientIpAddress
     useCommonAppServicePlan: willDeployCommonAppServicePlan
   }

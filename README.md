@@ -118,7 +118,12 @@ Run the following commands to set these values and create a new environment:
 
 ```shell
 azd env new eapdotnetmwa
-azd env set ADMIN_PASSWORD "AV@lidPa33word"
+```
+
+Set a password for the Azure SQL Database.
+> ⚠️ Password must be longer than 8 (no more than 128) and have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character.
+```
+azd env set DATABASE_PASSWORD "AV@lidPa33word"
 ```
 
 Substitute the environment name and database password for your own values.

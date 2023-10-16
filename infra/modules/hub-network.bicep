@@ -76,7 +76,7 @@ type DiagnosticSettings = {
 ** Passwords - specify these!
 */
 @secure()
-@minLength(8)
+@minLength(12)
 @description('The password for the administrator account.  This will be used for the jump host, SQL server, and anywhere else a password is needed for creating a resource.')
 param administratorPassword string = newGuid()
 
