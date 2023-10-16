@@ -1,17 +1,10 @@
-trigger:
-  branches:
-    exclude:
-    - "*"
-
-pr:
-  branches:
-    include:
-    - "*"
-
 schedules:
 - cron: "0 12 * * *"
   displayName: 'Daily Build'
   always: true
+  branches:
+    include:
+    - main
 
 pool:
   vmImage: 'ubuntu-latest'
