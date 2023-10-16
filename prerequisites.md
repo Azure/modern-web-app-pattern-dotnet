@@ -5,6 +5,8 @@
 
 ## Pre-requisites
 
+> ⚠️ Note that for the `az login` and `azd auth login` you must use the same account. And, you may also need to specify the `--tenant` option or `--tenant-id` as required by your administrator.
+
 The following tools are pre-requisites to running the associated deployment steps on Windows without using the Dev Container.
 
 1. To run the scripts, Windows users require Powershell 7.2 (LTS) or above. Alternatively, you can use a bash terminal using [Windows Subsystem for Linux](https://learn.microsoft.com/windows/wsl/install). macOS users can use a bash terminal.
