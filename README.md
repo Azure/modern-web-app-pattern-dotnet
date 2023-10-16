@@ -159,7 +159,7 @@ Make sure the secondary region is a paired region with the primary region (`AZUR
 
 ### 6. Provision the application
 
-Run the following command to create the infrastructure:
+Run the following command to create the infrastructure (about 15-minutes to provision):
 
 ```shell
 azd provision --no-prompt
@@ -172,7 +172,8 @@ AD resources that support the authentication features of the
 web app. They use the following command to create two new
 App Registrations within Azure AD. The command is also
 responsible for saving configuration data to Key Vault and
-App Configuration so that the web app can read this data.
+App Configuration so that the web app can read this data
+(about 3-minutes to register).
 
 ```sh
 ./infra/scripts/create-app-registrations.sh -g '<name from Azure portal for workload resource group>'
@@ -180,13 +181,13 @@ App Configuration so that the web app can read this data.
 
 ### 7. Deploy the application
 
-Run the following command to deploy the code to the created infrastructure:
+Run the following command to deploy the code to the created infrastructure (about 4-minutes to deploy):
 
 ```shell
 azd deploy
 ```
 
-If you are doing a multi-region deployment, you must also deploy the code to the secondary region:
+If you are doing a multi-region deployment, you must also deploy the code to the secondary region (about 4-minutes to deploy):
 
 ```shell
 SECONDARY_RESOURCE_GROUP=$(azd env get-values --output json | jq -r .secondary_resource_group)

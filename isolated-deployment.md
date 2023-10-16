@@ -19,7 +19,7 @@ If you do not wish to use a Dev Container, please refer to the [prerequisites](p
 
 This section describes the deployment steps for the reference implementation of a modern web application pattern with .NET on Microsoft Azure. These steps guide you through using the jump host that is deployed when performing a network isolated deployment because access to resources will be restricted from public network access and must be performed from a machine connected to the vnet.
 
-For users familiar with the deployment process, you can use the following list of the deployments commands as a quick reference. The commands assume you have logged into Azure through the Azure CLI and Azure Developer CLI and have selected a suitable subscription:
+For users familiar with the deployment process, you can use the following list of the deployments commands as a quick reference. The commands assume you have logged into Azure through the Azure CLI and Azure Developer CLI and have selected a suitable subscription (about 55-minutes to provision):
 
 ```shell
 git clone https://github.com/Azure/modern-web-app-pattern-dotnet.git
@@ -77,7 +77,7 @@ azd provision
     1. `azd env set AZURE_LOCATION <location from devcontainer terminal>`
     1. `azd env set AZURE_SUBSCRIPTION_ID <subscription id from devcontainer terminal>`
     1. `azd env set AZURE_RESOURCE_GROUP <name of workload resource group from Azure portal>`
-1. Create the Azure AD app registration from the new terminal
+1. Create the Azure AD app registration from the new terminal (about 3-minutes to register)
     1. `.\infra\scripts\create-app-registrations.ps1 -g '<name from Azure portal for workload resource group>'`
-1. Deploy the code from the jump host
+1. Deploy the code from the jump host (about 4-minutes to deploy)
     1. `azd deploy`
