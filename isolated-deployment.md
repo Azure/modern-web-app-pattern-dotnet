@@ -1,5 +1,5 @@
 # Steps to deploy the Network Isolated implementation
-This pattern comes with feature flags that enable different deployment scenarios. The primary difference between this approach, and the one outlined in the readme, are the virtual networks that provide a network isolation boundary for the web app. This approach shows how traffic between resources can be secured and how resources can limit or eliminate public network access.
+This section describes the deployment steps for the reference implementation of a modern web application pattern with .NET on Microsoft Azure. These steps guide you through using the jump host that is deployed when performing a network isolated deployment because access to resources will be restricted from public network access and must be performed from a machine connected to the vnet.
 
 ## Prerequisites
 
@@ -17,9 +17,7 @@ If you do not wish to use a Dev Container, please refer to the [prerequisites](p
 
 ## Steps to deploy the reference implementation
 
-This section describes the deployment steps for the reference implementation of a modern web application pattern with .NET on Microsoft Azure. These steps guide you through using the jump host that is deployed when performing a network isolated deployment because access to resources will be restricted from public network access and must be performed from a machine connected to the vnet.
-
-For users familiar with the deployment process, you can use the following list of the deployments commands as a quick reference. The commands assume you have logged into Azure through the Azure CLI and Azure Developer CLI and have selected a suitable subscription (about 55-minutes to provision):
+For users familiar with the deployment process, you can use the following list of the deployments commands as a quick reference. The commands assume you have logged into Azure through the Azure CLI and Azure Developer CLI and have selected a suitable subscription:
 
 ```shell
 git clone https://github.com/Azure/modern-web-app-pattern-dotnet.git
@@ -45,7 +43,7 @@ Set a password for the Azure SQL Database.
 azd env set DATABASE_PASSWORD "AV@lidPa33word"
 ```
 
-Provision the Azure resources
+Provision the Azure resources (about 55-minutes to provision):
 ```
 azd provision
 ```

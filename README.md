@@ -87,30 +87,7 @@ Once the command palette is open, search for `Dev Containers: Rebuild and Reopen
 
 ![WSL Ubuntu](docs/images/vscode-reopen-in-container-command.png)
 
-### 3. Log in to Azure
-
-Before deploying, you must be authenticated to Azure and have the appropriate subscription selected.  To authenticate:
-
-```shell
-az login --scope https://graph.microsoft.com//.default
-azd auth login
-```
-
-Each command will open a browser allowing you to authenticate.  To list the subscriptions you have access to:
-
-```shell
-az account list
-```
-
-To set the active subscription:
-
-```shell
-export AZURE_SUBSCRIPTION="<your-subscription-id>"
-az account set --subscription $AZURE_SUBSCRIPTION
-azd config set defaults.subscription $AZURE_SUBSCRIPTION
-```
-
-### 4. Create a new environment
+### 3. Create a new environment
 
 The environment name should be less than 18 characters and must be comprised of lower-case, numeric, and dash characters (for example, `eapdotnetmwa`).  The environment name is used for resource group naming and specific resource naming. Also, select a password for the admin user of the database.
 
@@ -132,6 +109,29 @@ By default, Azure resources are sized for a "development" mode. If doing a Produ
 
 ```shell
 azd env set AZURE_ENV_TYPE prod
+```
+
+### 4. Log in to Azure
+
+Before deploying, you must be authenticated to Azure and have the appropriate subscription selected.  To authenticate:
+
+```shell
+az login --scope https://graph.microsoft.com//.default
+azd auth login
+```
+
+Each command will open a browser allowing you to authenticate.  To list the subscriptions you have access to:
+
+```shell
+az account list
+```
+
+To set the active subscription:
+
+```shell
+export AZURE_SUBSCRIPTION="<your-subscription-id>"
+az account set --subscription $AZURE_SUBSCRIPTION
+azd env set AZURE_SUBSCRIPTION_ID $AZURE_SUBSCRIPTION
 ```
 
 ### 5. Select a region for deployment
