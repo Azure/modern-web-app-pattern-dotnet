@@ -139,8 +139,8 @@ module frontDoor '../core/security/front-door-with-waf.bicep' = {
     // Service settings
     diagnosticSettings: diagnosticSettings
     managedRules: deploymentSettings.isProduction ? [
-      { name: 'Microsoft_DefaultRuleSet', version: '2.0' }
-      { name: 'Microsoft_BotManager_RuleSet', version: '1.0' }
+      { name: 'Microsoft_DefaultRuleSet', version: '2.1' }
+      { name: 'Microsoft_BotManagerRuleSet', version: '1.0' }
     ] : []
     sku: deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated ? 'Premium' : 'Standard'
   }
