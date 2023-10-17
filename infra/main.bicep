@@ -44,10 +44,9 @@ param principalType string = 'ServicePrincipal'
 ** Passwords - specify these!
 */
 @secure()
-@minLength(8)
+@minLength(12)
 @description('The password for the jump host administrator account.')
 param administratorPassword string = newGuid()
-
 
 @secure()
 @minLength(8)
