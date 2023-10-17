@@ -335,13 +335,17 @@ $azureSubscriptionId = (Get-AzContext).Subscription.Id
 
 azd env set AZURE_SUBSCRIPTION_ID $azureSubscriptionId
 azd env set AZURE_LOCATION $azureLocationCmd
-azd env set ADMIN_PASSWORD (New-Guid).ToString()
+azd env set DATABASE_PASSWORD (New-Guid).ToString()
 azd env set AZURE_ENV_TYPE $environmentType
 azd env set NETWORK_ISOLATION $(if ($networkIsolation) { "true" } else { "false" })
 azd env set DEPLOY_HUB_NETWORK $(if ($deployHubNetwork) { "true" } else { "false" })
 azd env set COMMON_APP_SERVICE_PLAN $(if ($casp) { "true" } else { "false" })
 azd env set OWNER_EMAIL $emailAddr
 azd env set OWNER_NAME "$ownerName"
+
+if ($Isolated) {
+    azd env set ADMIN_PASSWORD (New-Guid).ToString()
+}
 
 if ($MultiLocation) {
     azd env set SECONDARY_AZURE_LOCATION $secondAzureLocationCmd
