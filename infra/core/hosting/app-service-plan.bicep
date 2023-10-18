@@ -152,7 +152,7 @@ resource autoScaleRule 'Microsoft.Insights/autoscalesettings@2022-10-01' = if (a
               timeWindow: 'PT10M'
               timeAggregation: 'Average'
               operator: 'GreaterThan'
-              threshold: autoScaleSettings!.scaleOutThreshold ?? defaultScaleOutThreshold
+              threshold: autoScaleSettings.?scaleOutThreshold ?? defaultScaleOutThreshold
             }
             scaleAction: {
               direction: 'Increase'
@@ -170,7 +170,7 @@ resource autoScaleRule 'Microsoft.Insights/autoscalesettings@2022-10-01' = if (a
               timeWindow: 'PT10M'
               timeAggregation: 'Average'
               operator: 'LessThan'
-              threshold: autoScaleSettings!.scaleInThreshold ?? defaultScaleInThreshold
+              threshold: autoScaleSettings.?scaleInThreshold ?? defaultScaleInThreshold
             }
             scaleAction: {
               direction: 'Decrease'
