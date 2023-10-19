@@ -122,7 +122,7 @@ param useCommonAppServicePlan string = 'auto'
 // VARIABLES
 // ========================================================================
 
-// initializes the database password to a GUID and allows an override witht the AZD env var administratorPasswordParam
+// initializes the database password to a GUID and allows an override with the AZD env var administratorPasswordParam
 var administratorPasswordValue = length(administratorPasswordParam) > 0 ? administratorPasswordParam : administratorPassword
 
 var prefix = '${environmentName}-${environmentType}'
