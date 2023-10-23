@@ -5,8 +5,8 @@ The modern web app pattern shows you how business goals influence incremental ch
 
 <!-- content lives in GH until published-->
 - Guidance
-    -[Plan the implementation](./guide/plan-the-implementation.md)
-    -[Apply the pattern](./guide/apply-the-pattern.md)
+    - [Plan the implementation](./guide/plan-the-implementation.md)
+    - [Apply the pattern](./guide/apply-the-pattern.md)
 - [Azure Architecture Center guidance](#azure-architecture-center-guidance)
 - [Architecture](#architecture)
 - [Workflow](#workflow)
