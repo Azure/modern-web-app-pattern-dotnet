@@ -80,7 +80,7 @@ stages:
           --client-id "$(AZURE_CLIENT_ID)" \
           --client-secret "$(AZURE_CLIENT_SECRET)" \
           --tenant-id "$(AZURE_TENANT_ID)"
-      displayName: 'Log in with azd (Federated Credentials)'
+      displayName: 'Log in with azd'
 
     - script: azd down --force --purge --no-prompt
       displayName: 'Azure Dev Down'
