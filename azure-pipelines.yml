@@ -44,7 +44,7 @@ stages:
     
     - task: AzureCLI@2
       inputs:
-        azureSubscription: 'Azure Service Connection'
+        azureSubscription: 'AzureServiceConnection'
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: 'azd deploy --no-prompt'
