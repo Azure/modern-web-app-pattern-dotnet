@@ -1,6 +1,7 @@
-# Placeholder
+# Modern web app pattern for .NET - Plan the implementation
+The reliable web app pattern provides essential implementation guidance for web apps moving to the cloud. It defines how you should incrementally apply updates (refactor) your web app to be successful in the cloud.
 
-
+There are two articles on the modern web app pattern for .NET. This article explains important decisions to plan the implementation of the pattern. The companion article provides code and architecture guidance to [apply the pattern](./apply-the-pattern.md). There's a [reference implementation](https://aka.ms/eap/mwa/dotnet) (sample web app) of the pattern that you can deploy.
 
 ## Architecture
 
