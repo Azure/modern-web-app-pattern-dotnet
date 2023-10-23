@@ -20,7 +20,7 @@ This project has a [companion article in the Azure Architecture Center](https://
 
 ## Architecture
 
-![architecture diagram](./docs/images/Modern%20Web%20App%20for%20dotnet-nobg.png)
+![architecture diagram](./docs/images/relecloud-solution-diagram.png)
 
 ## Workflow
 ⚠️ Pending Work Item: 1871276
