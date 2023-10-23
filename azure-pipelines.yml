@@ -41,9 +41,10 @@ stages:
       
     - script: azd env set AZURE_RESOURCE_GROUP $(AZURE_ENV_NAME)-rg
       displayName: 'Set AZD resource group'
+    
     - task: AzureCLI@2
       inputs:
-        azureSubscription: 'Azure DevEx Growth R&D(6ad866ae-f77e-4d58-8f02-a00a75a0e21b)'
+        azureSubscription: 'Azure Service Connection'
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: 'azd deploy --no-prompt'
