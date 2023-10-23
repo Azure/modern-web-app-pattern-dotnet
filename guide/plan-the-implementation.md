@@ -1,5 +1,5 @@
 # Modern web app pattern for .NET - Plan the implementation
-The reliable web app pattern provides essential implementation guidance for web apps moving to the cloud. It defines how you should incrementally apply updates (refactor) your web app to be successful in the cloud.
+The modern web app pattern provides essential implementation guidance for web apps moving to the cloud. It defines how you should incrementally apply updates (refactor) your web app to be successful in the cloud.
 
 There are two articles on the modern web app pattern for .NET. This article explains important decisions to plan the implementation of the pattern. The companion article provides code and architecture guidance to [apply the pattern](./apply-the-pattern.md). There's a [reference implementation](https://aka.ms/eap/mwa/dotnet) (sample web app) of the pattern that you can deploy.
 
@@ -7,7 +7,7 @@ There are two articles on the modern web app pattern for .NET. This article expl
 
 * ⚠️ Pending review as part of #1865953
 
-The modern web app pattern is a set of principles with implementation guidance. It's not a specific architecture. Your business context, existing web app, and desired service level objective (SLO) are critical factors that shape the architecture of your web app. The following diagram (figure 1) represents the architecture of the [reference implementation](https://aka.ms/eap/mwa/dotnet). It's one example that illustrates the principles of the reliable web app pattern. It's important that your web app adheres to the principles of the reliable web app pattern, not necessarily this specific architecture.
+The modern web app pattern is a set of principles with implementation guidance. It's not a specific architecture. Your business context, existing web app, and desired service level objective (SLO) are critical factors that shape the architecture of your web app. The following diagram (figure 1) represents the architecture of the [reference implementation](https://aka.ms/eap/mwa/dotnet). It's one example that illustrates the principles of the modern web app pattern. It's important that your web app adheres to the principles of the modern web app pattern, not necessarily this specific architecture.
 
 ![Diagram showing the architecture of the reference implementation.](../docs/images/relecloud-solution-diagram.png)
 
@@ -15,7 +15,7 @@ The modern web app pattern is a set of principles with implementation guidance. 
 
 * ⚠️ Pending review as part of #1865953
 
-The following table lists the principles of the reliable web app pattern and how to implement those principles in your web app. For more information, see the [Reliable web app pattern overview](https://aka.ms/eap/mwa/dotnet/doc).
+The following table lists the principles of the modern web app pattern and how to implement those principles in your web app. For more information, see the [Modern web app pattern overview](https://aka.ms/eap/mwa/dotnet/doc).
 
 *Table 1. Pattern principles and how to implement them.*
 
@@ -35,7 +35,7 @@ The reference scenario discussed in this guide is for Relecloud Concerts, a fict
 tickets on behalf of their offline (telephone) customers. Relecloud has experienced increased sales volume over the last quarter with continued
 increases projected, and senior leadership has decided to invest more in direct customer sales online instead of expanding call center capacity.
 
-Their call center employee website is a monolithic ASP.NET application with a Microsoft SQL Server database which suffers from common legacy challenges including extended timelines to build and ship new features and difficulty scaling different components of the application under higher load. By applying the changes outlined in the [Reliable Web App](https://github.com/Azure/reliable-web-app-pattern-dotnet/blob/main/business-scenario.md) Relecloud achieved their first set of objectives to modernize the application to sustain additional volume while maturing development team practices for modern development and operations.
+Their call center employee website is a monolithic ASP.NET application with a Microsoft SQL Server database which suffers from common legacy challenges including extended timelines to build and ship new features and difficulty scaling different components of the application under higher load. By applying the changes outlined in the [Modern Web App](https://github.com/Azure/modern-web-app-pattern-dotnet/blob/main/business-scenario.md) Relecloud achieved their first set of objectives to modernize the application to sustain additional volume while maturing development team practices for modern development and operations.
 
 In this phase Relecloud will achieve their intermediate goals such as opening the application directly to online customers through multiple web and mobile experiences, improving availability targets, and scaling different components of the system independently to handle traffic spikes without compromising security. Their goal of significantly reducing the time required to deliver new features to the application will be addressed in the next phase of their journey. In this phase they will build on the Azure solution they have deployed to augment their existing solution with Azure's robust global platform and tremendous managed service capabilities that will support Relecloud's growth objectives for years to come.
 
