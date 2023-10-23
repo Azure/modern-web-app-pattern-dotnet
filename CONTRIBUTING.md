@@ -17,4 +17,4 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 
 This sample is provided as guidance that represents how to apply princples outlined in the Well Architected Framework.
 The provided code, and guidance, should align with existing content in published Microsoft documentation.
-Usage of 3rd-party libraries should also be limited to those we recommend in published Microsot documentation.
+Usage of 3rd-party libraries should also be limited to those we recommend in published Microsot documentation or to those outlined with team approval in [Third-Party Package Dependencies for Relecloud](./3rdParty.md).
