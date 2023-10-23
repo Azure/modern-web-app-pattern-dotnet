@@ -29,6 +29,9 @@ stages:
       displayName: 'Log in to Azure with AZD'
       condition: ne(variables['AZURE_CLIENT_ID'], '')
       
+    - script: azd env set AZURE_SUBSCRIPTION_ID $(AZURE_SUBSCRIPTION_ID)
+      displayName: 'Set AZD Subscription ID'
+
     - script: azd provision --no-prompt
       displayName: 'Azure Dev Provision'
       
