@@ -9,7 +9,7 @@ There are two articles on the modern web app pattern for .NET. This article expl
 
 The modern web app pattern is a set of principles with implementation guidance. It's not a specific architecture. Your business context, existing web app, and desired service level objective (SLO) are critical factors that shape the architecture of your web app. The following diagram (figure 1) represents the architecture of the [reference implementation](https://aka.ms/eap/mwa/dotnet). It's one example that illustrates the principles of the reliable web app pattern. It's important that your web app adheres to the principles of the reliable web app pattern, not necessarily this specific architecture.
 
-![Solution Diagram](../docs/images/relecloud-solution-diagram.png)
+![Diagram showing the architecture of the reference implementation.](../docs/images/relecloud-solution-diagram.png)
 
 ## Principles and implementation
 

@@ -20,7 +20,7 @@ This project has a [companion article in the Azure Architecture Center](https://
 
 ## Architecture
 
-![architecture diagram](./docs/images/relecloud-solution-diagram.png)
+![Diagram showing the architecture of the reference implementation.](./docs/images/relecloud-solution-diagram.png)
 
 ## Workflow
 ⚠️ Pending Work Item: 1871276
