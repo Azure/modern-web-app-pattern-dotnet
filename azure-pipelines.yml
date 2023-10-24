@@ -25,7 +25,7 @@ stages:
 - stage: build
   jobs:
   - job: build
-    container: $(AZURE_CONTAINER_IMAGE)
+    container: '$(AZURE_CONTAINER_IMAGE)'
     steps:
     - checkout: self
     - task: UseDotNet@2
@@ -68,7 +68,7 @@ stages:
   dependsOn: build
   jobs:
   - job: teardown
-    container: $(AZURE_CONTAINER_IMAGE)
+    container: '$(AZURE_CONTAINER_IMAGE)'
     steps:
     - checkout: self
     - script: |
