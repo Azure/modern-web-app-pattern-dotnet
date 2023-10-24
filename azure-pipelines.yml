@@ -19,12 +19,13 @@ variables:
   AZURE_LOCATION2: $(LOCATION2)  
   AZURE_DATABASE_PASSWORD: $(DATABASE_PASSWORD)
   AZURE_PRINCIPAL_TYPE: 'ServicePrincipal'
+  AZURE_CONTAINER_IMAGE: $(CONTAINER_IMAGE)
 
 stages:
 - stage: build
   jobs:
   - job: build
-    container: mcr.microsoft.com/azure-dev-cli-apps:latest
+    container: $(AZURE_CONTAINER_IMAGE)
     steps:
     - checkout: self
     - task: UseDotNet@2
@@ -67,7 +68,7 @@ stages:
   dependsOn: build
   jobs:
   - job: teardown
-    container: mcr.microsoft.com/azure-dev-cli-apps:latest
+    container: $(AZURE_CONTAINER_IMAGE)
     steps:
     - checkout: self
     - script: |
