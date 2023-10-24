@@ -17,6 +17,7 @@ variables:
   AZURE_ENV_NAME: $(ENV_NAME)
   AZURE_LOCATION: $(LOCATION)
   AZURE_LOCATION2: $(LOCATION2)
+  AZURE_PRINCIPAL_TYPE: 'ServicePrincipal'
 
 stages:
 - stage: build
