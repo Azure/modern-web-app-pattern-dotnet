@@ -17,7 +17,7 @@ variables:
   AZURE_ENV_NAME: $(ENV_NAME)
   AZURE_LOCATION: $(LOCATION)
   AZURE_LOCATION2: $(LOCATION2)  
-  DATABASE_PASSWORD: $(DB_PASSWORD)
+  DATABASE_PASSWORD: 'Test8274!!@p2'
   AZURE_PRINCIPAL_TYPE: 'ServicePrincipal'
   AZURE_CONTAINER_IMAGE: $(CONTAINER_IMAGE)
 
@@ -32,7 +32,7 @@ stages:
       inputs:
         version: '7.0.x'
         performMultiLevelLookup: true
-    - script: |
+    - script: |        
         azd auth login \
           --client-id "$(AZURE_CLIENT_ID)" \
           --client-secret "$(AZURE_CLIENT_SECRET)" \
