@@ -129,7 +129,7 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
 
         private async Task UpdateTicketWithUriAsync(Ticket ticket, Uri sasUri)
         {
-            ticket.ImageUrl = sasUri.ToString();
+            ticket.ImageName = sasUri.ToString();
             database.Update(ticket);
             await database.SaveChangesAsync();
         }

@@ -39,6 +39,7 @@ namespace Relecloud.Web.Api
             AddDistributedSession(services);
             AddPaymentGatewayService(services);
             AddTicketManagementService(services);
+            AddTicketImageService(services);
 
             // The ApplicationInitializer is injected in the Configure method with all its dependencies and will ensure
             // they are all properly initialized upon construction.
@@ -132,6 +133,11 @@ namespace Relecloud.Web.Api
             services.AddScoped<IPaymentGatewayService, MockPaymentGatewayService>();
         }
 
+        private void AddTicketImageService(IServiceCollection services)
+        {
+            services.AddScoped<ITicketImageService, TicketImageService>();
+        }
+
         public void Configure(WebApplication app, IWebHostEnvironment env)
         {
             // Configure the HTTP request pipeline.
@@ -141,7 +147,7 @@ namespace Relecloud.Web.Api
                 app.UseSwaggerUI();
             }
             using var serviceScope = app.Services.CreateScope();
-            serviceScope.ServiceProvider.GetService<ApplicationInitializer>()!.Initialize();
+            serviceScope.ServiceProvider.GetRequiredService<ApplicationInitializer>().Initialize();
 
             // Configure the HTTP request pipeline.
             if (!env.IsDevelopment())
@@ -157,13 +163,12 @@ namespace Relecloud.Web.Api
                 IdentityModelEventSource.ShowPII = true;
             }
 
-            app.UseRetryTestingMiddleware();
-
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
             app.UseAuthorization();
 
+            app.MapGet("/", () => "Default Web API endpoint");
             app.MapControllers();
         }
     }

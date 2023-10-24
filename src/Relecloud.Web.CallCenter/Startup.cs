@@ -40,6 +40,7 @@ namespace Relecloud.Web
             AddConcertContextService(services);
             AddConcertSearchService(services);
             AddTicketPurchaseService(services);
+            AddTicketImageService(services);
             AddAzureCacheForRedis(services);
             services.AddHealthChecks();
 
@@ -76,7 +77,7 @@ namespace Relecloud.Web
                 {
                     httpClient.BaseAddress = new Uri(baseUri);
                     httpClient.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
-                    httpClient.DefaultRequestHeaders.Add(HeaderNames.UserAgent, "Relecloud.Web");
+                    httpClient.DefaultRequestHeaders.Add(HeaderNames.UserAgent, "Relecloud.Web.CallCenter");
                 })
                 .AddPolicyHandler(GetRetryPolicy())
                 .AddPolicyHandler(GetCircuitBreakerPolicy());
@@ -96,7 +97,27 @@ namespace Relecloud.Web
                 {
                     httpClient.BaseAddress = new Uri(baseUri);
                     httpClient.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
-                    httpClient.DefaultRequestHeaders.Add(HeaderNames.UserAgent, "Relecloud.Web");
+                    httpClient.DefaultRequestHeaders.Add(HeaderNames.UserAgent, "Relecloud.Web.CallCenter");
+                })
+                .AddPolicyHandler(GetRetryPolicy())
+                .AddPolicyHandler(GetCircuitBreakerPolicy());
+            }
+        }
+        
+        private void AddTicketImageService(IServiceCollection services)
+        {
+            var baseUri = Configuration["App:RelecloudApi:BaseUri"];
+            if (string.IsNullOrWhiteSpace(baseUri))
+            {
+                services.AddScoped<ITicketImageService, MockTicketImageService>();
+            }
+            else
+            {
+                services.AddHttpClient<ITicketImageService, RelecloudApiTicketImageService>(httpClient =>
+                {
+                    httpClient.BaseAddress = new Uri(baseUri);
+                    httpClient.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/octet-stream");
+                    httpClient.DefaultRequestHeaders.Add(HeaderNames.UserAgent, "Relecloud.Web.CallCenter");
                 })
                 .AddPolicyHandler(GetRetryPolicy())
                 .AddPolicyHandler(GetCircuitBreakerPolicy());
@@ -122,7 +143,7 @@ namespace Relecloud.Web
 
         private void AddConcertContextService(IServiceCollection services)
         {
-            string baseUri = Configuration["App:RelecloudApi:BaseUri"];
+            var baseUri = Configuration["App:RelecloudApi:BaseUri"];
             if (string.IsNullOrWhiteSpace(baseUri))
             {
                 services.AddScoped<IConcertContextService, MockConcertContextService>();
@@ -184,19 +205,19 @@ namespace Relecloud.Web
             services.Configure<OpenIdConnectOptions>(Configuration.GetSection("AzureAd"));
             services.Configure((Action<MicrosoftIdentityOptions>)(options =>
             {
-                var frontDoorUri = Configuration["App:FrontDoorUri"];
+                var frontDoorHostname = Configuration["App:FrontDoorHostname"];
                 var callbackPath = Configuration["AzureAd:CallbackPath"];
 
                 options.Events = new OpenIdConnectEvents
                 {
                     OnRedirectToIdentityProvider = ctx => {
                         // not needed when using host name preservation
-                        ctx.ProtocolMessage.RedirectUri = $"https://{frontDoorUri}{callbackPath}";
+                        ctx.ProtocolMessage.RedirectUri = $"https://{frontDoorHostname}{callbackPath}";
                         return Task.CompletedTask;
                     },
                     OnRedirectToIdentityProviderForSignOut = ctx => {
                         // not needed when using host name preservation
-                        ctx.ProtocolMessage.PostLogoutRedirectUri = $"https://{frontDoorUri}";
+                        ctx.ProtocolMessage.PostLogoutRedirectUri = $"https://{frontDoorHostname}";
                         return Task.CompletedTask;
                     },
                     OnTokenValidated = async ctx =>
@@ -252,7 +273,6 @@ namespace Relecloud.Web
             // but we recommend host name preservation for production scenarios
             // https://learn.microsoft.com/en-us/azure/architecture/best-practices/host-name-preservation
             app.UseForwardedHeaders();
-            app.UseRetryTestingMiddleware();
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();

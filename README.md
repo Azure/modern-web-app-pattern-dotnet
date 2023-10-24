@@ -37,6 +37,7 @@ We recommend that you use a Dev Container to deploy this application.  The requi
 
 If you do not wish to use a Dev Container, please refer to the [prerequisites](prerequisites.md) for detailed information on how to set up your development system to build, run, and deploy the application.
 
+> ⚠️ We are using version 1.3.0 for AZD while awaiting feedback on a known bicep issue.
 
 ## Steps to deploy the reference implementation
 
@@ -86,7 +87,31 @@ Once the command palette is open, search for `Dev Containers: Rebuild and Reopen
 
 ![WSL Ubuntu](docs/images/vscode-reopen-in-container-command.png)
 
-### 3. Log in to Azure
+### 3. Create a new environment
+
+The environment name should be less than 18 characters and must be comprised of lower-case, numeric, and dash characters (for example, `eapdotnetmwa`).  The environment name is used for resource group naming and specific resource naming. Also, select a password for the admin user of the database.
+
+Run the following commands to set these values and create a new environment:
+
+```shell
+azd env new eapdotnetmwa
+```
+
+Set a password for the Azure SQL Database.
+> ⚠️ Password must be longer than 8 (no more than 128) and have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character.
+```
+azd env set DATABASE_PASSWORD "AV@lidPa33word"
+```
+
+Substitute the environment name and database password for your own values.
+
+By default, Azure resources are sized for a "development" mode. If doing a Production deployment, set the `AZURE_ENV_TYPE` to `prod` using the following code:
+
+```shell
+azd env set AZURE_ENV_TYPE prod
+```
+
+### 4. Log in to Azure
 
 Before deploying, you must be authenticated to Azure and have the appropriate subscription selected.  To authenticate:
 
@@ -106,26 +131,7 @@ To set the active subscription:
 ```shell
 export AZURE_SUBSCRIPTION="<your-subscription-id>"
 az account set --subscription $AZURE_SUBSCRIPTION
-azd config set defaults.subscription $AZURE_SUBSCRIPTION
-```
-
-### 4. Create a new environment
-
-The environment name should be less than 18 characters and must be comprised of lower-case, numeric, and dash characters (for example, `eapdotnetmwa`).  The environment name is used for resource group naming and specific resource naming. Also, select a password for the admin user of the database.
-
-Run the following commands to set these values and create a new environment:
-
-```shell
-azd env new eapdotnetmwa
-azd env set DATABASE_PASSWORD "AV@lidPa33word"
-```
-
-Substitute the environment name and database password for your own values.
-
-By default, Azure resources are sized for a "development" mode. If doing a Production deployment, set the `APP_ENVIRONMENT` to `prod` using the following code:
-
-```shell
-azd env set APP_ENVIRONMENT prod
+azd env set AZURE_SUBSCRIPTION_ID $AZURE_SUBSCRIPTION
 ```
 
 ### 5. Select a region for deployment
@@ -158,35 +164,35 @@ Make sure the secondary region is a paired region with the primary region (`AZUR
 
 ### 6. Provision the application
 
-Run the following command to create the infrastructure:
+Run the following command to create the infrastructure (about 15-minutes to provision):
 
 ```shell
 azd provision --no-prompt
 ```
 
 **Create App Registrations**
-<!-- Todo: as we rearrange bicep templates we want to simplify this step so that we can just run `azd up` -->
 
 Relecloud devs have automated the process of creating Azure
 AD resources that support the authentication features of the
 web app. They use the following command to create two new
 App Registrations within Azure AD. The command is also
 responsible for saving configuration data to Key Vault and
-App Configuration so that the web app can read this data.
+App Configuration so that the web app can read this data
+(about 3-minutes to register).
 
 ```sh
-./infra/createAppRegistrations.sh -g 'eapdotnetmwa-rg'
+./infra/scripts/create-app-registrations.sh -g '<name from Azure portal for workload resource group>'
 ```
 
 ### 7. Deploy the application
 
-Run the following command to deploy the code to the created infrastructure:
+Run the following command to deploy the code to the created infrastructure (about 4-minutes to deploy):
 
 ```shell
 azd deploy
 ```
 
-If you are doing a multi-region deployment, you must also deploy the code to the secondary region:
+If you are doing a multi-region deployment, you must also deploy the code to the secondary region (about 4-minutes to deploy):
 
 ```shell
 SECONDARY_RESOURCE_GROUP=$(azd env get-values --output json | jq -r .secondary_resource_group)

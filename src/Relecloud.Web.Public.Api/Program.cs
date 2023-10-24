@@ -51,7 +51,7 @@ if (hasRequiredConfigSettings)
 }
 else if (!hasAzureAdSettings)
 {
-    app.MapGet("/", () => "Could not find required Azure AD settings. Check your App Config Service, you may need to run the createAppRegistrations script.");
+    app.MapGet("/", () => "Could not find required Azure AD settings. Check your App Config Service, you may need to run the create-app-registrations script.");
 }
 else
 {

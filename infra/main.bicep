@@ -1,275 +1,543 @@
 targetScope = 'subscription'
 
-@minLength(1)
-@maxLength(64)
-@description('Name of the the environment which is used to generate a short unqiue hash used in all resources.')
-param name string
+// ========================================================================
+//
+//  Relecloud Scenario of the Modern Web Application (MWA)
+//  Infrastructure description
+//  Copyright (C) 2023 Microsoft, Inc.
+//
+// ========================================================================
 
-@minLength(1)
-@description('Primary location for all resources. Should specify an Azure region. e.g. `eastus2` ')
+/*
+** Parameters that are provided by Azure Developer CLI.
+**
+** If you are running this with bicep, use the main.parameters.json
+** and overrides to generate these.
+*/
+
+
+@minLength(3)
+@maxLength(18)
+@description('The environment name - a unique string that is used to identify THIS deployment.')
+param environmentName string
+
+@minLength(3)
+@description('The name of the Azure region that will be used for the deployment.')
 param location string
 
-@description('Id of the user or app to assign application roles')
+@minLength(3)
+@description('The email address of the owner of the workload.')
+param ownerEmail string
+
+@minLength(3)
+@description('The name of the owner of the workload.')
+param ownerName string
+
+@description('The ID of the running user or service principal.  This will be set as the owner when needed.')
 param principalId string = ''
 
-@description('Will select production ready SKUs when `true`')
-param isProd string = 'false'
+@allowed([ 'ServicePrincipal', 'User' ])
+@description('The type of the principal specified in \'principalId\'')
+param principalType string = 'ServicePrincipal'
 
-@description('Defines type of principal that is executing the template')
-param isRunAsServicePrincipal bool = false
+/*
+** Passwords - specify these!
+*/
+@secure()
+@minLength(12)
+@description('The password for the jump host administrator account.')
+param administratorPassword string = newGuid()
 
-@description('Should specify an Azure region, if not set to none, to trigger multiregional deployment. The second region should be different than the `location` . e.g. `westus3`')
+@secure()
+param administratorPasswordParam string = ''
+
+@secure()
+@minLength(8)
+@description('The password for the SQL administrator account. This will be used for the jump host, SQL server, and anywhere else a password is needed for creating a resource.')
+param databasePassword string = newGuid()
+
+@minLength(8)
+@description('The username for the administrator account.  This will be used for the jump host, SQL server, and anywhere else a password is needed for creating a resource.')
+param administratorUsername string = 'azureadmin'
+
+/*
+** Parameters that make changes to the deployment based on requirements.  They mostly have
+** "reasonable" defaults such that a developer can just run "azd up" and get a working dev
+** system.
+*/
+
+// Settings for setting up a build agent for Azure DevOps
+@description('The URL of the Azure DevOps organization.  If this and the adoToken is provided, then an Azure DevOps build agent will be deployed.')
+param adoOrganizationUrl string = ''
+
+@description('The access token for the Azure DevOps organization.  If this and the adoOrganizationUrl is provided, then an Azure DevOps build agent will be deployed.')
+param adoToken string = ''
+
+// Settings for setting up a build agent for GitHub Actions
+@description('The URL of the GitHub repository.  If this and the githubToken is provided, then a GitHub Actions build agent will be deployed.')
+param githubRepositoryUrl string = ''
+
+@description('The personal access token for the GitHub repository.  If this and the githubRepositoryUrl is provided, then a GitHub Actions build agent will be deployed.')
+param githubToken string = ''
+
+// The IP address for the current system.  This is used to set up the firewall
+// for Key Vault and SQL Server if in development mode.
+@description('The IP address of the current system.  This is used to set up the firewall for Key Vault and SQL Server if in development mode.')
+param clientIpAddress string = ''
+
+// A differentiator for the environment.  This is used in CI/CD testing to ensure
+// that each environment is unique.
+@description('A differentiator for the environment.  Set this to a build number or date to ensure that the resource groups and resources are unique.')
+param differentiator string = 'none'
+
+// Environment type - dev or prod; affects sizing and what else is deployed alongside.
+@allowed([ 'dev', 'prod' ])
+@description('The set of pricing SKUs to choose for resources.  \'dev\' uses cheaper SKUs by avoiding features that are unnecessary for writing code.')
+param environmentType string = 'dev'
+
+// Deploy Hub Resources; if auto, then
+//  - environmentType == dev && networkIsolation == true => true
+@allowed([ 'auto', 'false', 'true' ])
+@description('Deploy hub resources.  Normally, the hub resources are not deployed since the app developer wouldn\'t have access, but we also need to be able to deploy a complete solution')
+param deployHubNetwork string = 'auto'
+
+// Network isolation - determines if the app is deployed in a VNET or not.
+//  if environmentType == prod => true
+//  if environmentType == dev => false
+@allowed([ 'auto', 'false', 'true' ])
+@description('Deploy the application in network isolation mode.  \'auto\' will deploy in isolation only if deploying to production.')
+param networkIsolation string = 'auto'
+
+// Secondary Azure location - provides the name of the 2nd Azure region. Blank by default to represent a single region deployment.
+@description('Should specify an Azure region. If not set to empty string then deploy to single region, else trigger multiregional deployment. The second region should be different than the `location`. e.g. `westus3`')
 param secondaryAzureLocation string
 
-@secure()
-@description('Specifies a password that will be used to secure the Azure SQL Database')
-param azureSqlPassword string = ''
+// Common App Service Plan - determines if a common app service plan should be deployed.
+//  auto = yes in dev, no in prod.
+@allowed([ 'auto', 'false', 'true' ])
+@description('Should we deploy a common app service plan, used by both the API and WEB app services?  \'auto\' will deploy a common app service plan in dev, but separate plans in prod.')
+param useCommonAppServicePlan string = 'auto'
 
-// the following Azure AD B2C information can be found in the Azure portal when examining the Azure AD B2C tenant's app registration page
-// read the following to learn more: https://learn.microsoft.com/en-us/azure/active-directory-b2c/tutorial-register-applications?tabs=app-reg-ga
+// ========================================================================
+// VARIABLES
+// ========================================================================
 
-// these AADB2C settings are also documented in the resources.bicep. Please keep both locations in sync
+// initializes the database password to a GUID and allows an override with the AZD env var administratorPasswordParam
+var administratorPasswordValue = length(administratorPasswordParam) > 0 ? administratorPasswordParam : administratorPassword
 
-@minLength(1)
-@description('A scope used by the front-end public web app to get authorized access to the public web api. Looks similar to https://myb2ctestorg.onmicrosoft.com/fbb6ce3b-c65f-4708-ae94-5069d1f821b4/Attendee')
-param frontEndAzureAdB2CApiScope string
+var prefix = '${environmentName}-${environmentType}'
 
-@minLength(1)
-@description('A unique identifier of the public facing front-end web app')
-param frontEndAzureAdB2cClientId string
-
-@secure()
-@minLength(1)
-@description('A secret generated by Azure AD B2C so that your web app can establish trust with Azure AD B2C')
-param frontEndAzureAdB2cClientSecret string
-
-@minLength(1)
-@description('A unique identifier of the public facing API web app')
-param apiAzureAdB2cClientId string
-
-@minLength(1)
-@description('The domain for the Azure B2C tenant: e.g. myb2ctestorg.onmicrosoft.com')
-param azureAdB2cDomain string
-
-@minLength(1)
-@description('The url for the Azure B2C tenant: e.g. https://myb2ctestorg.b2clogin.com')
-param azureAdB2cInstance string
-
-@minLength(1)
-@description('A unique identifier of the Azure AD B2C tenant')
-param azureAdB2cTenantId string
-
-@minLength(1)
-@description('An Azure AD B2C flow that defines behaviors relating to user sign-up and sign-in. Also known as an Azure AD B2C user flow.')
-param azureAdB2cSignupSigninPolicyId string
-
-@minLength(1)
-@description('An Azure AD B2C flow that enables users to reset their passwords. Also known as an Azure AD B2C user flow.')
-param azureAdB2cResetPolicyId string
-
-@minLength(1)
-@description('A URL provided by your web app that will clear session info when a user signs out')
-param azureAdB2cSignoutCallback string
-
-var isProdBool = isProd == 'true' ? true : false
-
-var tags = {
-  'azd-env-name': name
-}
-
+// Boolean to indicate the various values for the deployment settings
 var isMultiLocationDeployment = secondaryAzureLocation == '' ? false : true
+var isProduction = environmentType == 'prod'
+var isNetworkIsolated = networkIsolation == 'true' || (networkIsolation == 'auto' && isProduction)
+var willDeployHubNetwork = isNetworkIsolated && (deployHubNetwork == 'true' || (deployHubNetwork == 'auto' && !isProduction))
+var willDeployCommonAppServicePlan = useCommonAppServicePlan == 'true' || (useCommonAppServicePlan == 'auto' && !isProduction)
 
-var primaryResourceGroupName = '${name}-rg'
-var secondaryResourceGroupName = '${name}-secondary-rg'
-
-var primaryResourceToken = toLower(uniqueString(subscription().id, primaryResourceGroupName, location))
-var secondaryResourceToken = toLower(uniqueString(subscription().id, secondaryResourceGroupName, secondaryAzureLocation))
-
-module logAnalyticsForDiagnostics './logAnalyticsWorkspaceForDiagnostics.bicep' = {
-  name: 'logAnalyticsForDiagnostics'
-  scope: primaryResourceGroup
-  params: {
-    tags: tags
-    location: location
-    logAnalyticsWorkspaceNameForDiagnstics: 'diagnostics-${primaryResourceToken}-log'
-  }
-}
-
-resource primaryResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: primaryResourceGroupName
+var deploymentSettings = {
+  isMultiLocationDeployment: isMultiLocationDeployment
+  isProduction: isProduction
+  isNetworkIsolated: isNetworkIsolated
+  isPrimaryLocation: true
   location: location
-  tags: tags
+  name: environmentName
+  principalId: principalId
+  principalType: principalType
+  stage: environmentType
+  tags: {
+    'azd-env-name': environmentName
+    'azd-env-type': environmentType
+    'azd-owner-email': ownerEmail
+    'azd-owner-name': ownerName
+  }
+  workloadTags: {
+    WorkloadName: environmentName
+    Environment: environmentType
+    OwnerName: ownerEmail
+    ServiceClass: isProduction ? 'Silver' : 'Dev'
+    OpsCommitment: 'Workload operations'
+  }
 }
 
-module devOpsIdentitySetup './devOpsIdentitySetup.bicep' = {
-  name: 'devOpsIdentitySetup'
-  scope: primaryResourceGroup
+var secondDeployment = {
+  isPrimaryLocation: false
+}
+// a copy of the deploymentSettings that is aware these details describe a second deployment
+var deploymentSettings2 = union(deploymentSettings, secondDeployment)
+
+var diagnosticSettings = {
+  logRetentionInDays: isProduction ? 30 : 3
+  metricRetentionInDays: isProduction ? 7 : 3
+  enableLogs: true
+  enableMetrics: true
+}
+
+var installBuildAgent = isNetworkIsolated && ((!empty(adoOrganizationUrl) && !empty(adoToken)) || (!empty(githubRepositoryUrl) && !empty(githubToken)))
+
+var spokeAddressPrefixPrimary = '10.0.16.0/20'
+var spokeAddressPrefixSecondary = '10.0.32.0/20'
+
+// ========================================================================
+// BICEP MODULES
+// ========================================================================
+
+/*
+** Every single resource can have a naming override.  Overrides should be placed
+** into the 'naming.overrides.jsonc' file.  The output of this module drives the
+** naming of all resources.
+*/
+module naming './modules/naming.bicep' = {
+  name: '${prefix}-naming'
   params: {
-    tags: tags
-    location: location
-    resourceToken: primaryResourceToken
+    deploymentSettings: deploymentSettings
+    differentiator: differentiator != 'none' ? differentiator : ''
+    overrides: loadJsonContent('./naming.overrides.jsonc')
   }
 }
 
-// temporary workaround for multiple resource group bug
-// https://github.com/Azure/azure-dev/issues/690
-// `azd down` expects to be able to delete this resource because it was listed by the azure deployment output even when it is not deployed
-resource secondaryResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: secondaryResourceGroupName
-  location: isMultiLocationDeployment ? secondaryAzureLocation : location
-  tags: tags
-}
-
-module primaryResources './resources.bicep' = {
-  name: 'primary-${primaryResourceToken}'
-  scope: primaryResourceGroup
+module naming2 './modules/naming.bicep' = {
+  name: '${prefix}-naming2'
   params: {
-    azureSqlPassword: azureSqlPassword
-    devOpsManagedIdentityId: devOpsIdentitySetup.outputs.devOpsManagedIdentityId
-    isProd: isProdBool
-    isRunAsServicePrincipal: isRunAsServicePrincipal
-    location: location
-    principalId: principalId
-    resourceToken: primaryResourceToken
-    tags: tags
-    apiAzureAdB2cClientId: apiAzureAdB2cClientId
-    azureAdB2cDomain: azureAdB2cDomain
-    azureAdB2cInstance: azureAdB2cInstance
-    azureAdB2cResetPolicyId: azureAdB2cResetPolicyId
-    azureAdB2cSignoutCallback: azureAdB2cSignoutCallback
-    azureAdB2cSignupSigninPolicyId: azureAdB2cSignupSigninPolicyId
-    azureAdB2cTenantId: azureAdB2cTenantId
-    frontEndAzureAdB2CApiScope: frontEndAzureAdB2CApiScope
-    frontEndAzureAdB2cClientId: frontEndAzureAdB2cClientId
-    frontEndAzureAdB2cClientSecret: frontEndAzureAdB2cClientSecret
+    deploymentSettings: deploymentSettings
+    differentiator: differentiator != 'none' ? '${differentiator}2' : '2'
+    overrides: loadJsonContent('./naming.overrides.jsonc')
   }
 }
 
-module devOpsIdentitySetupSecondary './devOpsIdentitySetup.bicep' = {
-  name: 'devOpsIdentitySetupSecondary'
-  scope: secondaryResourceGroup
+/*
+** Resources are organized into one of four resource groups:
+**
+**  hubResourceGroup      - contains the hub network resources
+**  spokeResourceGroup    - contains the spoke network resources
+**  sqlResourceGroup      - contains the SQL resources
+**  workloadResourceGroup - contains the workload resources 
+** 
+** Not all of the resource groups are necessarily available - it
+** depends on the settings.
+*/
+module resourceGroups './modules/resource-groups.bicep' = {
+  name: '${prefix}-resource-groups'
   params: {
-    tags: tags
-    location: location
-    resourceToken: secondaryResourceToken
+    deploymentSettings: deploymentSettings
+    resourceNames: naming.outputs.resourceNames
+
+    // Settings
+    deployHubNetwork: willDeployHubNetwork
   }
 }
 
-module secondaryResources './resources.bicep' = if (isMultiLocationDeployment) {
-  name: 'secondary-${primaryResourceToken}'
-  scope: secondaryResourceGroup
+module resourceGroups2 './modules/resource-groups.bicep' = if (isMultiLocationDeployment) {
+  name: '${prefix}-resource-groups2'
   params: {
-    azureSqlPassword: azureSqlPassword
-    devOpsManagedIdentityId: devOpsIdentitySetupSecondary.outputs.devOpsManagedIdentityId
-    isProd: isProdBool
-    isRunAsServicePrincipal: isRunAsServicePrincipal
-    location: secondaryAzureLocation
-    principalId: principalId
-    resourceToken: secondaryResourceToken
-    tags: tags
-    apiAzureAdB2cClientId: apiAzureAdB2cClientId
-    azureAdB2cDomain: azureAdB2cDomain
-    azureAdB2cInstance: azureAdB2cInstance
-    azureAdB2cResetPolicyId: azureAdB2cResetPolicyId
-    azureAdB2cSignoutCallback: azureAdB2cSignoutCallback
-    azureAdB2cSignupSigninPolicyId: azureAdB2cSignupSigninPolicyId
-    azureAdB2cTenantId: azureAdB2cTenantId
-    frontEndAzureAdB2CApiScope: frontEndAzureAdB2CApiScope
-    frontEndAzureAdB2cClientId: frontEndAzureAdB2cClientId
-    frontEndAzureAdB2cClientSecret: frontEndAzureAdB2cClientSecret
+    deploymentSettings: deploymentSettings2
+    resourceNames: naming2.outputs.resourceNames
+
+    // Settings
+    deployHubNetwork: willDeployHubNetwork
   }
 }
 
-module azureFrontDoor './azureFrontDoor.bicep' = {
-  name: 'frontDoor-${primaryResourceToken}'
-  scope: primaryResourceGroup
+/*
+** Azure Monitor Resources
+**
+** Azure Monitor resources (Log Analytics Workspace and Application Insights) are
+** homed in the hub network when it's available, and the workload resource group
+** when it's not available.
+*/
+module azureMonitor './modules/azure-monitor.bicep' = {
+  name: '${prefix}-azure-monitor'
   params: {
-    tags: tags
-    logAnalyticsWorkspaceIdForDiagnostics: logAnalyticsForDiagnostics.outputs.LOG_WORKSPACE_ID
-    primaryBackendAddress: primaryResources.outputs.WEB_CALLCENTER_URI
-    secondaryBackendAddress: isMultiLocationDeployment ? secondaryResources.outputs.WEB_CALLCENTER_URI : 'none'
+    deploymentSettings: deploymentSettings
+    resourceNames: naming.outputs.resourceNames
+    resourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : resourceGroups.outputs.workload_resource_group_name
   }
 }
 
-module primaryKeyVaultDiagnostics 'azureKeyVaultDiagnostics.bicep' = {
-  name: 'primaryKeyVaultDiagnostics'
-  scope: primaryResourceGroup
+/*
+** Create the hub network, if requested. 
+**
+** The hub network consists of the following resources
+**
+**  The hub virtual network with subnets for Bastion Hosts and Firewall
+**  The bastion host
+**  The firewall
+**  A route table that is used within the spoke to reach the firewall
+**
+** We also set up a budget with cost alerting for the hub network (separate
+** from the workload budget)
+*/
+module hubNetwork './modules/hub-network.bicep' = if (willDeployHubNetwork) {
+  name: '${prefix}-hub-network'
   params: {
-    keyVaultName: primaryResources.outputs.KEY_VAULT_NAME
-    logAnalyticsWorkspaceIdForDiagnostics: logAnalyticsForDiagnostics.outputs.LOG_WORKSPACE_ID
+    deploymentSettings: deploymentSettings
+    diagnosticSettings: diagnosticSettings
+    resourceNames: naming.outputs.resourceNames
+
+    // Dependencies
+    logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
+
+    // Settings
+    administratorPassword: administratorPasswordValue
+    administratorUsername: administratorUsername
+    enableBastionHost: true
+    enableDDoSProtection: deploymentSettings.isProduction
+    enableFirewall: true
+    enableJumpHost: willDeployHubNetwork
+    spokeAddressPrefixPrimary: spokeAddressPrefixPrimary
+    spokeAddressPrefixSecondary: spokeAddressPrefixSecondary
   }
+  dependsOn: [
+    resourceGroups
+  ]
 }
 
-module secondaryAppConfigSvcFrontDoorUri 'appConfigSvcKeyValue.bicep' = if (isMultiLocationDeployment) {
-  name: 'secondaryKeyValue'
-  scope: secondaryResourceGroup
-  params:{
-    appConfigurationServiceName: isMultiLocationDeployment ? secondaryResources.outputs.APP_CONFIGURATION_SVC_NAME : 'none'
-    frontDoorUri: azureFrontDoor.outputs.HOST_NAME
-  }
-}
+/*
+** The hub network MAY have created an Azure Monitor workspace.  If it did, we don't need
+** to do it again.  If not, we'll create one in the workload resource group
+*/
 
-module secondaryKeyVaultDiagnostics 'azureKeyVaultDiagnostics.bicep' = if (isMultiLocationDeployment) {
-  name: 'secondaryKeyVaultDiagnostics'
-  scope: secondaryResourceGroup
+
+/*
+** The spoke network is the network that the workload resources are deployed into.
+*/
+module spokeNetwork './modules/spoke-network.bicep' = if (isNetworkIsolated) {
+  name: '${prefix}-spoke-network'
   params: {
-    keyVaultName: isMultiLocationDeployment ? secondaryResources.outputs.KEY_VAULT_NAME : 'none'
-    logAnalyticsWorkspaceIdForDiagnostics: logAnalyticsForDiagnostics.outputs.LOG_WORKSPACE_ID
+    deploymentSettings: deploymentSettings
+    diagnosticSettings: diagnosticSettings
+    resourceNames: naming.outputs.resourceNames
+
+    // Dependencies
+    logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
+    routeTableId: willDeployHubNetwork ? hubNetwork.outputs.route_table_id : ''
+
+    // Settings
+    addressPrefix: spokeAddressPrefixPrimary
+    administratorPassword: administratorPasswordValue
+    administratorUsername: administratorUsername
+    createDevopsSubnet: isNetworkIsolated
+    enableJumpHost: true
   }
+  dependsOn: [
+    resourceGroups
+  ]
 }
 
-module azureLoadTest './azureLoadTest.bicep' = {
-  name: 'azureLoadTest'
-  scope: primaryResourceGroup
+module spokeNetwork2 './modules/spoke-network.bicep' = if (isNetworkIsolated && isMultiLocationDeployment) {
+  name: '${prefix}-spoke-network2'
   params: {
-    resourceToken: primaryResourceToken
-    tags: tags
-    location: location
+    deploymentSettings: deploymentSettings2
+    diagnosticSettings: diagnosticSettings
+    resourceNames: naming2.outputs.resourceNames
+
+    // Dependencies
+    logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
+    routeTableId: willDeployHubNetwork ? hubNetwork.outputs.route_table_id : ''
+
+    // Settings
+    addressPrefix: spokeAddressPrefixSecondary
+    administratorPassword: administratorPasswordValue
+    administratorUsername: administratorUsername
+    createDevopsSubnet: true
+    enableJumpHost: true
   }
+  dependsOn: [
+    resourceGroups2
+  ]
 }
 
-@description('Enable usage and telemetry feedback to Microsoft.')
-param enableTelemetry bool = true
-
-var telemetryId = '2e1b35cf-c556-45fd-87d5-bfc08ac2e8ba-${location}'
-resource telemetrydeployment 'Microsoft.Resources/deployments@2021-04-01' = if (enableTelemetry) {
-  name: telemetryId
-  location: location
-  properties: {
-    mode: 'Incremental'
-    template: {
-      '$schema': 'https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#'
-      contentVersion: '1.0.0.0'
-      resources: {}
+/*
+** Now that the networking resources have been created, we need to peer the networks.  This is
+** only done if the hub network was created in this deployment.  If the hub network was not
+** deployed, then a manual peering process needs to be done.
+*/
+module peerHubAndPrimarySpokeVirtualNetworks './modules/peer-networks.bicep' = if (willDeployHubNetwork && isNetworkIsolated) {
+  name: '${prefix}-peer-hub-primary-networks'
+  params: {
+    hubNetwork: {
+      name: willDeployHubNetwork ? hubNetwork.outputs.virtual_network_name : ''
+      resourceGroupName: naming.outputs.resourceNames.hubResourceGroup
+    }
+    spokeNetwork: {
+      name: isNetworkIsolated ? spokeNetwork.outputs.virtual_network_name : ''
+      resourceGroupName: naming.outputs.resourceNames.spokeResourceGroup
     }
   }
 }
 
-output WEB_URI string = 'https://${azureFrontDoor.outputs.HOST_NAME}'
-output AZURE_LOCATION string = location
+/* peer the hub and spoke for secondary region if it was deployed */
+module peerHubAndSecondarySpokeVirtualNetworks './modules/peer-networks.bicep' = if (willDeployHubNetwork && isNetworkIsolated && isMultiLocationDeployment) {
+  name: '${prefix}-peer-hub-secondary-networks'
+  params: {
+    hubNetwork: {
+      name: isMultiLocationDeployment ? hubNetwork.outputs.virtual_network_name : ''
+      resourceGroupName: naming.outputs.resourceNames.hubResourceGroup
+    }
+    spokeNetwork: {
+      name: isMultiLocationDeployment ? spokeNetwork2.outputs.virtual_network_name : ''
+      resourceGroupName: isMultiLocationDeployment ? naming2.outputs.resourceNames.spokeResourceGroup : ''
+    }
+  }
+}
 
-output DEBUG_IS_MULTI_LOCATION_DEPLOYMENT bool = isMultiLocationDeployment
-output DEBUG_SECONDARY_AZURE_LOCATION string = secondaryAzureLocation
-output DEBUG_IS_PROD bool = isProdBool
+/* peer the two spoke vnets so that replication is not forced through the hub */
+module peerSpokeVirtualNetworks './modules/peer-networks.bicep' = if (willDeployHubNetwork && isNetworkIsolated && isMultiLocationDeployment) {
+  name: '${prefix}-peer-spoke-and-spoke-networks'
+  params: {
+    hubNetwork: {
+      name: isMultiLocationDeployment ? spokeNetwork.outputs.virtual_network_name : ''
+      resourceGroupName: isMultiLocationDeployment ? naming.outputs.resourceNames.spokeResourceGroup : ''
+    }
+    spokeNetwork: {
+      name: isMultiLocationDeployment ? spokeNetwork2.outputs.virtual_network_name : ''
+      resourceGroupName: isMultiLocationDeployment ? naming2.outputs.resourceNames.spokeResourceGroup : ''
+    }
+  }
+}
 
-// the following settings will be used by the Azure.LoadTest.Tool to configure the Load Test service with a JMX and server side diagnostics to monitor during the test run
-// these details assume the Azure App Service is configured for Active/Passive deployment
-output AZURE_RESOURCE_GROUP string = primaryResourceGroupName
-output AZURE_LOAD_TEST_NAME string = azureLoadTest.outputs.loadTestServiceName
+/*
+** Create the application resources.
+*/
 
-// path to the file name will be relative to the tool that uploads the file
-output AZURE_LOAD_TEST_FILE string = '../../assets/loadtest/api-loadtest.jmx'
-output APP_COMPONENTS_RESOURCE_IDS string = '${primaryResources.outputs.PUBLIC_API_APP_INSIGHTS_RESOURCEID},${primaryResources.outputs.PUBLIC_API_APP_SERVICE_RESOURCEID}'
+module frontdoor './modules/shared-frontdoor.bicep' = {
+  name: '${prefix}-frontdoor'
+  params: {
+    deploymentSettings: deploymentSettings
+    diagnosticSettings: diagnosticSettings
+    resourceNames: naming.outputs.resourceNames
 
-// adding AZURE_SUBSCRIPTION_ID output to account for non-interactive exectuions where it does not get populated in env.ini
-output AZURE_SUBSCRIPTION_ID string = subscription().subscriptionId 
+    // Dependencies
+    logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
+  }
+}
 
-// the following settings will be used as environment vars by the 'basic-test.jmx' file
-output ALT_ENV_PARAM_X1 string = 'apihost,${primaryResources.outputs.WEB_PUBLIC_URI}'
-output ALT_ENV_PARAM_X2 string = 'duration_seconds,120'
-output ALT_ENV_PARAM_X3 string = 'protocol,https'
-output ALT_ENV_PARAM_X4 string = 'rampup_seconds,10'
-output ALT_ENV_PARAM_X5 string = 'threads_per_engine,5'
-output ALT_ENV_PARAM_X6 string = 'virtualusers,5'
-// TODO - as we integrate with APIM we'll need to share an auth token that supports load testing
-output ALT_ENV_PARAM_X7 string = 'authtoken,NaN'
+module workload './modules/workload-resources.bicep' = {
+  name: '${prefix}-workload'
+  params: {
+    deploymentSettings: deploymentSettings
+    diagnosticSettings: diagnosticSettings
+    resourceNames: naming.outputs.resourceNames
+
+    // Dependencies
+    applicationInsightsId: azureMonitor.outputs.application_insights_id
+    logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
+    dnsResourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : ''
+    subnets: isNetworkIsolated ? spokeNetwork.outputs.subnets : {}
+    frontDoorSettings: frontdoor.outputs.settings
+
+    // Settings
+    administratorUsername: administratorUsername
+    databasePassword: databasePassword
+    clientIpAddress: clientIpAddress
+    useCommonAppServicePlan: willDeployCommonAppServicePlan
+  }
+  dependsOn: [
+    resourceGroups
+    spokeNetwork
+  ]
+}
+
+module workload2 './modules/workload-resources.bicep' =  if (isMultiLocationDeployment) {
+  name: '${prefix}-workload2'
+  params: {
+    deploymentSettings: deploymentSettings2
+    diagnosticSettings: diagnosticSettings
+    resourceNames: naming2.outputs.resourceNames
+
+    // Dependencies
+    applicationInsightsId: azureMonitor.outputs.application_insights_id
+    logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
+    dnsResourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : ''
+    subnets: isNetworkIsolated && isMultiLocationDeployment? spokeNetwork2.outputs.subnets : {}
+    frontDoorSettings: frontdoor.outputs.settings
+
+    // Settings
+    administratorUsername: administratorUsername
+    databasePassword: databasePassword
+    clientIpAddress: clientIpAddress
+    useCommonAppServicePlan: willDeployCommonAppServicePlan
+  }
+  dependsOn: [
+    resourceGroups2
+    spokeNetwork2
+    privateDnsZones
+  ]
+}
+
+/*
+** Create a build agent (only if network isolated and the relevant information has been provided)
+*/
+module buildAgent './modules/build-agent.bicep' = if (installBuildAgent) {
+  name: '${prefix}-build-agent'
+  params: {
+    deploymentSettings: deploymentSettings
+    diagnosticSettings: diagnosticSettings
+    resourceNames: naming.outputs.resourceNames
+
+    // Dependencies
+    logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
+    managedIdentityId: workload.outputs.owner_managed_identity_id
+    subnets: isNetworkIsolated ? spokeNetwork.outputs.subnets : {}
+
+    // Settings
+    administratorPassword: administratorPasswordValue
+    administratorUsername: administratorUsername
+    adoOrganizationUrl: adoOrganizationUrl
+    adoToken: adoToken
+    githubRepositoryUrl: githubRepositoryUrl
+    githubToken: githubToken
+  }
+}
+
+var virtualNetworkLinks = [
+  {
+    vnetName: hubNetwork.outputs.virtual_network_name
+    vnetId: hubNetwork.outputs.virtual_network_id
+    registrationEnabled: false
+  }
+  {
+    vnetName: spokeNetwork.outputs.virtual_network_name
+    vnetId: spokeNetwork.outputs.virtual_network_id
+    registrationEnabled: false
+  }
+]
+
+module privateDnsZones './modules/private-dns-zones.bicep' = if (willDeployHubNetwork) {
+  name: '${prefix}-private-dns-zone-deploy'
+  params:{
+    deploymentSettings: deploymentSettings
+    hubResourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : ''
+    virtualNetworkLinks: willDeployHubNetwork ? virtualNetworkLinks : []
+  }
+}
+
+/*
+** Enterprise App Patterns Telemetry
+** A non-billable resource deployed to Azure to identify the template
+*/
+@description('Enable usage and telemetry feedback to Microsoft.')
+param enableTelemetry bool = true
+
+module telemetry './modules/telemetry.bicep' = if (enableTelemetry) {
+  name: '${prefix}-telemetry'
+  params: {
+    resourceGroupName: resourceGroups.outputs.workload_resource_group_name
+    deploymentSettings: deploymentSettings
+  }
+}
+
+// ========================================================================
+// OUTPUTS
+// ========================================================================
+
+// Hub resources
+output bastion_hostname string = willDeployHubNetwork ? hubNetwork.outputs.bastion_hostname : ''
+output firewall_hostname string = willDeployHubNetwork ? hubNetwork.outputs.firewall_hostname : ''
+
+// Spoke resources
+output build_agent string = installBuildAgent ? buildAgent.outputs.build_agent_hostname : ''
+
+// Workload resources
+output AZURE_RESOURCE_GROUP string = resourceGroups.outputs.workload_resource_group_name
+output service_managed_identities object[] = workload.outputs.service_managed_identities
+output service_web_endpoints string[] = workload.outputs.service_web_endpoints

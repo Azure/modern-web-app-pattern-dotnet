@@ -3,33 +3,20 @@
 name: modern-csharp-web
 metadata:
   template: modern-csharp-web@0.0.1-beta
+hooks:
+  preprovision:
+    posix:
+      interactive: true
+      run: ./infra/scripts/whats-my-ip.sh
+    windows:
+      interactive: true
+      run: ./infra/scripts/whats-my-ip.ps1
 services:
-  web-call-center:
-    project: src/Relecloud.Web.CallCenter
-    language: csharp
-    host: appservice
-  web-public:
-    project: src/Relecloud.Web.Public
-    language: csharp
-    host: appservice
-  public-api:
-    project: src/Relecloud.Web.Public.Api
-    language: csharp
-    host: appservice
-    # disabling hooks until later sprint focused on diagnosing a bug with this feature
-    # hooks:
-    #   predeploy:
-    #     posix:
-    #       shell: sh
-    #       interactive: true
-    #       # executes in the context of the root folder
-    #       run: ../../infra/devOpsScripts/configureLoadTest.sh
-    #     windows: 
-    #       shell: pwsh
-    #       interactive: true
-    #       # executes in the context of the root folder
-    #       run: ../../infra/devOpsScripts/configureLoadTest.ps1
-  call-center-api:
+  web-callcenter-service:
     project: src/Relecloud.Web.CallCenter.Api
+    language: csharp
+    host: appservice
+  web-callcenter-frontend:
+    project: src/Relecloud.Web.CallCenter
     language: csharp
     host: appservice
