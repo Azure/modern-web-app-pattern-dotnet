@@ -34,6 +34,7 @@ A modern web application is one that is both resilient and available. Resiliency
 
 ### Queue-Based Load Leveling pattern
 > ⚠️ Pending task Queue-based Load Leveling pattern - (Queue-based ticket rendering experience) covered by  #1865952
+> This section will talk about how moving work out of the request processing stream will  create more bandwidth for request throughput by reducing long running operations that tie up CPU, RAM, and network connections. Improved request bandwidth provides additional benefits for scaling, and smoothes out edge case scenarios such as a user buying 20 tickets, that can lead to reliability problems as requests become queued during high throughput scenarios.
 
 ### Rate Limiting pattern
 > ⚠️ Pending task Rate Limiting pattern - (Multichannel API Capability) covered by #1864671
@@ -146,6 +147,15 @@ Performance efficiency is the ability of a workload to scale and meet the demand
 ### Use the Cache-Aside pattern
 
 > ⚠️ Pending documentation of infrastructure cache replaces code cache - (Multichannel API Capability experience) covered by #1865963
+
+### Queue-based Load Leveling pattern
+
+> ⚠️ Pending task Queue-based Load Leveling pattern - (Queue-based ticket rendering experience) covered by  #1865952
+> This section will talk about how applying the Queue-based Load leveling pattern changes our scaling paradigm so that we no longer need to plan for peak workloads. Autoscaling provides alignment with user load and Queue-based Load Leveling provides additional smoothing of the resource demands for our solution. This reduces waste by reducing scaling events and helping us plan for our expected consumption in a more consistent approach.
+
+![Diagram that shows the abstraction choices and their impacts on system costs.](../docs/images/choice-of-abstraction.png)
+
+- Learn more by reading about [Consumption and fixed cost models](https://learn.microsoft.com/azure/well-architected/cost/design-price)
 
 ## Next steps
 
