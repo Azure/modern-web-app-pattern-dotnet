@@ -23,7 +23,7 @@ This project has a [companion article in the Azure Architecture Center](https://
 ![Diagram showing the architecture of the reference implementation.](./docs/images/relecloud-solution-diagram.png)
 
 ## Workflow
-⚠️ Pending Work Item: 1871276
+> ⚠️ Pending documentation of workflow - (Business reporting experience) coverd by #1871276
 
 ## Prerequisites
 
