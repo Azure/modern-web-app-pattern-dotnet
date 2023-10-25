@@ -39,7 +39,7 @@ while [[ $# -gt 0 ]]; do
       echo "<This command should only be run after using the azd command to deploy resources to Azure>"
       echo ""
       echo "Command"
-      echo "    create-app-registrations.sh : Will create two app registrations for the reliable-web-app-pattern-dotnet and register settings with App Configuration Svc and Key Vault."
+      echo "    create-app-registrations.sh : Will create two app registrations for the modern-web-app-pattern-dotnet and register settings with App Configuration Svc and Key Vault."
       echo ""
       echo "Arguments"
       echo "    --resource-group -g : Name of resource group containing the environment that was created by the azd command."
