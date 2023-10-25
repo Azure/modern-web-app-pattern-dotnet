@@ -5,13 +5,16 @@ There are two articles on the modern web app pattern for .NET. This article prov
 
 ## Architecture and code
 
+> ⚠️ The entire architecture and code section is pending review - (Multichannel API Capability experience) coverd by #1865953
+
 The modern web app pattern situates code changes within the pillars of the Azure Well-Architected Framework to reinforce the close relationship between code and architecture. This guidance uses the reference implementation architecture to illustrate the principles of the modern web app pattern (*see figure 1*). The modern web app pattern is a set of principles with implementation guidance. It's not a specific architecture. It's important that your web app adheres to the principles of the pattern, not this specific architecture.
+
 ![Diagram showing the architecture of the reference implementation.](../docs/images/relecloud-solution-diagram.png)
 *Figure 1. Target reference implementation architecture.
 
 ## Principles and implementation
 
-* ⚠️ Pending review as part of #1865953
+> ⚠️ The entire principles and implementation section is pending review - (Multichannel API Capability ) coverd by #1865953
 
 The following table lists the principles of the modern web app pattern and how to implement those principles in your web app. For more information, see the [modern web app pattern overview](https://aka.ms/eap/mwa/dotnet/doc).
 
@@ -39,15 +42,20 @@ A modern web application is one that is both resilient and available. Resiliency
 
 Cloud applications are often composed of multiple Azure services. Communication between those services needs to be secure. Enforcing secure authentication, authorization, and accounting practices in your application is essential to your security posture. At this phase in the cloud journey, you should use managed identities, secrets management, and private endpoints. Here are the security recommendations for the modern web app pattern.
 
+### Apply Federated Identity pattern for website authentication
+> ⚠️ Pending task Document the way Federated Identity Pattern was applied - (Public facing website experience) covered by  #1908023
+
+
 ### Secure Azure resources at the identity layer
-> ⚠️ Pending task Queue-based Load Leveling Pattern - (Multichannel API Capability) covered by  #1865952
+> ⚠️ Pending task Document recommended approach for Identity Layer - (Multichannel API Capability experience) covered by  #1865959
+
 
 ### Secure Azure resources with network isolation
-> ⚠️ Pending task  Queue-based Load Leveling Pattern - (Multichannel API Capability) covered by  #1865952
+> ⚠️ Pending task Queue-based Load Leveling Pattern - (Multichannel API Capability experience) covered by  #1865959
 
 ## Cost optimization
 
-> ⚠️ Pending review as part of #1865953
+> ⚠️ The entire cost optimization section is pending review - (Business reporting experience) coverd by #1865960
 
 Cost optimization principles balance business goals with budget justification to create a cost-effective web application. Cost optimization is about reducing unnecessary expenses and improving operational efficiencies. For a web app converging on the cloud, here are our recommendations for cost optimization. The code changes optimize for horizontal scale to reduce costs rather than optimizing existing business processes. The latter can lead to higher risks.
 
@@ -62,7 +70,7 @@ Production environments need SKUs that meet the service level agreements (SLA), 
 
 *Reference implementation:* The reference implementation uses Bicep parameters to trigger resource deployment configurations. One of these parameters tells Azure Resource Manager which SKUs to select. The following code gives Azure Cache for Redis different SKUs for production and non-production environments:
 
-> ⚠️ Pending #1865953 where we will update code samples
+> ⚠️ Pending review of code sample - (Business reporting experience) coverd by #1865960
 ```bicep
 var redisCacheSkuName = isProd ? 'Standard' : 'Basic'
 var redisCacheFamilyName = isProd ? 'C' : 'C'
@@ -73,7 +81,7 @@ The web app uses the Standard C1 SKU for the production environment and the Basi
 
 *Table 2. Reference implementation SKU differences between the development and production environments.*
 
-> ⚠️ Pending #1865953 where we will update code SKU features
+> ⚠️ Pending review of SKU - (Business reporting experience) coverd by #1865960
 
 |   | Standard C1 SKU | Basic C0 SKU|
 | --- | --- | --- |
@@ -118,28 +126,27 @@ IaC is often considered an operational best practice, but it's also a way to man
 A DevOps methodology provides a greater return on investment for application teams in the cloud. IaC is a key tenet of DevOps. The modern web app pattern requires the use of IaC to deploy application infrastructure, configure services, and set up application telemetry. Monitoring operational health requires telemetry to measure security, cost, reliability, and performance gains. The cloud offers built-in features to capture telemetry. When this telemetry is fed into a DevOps framework, it can help you rapidly improve your application.
 
 ### Gateway Routing pattern
-> ⚠️ Pending scenario (Multichannel API Capability) covered by  #1864679
+> ⚠️ Pending implementation and documentation associated with - (Multichannel API Capability) coverd by #1864679
 
 ### Distributed tracing and logging
-> ⚠️ Pending scenario (Business Reporting) covered by  #1865961
+> ⚠️ Pending implementation and documentation associated with - (Business Reporting) coverd by #1865961
 
 ### Load testing
-> ⚠️ Pending task (Load testing the API) covered by  #1865967
-
-Distribute tracing and logging - M5 covers #1865961
+> ⚠️ Pending implementation and documentation associated with - (Load testing the API) coverd by #1865967
 
 ## Performance efficiency
 Performance efficiency is the ability of a workload to scale and meet the demands placed on it by users in an efficient manner. In cloud environments, a workload should anticipate increases in demand to meet business requirements. You should use the Cache-Aside pattern to manage application data while improving performance and optimizing costs.
 
-> ⚠️ Pending task Backend-for-frontends pattern - (Public facing website experience) covered by  #1865974
+### Apply the Backends for Frontends pattern
+> ⚠️ Pending documentation of Backends for Frontends pattern - (Public facing website experience) covered by  #1865974
 
 ### Use the Cache-Aside pattern
 
-> ⚠️ Pending task infrastructure cache replaces code cache - (Multichannel API Capability experience) covered by #1865963
+> ⚠️ Pending documentation of infrastructure cache replaces code cache - (Multichannel API Capability experience) covered by #1865963
 
 ## Next steps
 
-You can deploy the reference implementation by following the instructions in the [moddern web app pattern for .NET repository](https://aka.ms/eap/mwa/dotnet). The repository has everything you need.  Follow the deployment guidelines to deploy the code to Azure and local development. The following resources can help you learn cloud best practices, discover migration tools, and learn about .NET.
+You can deploy the reference implementation by following the instructions in the [modern web app pattern for .NET repository](https://aka.ms/eap/mwa/dotnet). The repository has everything you need. Follow the deployment guidelines to deploy the code to Azure and local development. The following resources can help you learn cloud best practices, discover migration tools, and learn about .NET.
 
 **Introduction to web apps on Azure.** For a hands-on introduction to .NET web applications on Azure, see this [guidance for deploying a basic .NET web application](https://github.com/Azure-Samples/app-templates-dotnet-azuresql-appservice).
 
@@ -148,7 +155,7 @@ You can deploy the reference implementation by following the instructions in the
 - [Cloud Adoption Framework](https://learn.microsoft.com/azure/cloud-adoption-framework/overview). Can help your organization prepare and execute a strategy to build solutions on Azure.
 - [Well-Architected Framework](https://learn.microsoft.com/azure/architecture/framework/). A set of guiding tenets that can be used to improve the quality of a workload.
 
-For applications that require a higher SLO than the reliable web app pattern, see [mission-critical workloads](https://learn.microsoft.com/azure/architecture/framework/mission-critical/mission-critical-overview).
+For applications that require a higher SLO than the modern web app pattern, see [mission-critical workloads](https://learn.microsoft.com/azure/architecture/framework/mission-critical/mission-critical-overview).
 
 **Migration guidance.** The following tools and resources can help you migrate on-premises resources to Azure.
 
