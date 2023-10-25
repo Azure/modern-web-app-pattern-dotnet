@@ -129,15 +129,18 @@ A DevOps methodology provides a greater return on investment for application tea
 > ⚠️ Pending implementation and documentation associated with - (Multichannel API Capability) coverd by #1864679
 
 ### Distributed tracing and logging
+
 > ⚠️ Pending implementation and documentation associated with - (Business Reporting) coverd by #1865961
 
 ### Load testing
+
 > ⚠️ Pending implementation and documentation associated with - (Load testing the API) coverd by #1865967
 
 ## Performance efficiency
 Performance efficiency is the ability of a workload to scale and meet the demands placed on it by users in an efficient manner. In cloud environments, a workload should anticipate increases in demand to meet business requirements. You should use the Cache-Aside pattern to manage application data while improving performance and optimizing costs.
 
 ### Apply the Backends for Frontends pattern
+
 > ⚠️ Pending documentation of Backends for Frontends pattern - (Public facing website experience) covered by  #1865974
 
 ### Use the Cache-Aside pattern
