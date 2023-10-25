@@ -5,7 +5,7 @@ There are two articles on the modern web app pattern for .NET. This article expl
 
 ## Architecture
 
-* ⚠️ Pending review as part of #1865953
+> ⚠️ The architecture section is pending review - (Multichannel API Capability experience) coverd by #1865953
 
 The modern web app pattern is a set of principles with implementation guidance. It's not a specific architecture. Your business context, existing web app, and desired service level objective (SLO) are critical factors that shape the architecture of your web app. The following diagram (figure 1) represents the architecture of the [reference implementation](https://aka.ms/eap/mwa/dotnet). It's one example that illustrates the principles of the modern web app pattern. It's important that your web app adheres to the principles of the modern web app pattern, not necessarily this specific architecture.
 
@@ -13,7 +13,7 @@ The modern web app pattern is a set of principles with implementation guidance. 
 
 ## Principles and implementation
 
-* ⚠️ Pending review as part of #1865953
+> ⚠️ The principles and implementation section is pending review - (Multichannel API Capability experience) coverd by #1865953
 
 The following table lists the principles of the modern web app pattern and how to implement those principles in your web app. For more information, see the [Modern web app pattern overview](https://aka.ms/eap/mwa/dotnet/doc).
 
@@ -26,7 +26,7 @@ The following table lists the principles of the modern web app pattern and how t
 
 ## Business scenario
 
-* ⚠️ Pending review as part of #1865953
+> ⚠️ The business scenario section is pending review - (Multichannel API Capability experience) coverd by #1865953
 
 This guide demonstrates how principles from the [Well-Architected Framework](https://docs.microsoft.com/azure/architecture/framework/)
 and [Twelve-Factor Applications](https://12factor.net/) can be applied to migrate and modernize a legacy, line-of-business (LOB) web app to the cloud. A reference architecture is included to showcase a production ready solution which can be easily deployed for learning and experimentation.
@@ -43,19 +43,19 @@ Continue to the next section to learn more about the solution architecture, and 
 
 ## Existing web app
 
-* ⚠️ Pending review as part of #1865953
+> ⚠️ The existing web app section is pending review - (Multichannel API Capability experience) coverd by #1865953
 
 The existing web app was an on-premises web app migrated to the cloud with the [Reliable Web App pattern](https://aka.ms/eap/rwa/dotnet/doc). The web app is a monolithic ASP.NET web app. It runs an eCommerce, line-of-business web app on two App Service Plans and has a Azure SQL database. The web app is employee-facing. The only application users are Relecloud's call center employees. Relecloud employees use the application to buy tickets on behalf of Relecloud customers. The on-premises web app suffers from common challenges. These challenges include extended timelines to build and ship new features difficulty scaling different components of the application under a higher load.
 
 ## Service level objective
 
-* ⚠️ Pending review as part of #1865953
+> ⚠️ The service level objective section is pending review - (Multichannel API Capability experience) coverd by #1865953
 
 A service level objective (SLO) for availability defines how available you want a web app to be for users. You need to define an SLO and what *available* means for your web app. Relecloud has a target SLO of 99.9% for availability, about 8.7 hours of downtime per year. For Relecloud, the web app is available when call center employees can purchase tickets 99.9% of the time. When you have a definition of *available*, list all the dependencies on the critical path of availability. Dependencies should include Azure services and third-party integrations.
 
 ## Choose the right services
 
-* ⚠️ Pending review as part of #1865953 and the addition of new Azure services introduced for MWA
+> ⚠️ The Choose the right services section, and the addition of new Azure services introduced for MWA, is pending review - (Multichannel API Capability experience) coverd by #1865953
 
 The Azure services you choose should support your short-term objectives. They should also prepare you to reach any long-term goals. To accomplish both, you should pick services that (1) meet your SLO, (2) require minimal re-platforming effort, and (3) support future modernization plans.
 
