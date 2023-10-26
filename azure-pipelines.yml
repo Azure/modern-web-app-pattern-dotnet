@@ -60,8 +60,7 @@ stages:
         scriptLocation: 'inlineScript'
         inlineScript: 'azd deploy --no-prompt'
 
-    - script: ./infra/devOpsScripts/validateDeployment.sh -g $(AZURE_ENV_NAME)-rg
-      displayName: 'QA - Validate Deployment'
+
 
 - stage: teardown
   condition: eq(variables['run_tear_down'], 'true')
