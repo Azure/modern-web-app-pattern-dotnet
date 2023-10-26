@@ -33,7 +33,7 @@ azd env set AZURE_LOCATION westus3
 
 > **Password Requirements**
 >
-> - The `ADMIN_PASSWORD must be between 12 and 123 characters and have 3 of the following: lower case, upper case, number, special characters.
+> - The `ADMIN_PASSWORD must be between 12 and 123 characters.
 > - The `DATABASE_PASSWRD` must be between 8 and 128 characters.
 >
 > Both passwords must meet complexity requirements (having 3 different classes of character - lower case, upper case, number, and special characters).
