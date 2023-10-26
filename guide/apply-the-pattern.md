@@ -14,7 +14,7 @@ The modern web app pattern situates code changes within the pillars of the Azure
 
 ## Principles and implementation
 
-> ⚠️ The entire principles and implementation section is pending review - (Multichannel API Capability ) covered by #1865953
+> ⚠️ The entire principles and implementation section is pending review - (Multichannel API Capability experience) covered by #1865953
 
 The following table lists the principles of the modern web app pattern and how to implement those principles in your web app. For more information, see the [modern web app pattern overview](https://aka.ms/eap/mwa/dotnet/doc).
 
@@ -35,10 +35,10 @@ A modern web application is one that is both resilient and available. Resiliency
 
 ### Queue-Based Load Leveling pattern
 > ⚠️ Pending task Queue-based Load Leveling pattern - (Queue-based ticket rendering experience) covered by  #1865952
-> This section will talk about how moving work out of the request processing stream will  create more bandwidth for request throughput by reducing long running operations that tie up CPU, RAM, and network connections. Improved request bandwidth provides additional benefits for scaling, and smoothes out edge case scenarios such as a user buying 20 tickets, that can lead to reliability problems as requests become queued during high throughput scenarios.
+> This section will talk about how moving work out of the request processing stream will  create more bandwidth for request throughput by reducing long running operations that tie up CPU, RAM, and network connections. Improved request bandwidth provides additional benefits for scaling, and will smooth out edge case scenarios such as a user buying 20 tickets, that can lead to reliability problems as requests become queued during high throughput scenarios.
 
 ### Rate Limiting pattern
-> ⚠️ Pending task Rate Limiting pattern - (Multichannel API Capability) covered by #1864671
+> ⚠️ Pending task Rate Limiting pattern - (Multichannel API Capability experience) covered by #1864671
 
 <!-- #2 Security pillar -->
 ## Security
@@ -62,7 +62,7 @@ Cloud applications are often composed of multiple Azure services. Communication 
 
 > ⚠️ The entire cost optimization section is pending review - (Business reporting experience) covered by #1865960
 
-Cost optimization principles balance business goals with budget justification to create a cost-effective web application. Cost optimization is about reducing unnecessary expenses and improving operational efficiencies. For a web app converging on the cloud, here are our recommendations for cost optimization. The code changes optimize for horizontal scale to reduce costs rather than optimizing existing business processes. The latter can lead to higher risks.
+Cost optimization principles balance business goals with budget justification to create a cost-effective web application. Cost optimization is about reducing unnecessary expenses and improving operational efficiency. Here are our recommendations for cost optimization. The code changes optimize for horizontal scale to reduce costs rather than optimizing existing business processes. The latter can lead to higher risks.
 
 *Reference implementation:* The checkout process in the reference implementation has a hot path of rendering ticket images during request processing. You can isolate the checkout process to improve cost optimization and performance efficiency, but this change is beyond the scope of the modern web app pattern. You should address it in future modernizations.
 ### Rightsize resources for each environment
@@ -124,11 +124,11 @@ resource webAppScaleRule 'Microsoft.Insights/autoscalesettings@2021-05-01-previe
 
 ### Delete non-production environments
 
-IaC is often considered an operational best practice, but it's also a way to manage costs. IaC can create and delete entire environments. You should delete non-production environments after hours or during holidays to optimize cost.
+Infrastructure as Code (IaC) is often considered an operational best practice, but it's also a way to manage costs. IaC can create and delete entire environments. You should delete non-production environments after hours or during holidays to optimize cost.
 
 ### Leverage and reuse resources for shared responsibilities
-> ⚠️Pending documentation associated with - (Multichannel API Capability scenario) covered by #1908512
-> In this section of the guide we would discuss the shared resources in the soltuion. The decision criteria that were considered and the associated cost savings from having consolidated services and the reduced operational costs associated with management and monitoring a single resource.
+> ⚠️Pending documentation associated with - (Multichannel API Capability experience) covered by #1908512
+> In this section of the guide we would discuss the shared resources in the solution. The decision criteria that were considered and the associated cost savings from having consolidated services and the reduced operational costs associated with management and monitoring a single resource.
 
 <!-- #4 Operational excellence pillar -->
 ## Operational excellence
@@ -136,15 +136,15 @@ IaC is often considered an operational best practice, but it's also a way to man
 A DevOps methodology provides a greater return on investment for application teams in the cloud. IaC is a key tenet of DevOps. The modern web app pattern requires the use of IaC to deploy application infrastructure, configure services, and set up application telemetry. Monitoring operational health requires telemetry to measure security, cost, reliability, and performance gains. The cloud offers built-in features to capture telemetry. When this telemetry is fed into a DevOps framework, it can help you rapidly improve your application.
 
 ### Gateway Routing pattern
-> ⚠️ Pending implementation and documentation associated with - (Multichannel API Capability) covered by #1864679
+> ⚠️ Pending implementation and documentation associated with - (Multichannel API Capability experience) covered by #1864679
 
 ### Distributed tracing and logging
 
-> ⚠️ Pending implementation and documentation associated with - (Business Reporting) covered by #1865961
+> ⚠️ Pending implementation and documentation associated with - (Business Reporting experience) covered by #1865961
 
 ### Load testing
 
-> ⚠️ Pending implementation and documentation associated with - (Load testing the API) covered by #1865967
+> ⚠️ Pending implementation and documentation associated with - (Load testing the API experience) covered by #1865967
 
 
 <!-- #5 Performance efficiency pillar -->
