@@ -5,7 +5,7 @@ There are two articles on the modern web app pattern for .NET. This article prov
 
 ## Architecture and code
 
-> ⚠️ The entire architecture and code section is pending review - (Multichannel API Capability experience) coverd by #1865953
+> ⚠️ The entire architecture and code section is pending review - (Multichannel API Capability experience) covered by #1865953
 
 The modern web app pattern situates code changes within the pillars of the Azure Well-Architected Framework to reinforce the close relationship between code and architecture. This guidance uses the reference implementation architecture to illustrate the principles of the modern web app pattern (*see figure 1*). The modern web app pattern is a set of principles with implementation guidance. It's not a specific architecture. It's important that your web app adheres to the principles of the pattern, not this specific architecture.
 
@@ -14,7 +14,7 @@ The modern web app pattern situates code changes within the pillars of the Azure
 
 ## Principles and implementation
 
-> ⚠️ The entire principles and implementation section is pending review - (Multichannel API Capability ) coverd by #1865953
+> ⚠️ The entire principles and implementation section is pending review - (Multichannel API Capability ) covered by #1865953
 
 The following table lists the principles of the modern web app pattern and how to implement those principles in your web app. For more information, see the [modern web app pattern overview](https://aka.ms/eap/mwa/dotnet/doc).
 
@@ -28,6 +28,7 @@ The following table lists the principles of the modern web app pattern and how t
 > ⚠️ Pending task Strangler Fig discussion - (Queue-based ticket rendering experience) covered by #1864681
 > In this section we will describe how the team approached updating the solution without rewriting it as part of the larger conversation for an application that 1) adds new features and 2) is sitting between monolith and microservices.
 
+<!-- #1 Reliability pillar -->
 ## Reliability
 
 A modern web application is one that is both resilient and available. Resiliency is the ability of the system to recover from failures and continue to function. The goal of resiliency is to return the application to a fully functioning state after a failure occurs. Availability is a measure of whether your users can access your web application when they need to. You should use the Rate Limiting and Queue-Based Load Leveling patterns as steps toward improving application reliability. These design patterns address high throughput scenarios and help your application maximize the reliability features of the cloud.
@@ -39,6 +40,7 @@ A modern web application is one that is both resilient and available. Resiliency
 ### Rate Limiting pattern
 > ⚠️ Pending task Rate Limiting pattern - (Multichannel API Capability) covered by #1864671
 
+<!-- #2 Security pillar -->
 ## Security
 
 Cloud applications are often composed of multiple Azure services. Communication between those services needs to be secure. Enforcing secure authentication, authorization, and accounting practices in your application is essential to your security posture. At this phase in the cloud journey, you should use managed identities, secrets management, and private endpoints. Here are the security recommendations for the modern web app pattern.
@@ -54,9 +56,11 @@ Cloud applications are often composed of multiple Azure services. Communication 
 ### Secure Azure resources with network isolation
 > ⚠️ Pending task Queue-based Load Leveling Pattern - (Multichannel API Capability experience) covered by  #1865959
 
+
+<!-- #3 Cost optimization pillar -->
 ## Cost optimization
 
-> ⚠️ The entire cost optimization section is pending review - (Business reporting experience) coverd by #1865960
+> ⚠️ The entire cost optimization section is pending review - (Business reporting experience) covered by #1865960
 
 Cost optimization principles balance business goals with budget justification to create a cost-effective web application. Cost optimization is about reducing unnecessary expenses and improving operational efficiencies. For a web app converging on the cloud, here are our recommendations for cost optimization. The code changes optimize for horizontal scale to reduce costs rather than optimizing existing business processes. The latter can lead to higher risks.
 
@@ -71,7 +75,7 @@ Production environments need SKUs that meet the service level agreements (SLA), 
 
 *Reference implementation:* The reference implementation uses Bicep parameters to trigger resource deployment configurations. One of these parameters tells Azure Resource Manager which SKUs to select. The following code gives Azure Cache for Redis different SKUs for production and non-production environments:
 
-> ⚠️ Pending review of code sample - (Business reporting experience) coverd by #1865960
+> ⚠️ Pending review of code sample - (Business reporting experience) covered by #1865960
 ```bicep
 var redisCacheSkuName = isProd ? 'Standard' : 'Basic'
 var redisCacheFamilyName = isProd ? 'C' : 'C'
@@ -82,7 +86,7 @@ The web app uses the Standard C1 SKU for the production environment and the Basi
 
 *Table 2. Reference implementation SKU differences between the development and production environments.*
 
-> ⚠️ Pending review of SKU - (Business reporting experience) coverd by #1865960
+> ⚠️ Pending review of SKU - (Business reporting experience) covered by #1865960
 
 |   | Standard C1 SKU | Basic C0 SKU|
 | --- | --- | --- |
@@ -122,21 +126,28 @@ resource webAppScaleRule 'Microsoft.Insights/autoscalesettings@2021-05-01-previe
 
 IaC is often considered an operational best practice, but it's also a way to manage costs. IaC can create and delete entire environments. You should delete non-production environments after hours or during holidays to optimize cost.
 
+### Leverage and reuse resources for shared responsibilities
+> ⚠️Pending documentation associated with - (Multichannel API Capability scenario) covered by #1908512
+> In this section of the guide we would discuss the shared resources in the soltuion. The decision criteria that were considered and the associated cost savings from having consolidated services and the reduced operational costs associated with management and monitoring a single resource.
+
+<!-- #4 Operational excellence pillar -->
 ## Operational excellence
 
 A DevOps methodology provides a greater return on investment for application teams in the cloud. IaC is a key tenet of DevOps. The modern web app pattern requires the use of IaC to deploy application infrastructure, configure services, and set up application telemetry. Monitoring operational health requires telemetry to measure security, cost, reliability, and performance gains. The cloud offers built-in features to capture telemetry. When this telemetry is fed into a DevOps framework, it can help you rapidly improve your application.
 
 ### Gateway Routing pattern
-> ⚠️ Pending implementation and documentation associated with - (Multichannel API Capability) coverd by #1864679
+> ⚠️ Pending implementation and documentation associated with - (Multichannel API Capability) covered by #1864679
 
 ### Distributed tracing and logging
 
-> ⚠️ Pending implementation and documentation associated with - (Business Reporting) coverd by #1865961
+> ⚠️ Pending implementation and documentation associated with - (Business Reporting) covered by #1865961
 
 ### Load testing
 
-> ⚠️ Pending implementation and documentation associated with - (Load testing the API) coverd by #1865967
+> ⚠️ Pending implementation and documentation associated with - (Load testing the API) covered by #1865967
 
+
+<!-- #5 Performance efficiency pillar -->
 ## Performance efficiency
 Performance efficiency is the ability of a workload to scale and meet the demands placed on it by users in an efficient manner. In cloud environments, a workload should anticipate increases in demand to meet business requirements. You should use the Cache-Aside pattern to manage application data while improving performance and optimizing costs.
 

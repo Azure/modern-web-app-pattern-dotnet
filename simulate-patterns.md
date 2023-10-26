@@ -5,7 +5,7 @@ In the next section we’ll evaluate the performance criteria of the web app as 
 
 ## Simulating the pattern: Queue-Based Load Leveling pattern
 
-> ⚠️ The Queue-Based Load Leveling pattern section is pending review - (Queue-based ticket rendering experience) coverd by #1865953
+> ⚠️ The Queue-Based Load Leveling pattern section is pending review - (Queue-based ticket rendering experience) covered by #1865953
 > The intent is to showcase that the site has different behavioral characteristics for the same load profile and that the additional complexity of the pattern is rewarded with cheaper hosting costs (fewer app service instances are needed to respond to the same load pattern) and builds an experience that is more responsive to end-users.
 
 Step 1: Run the load test
@@ -18,7 +18,7 @@ At this point we have a defined baseline and a new load test result which shows 
 
 ## Simulating the pattern: Cache Aside pattern with APIM
 
-> ⚠️ The Cache Aside pattern with APIM section is pending review - (Multichannel API Capability experience) coverd by #1865963
+> ⚠️ The Cache Aside pattern with APIM section is pending review - (Multichannel API Capability experience) covered by #1865963
 
 Step 1: Run the load test
 Step 2: Observe the results
@@ -32,6 +32,6 @@ The intent of this demonstration is to show how an operations team can respond t
 
 ## Simulating the pattern: End-to-end traceability and Error handling
 
-> ⚠️ The Simulating the pattern: End-to-end traceability and Error handling section is pending review - (Business reporting experience) coverd by #1865962
+> ⚠️ The Simulating the pattern: End-to-end traceability and Error handling section is pending review - (Business reporting experience) covered by #1865962
 
 In this scenario we will describe how a reader can use the dashboards, tools, and Application Insights to diagnose a bug in the web app.
