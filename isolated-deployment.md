@@ -58,9 +58,7 @@ azd provision
 
 ### Login
 
-The default username for the jump host is `azureadmin` and the password was set earlier.
-If you did not set an ADMIN_PASSWORD, then one is generated for you.  To retrieve the 
-generated password:
+The default username for the jump host is `azureadmin` and the password was set earlier. If you did not set an ADMIN_PASSWORD, then one is generated for you.  To retrieve the generated password:
 
 1. Turn off the firewall for the Azure Key Vault:
 
@@ -70,17 +68,7 @@ generated password:
     - In the **Firewalls and virtual networks** tab, select **Allow public access from all networks**.
     - Select **Apply** at the bottom of the screen.
 
-1. Give yourself permission to view secrets from Azure Key Vault:
-
-    - In the menu sidebar, select **Access control (IAM)**.
-    - Select **Add role assignment**.
-    - Find and select the **Key Vault Secrets User**, then press **Next**.
-    - Select **User, group, or service principal**, then press **+ Select members**.
-    - In the right hand sidebar that opens, search for and select your account, then press **Select**.
-    - Press **Review + assign**.
-    - Review the change, then press **Review + assign**.
-
-2. Retrieve the username and password for your jump host:
+1. Retrieve the username and password for your jump host:
 
     - Select **Secrets** from the menu sidebar.
     - Select **Jumphost--AdministratorPassword**.
@@ -151,11 +139,10 @@ cd .\modern-web-app-pattern-dotnet
 1. [Sign in to the Azure CLI](https://learn.microsoft.com/cli/azure/authenticate-azure-cli):
 
     ```shell
-    az login --scope https://graph.microsoft.com//.default
+    az login
     ```
 
-    This will open a browser to complete the authentication process.  See [the documentation](https://learn.microsoft.com/cli/azure/authenticate-azure-cli)
-    for instructions on other mechanisms to sign in to the Azure CLI.
+    This will open a browser to complete the authentication process.  See [the documentation](https://learn.microsoft.com/cli/azure/authenticate-azure-cli) for instructions on other mechanisms to sign in to the Azure CLI.
 
 1. [Sign in to azd](https://learn.microsoft.com/azure/developer/azure-developer-cli/reference#azd-auth-login):
 
