@@ -157,7 +157,7 @@ Performance efficiency is the ability of a workload to scale and meet the demand
 
 ### Use the Cache-Aside pattern
 
-> ⚠️ Pending documentation of infrastructure cache replaces code cache - (Multichannel API Capability experience) covered by #1865963
+> ⚠️ Pending documentation of infrastructure cache replaces code cache - (Multichannel API Capability experience) covered by #1865950
 
 ### Queue-based Load Leveling pattern
 

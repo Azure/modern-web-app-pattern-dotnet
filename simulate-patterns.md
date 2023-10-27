@@ -18,7 +18,7 @@ At this point we have a defined baseline and a new load test result which shows 
 
 ## Simulating the pattern: Cache Aside pattern with APIM
 
-> ⚠️ The Cache Aside pattern with APIM section is pending review - (Multichannel API Capability experience) covered by #1865963
+> ⚠️ The Cache Aside pattern with APIM section is pending review - (Multichannel API Capability experience) covered by #1865950
 
 Step 1: Run the load test
 Step 2: Observe the results
