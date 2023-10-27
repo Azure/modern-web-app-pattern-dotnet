@@ -84,19 +84,25 @@ param resourceNames object
 /*
 ** Dependencies
 */
-/* The vault must exist prior to running this module */
 @description('The resource names for the resources to be created.')
 param keyVaultName string
+
+@description('Name of the resource group containing Key Vault.')
+param resourceGroupName string
+
+// ========================================================================
+// EXISTING RESOURCES
+// ========================================================================
+
+resource resourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
+  name: resourceGroupName
+}
 
 // ========================================================================
 // AZURE MODULES
 // ========================================================================
 
-resource resourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
-  name: deploymentSettings.isNetworkIsolated ? resourceNames.hubResourceGroup : resourceNames.keyVault
-}
-
-module writeJumpHostCredentials '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isNetworkIsolated) {
+module writeJumpHostCredentialsPrimaryVault '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isNetworkIsolated) {
   name: 'hub-write-jumphost-credentials'
   scope: resourceGroup
   params: {
@@ -111,7 +117,7 @@ module writeJumpHostCredentials '../core/security/key-vault-secrets.bicep' = if 
 
 
 /* write secrets to the KV in the workload resource group when appropriate */
-module writeSqlAdminInfoToKv '../core/security/key-vault-secrets.bicep' = {
+module writeSqlAdminInfoToPrimaryVault '../core/security/key-vault-secrets.bicep' = {
   name: 'write-sql-admin-info-to-keyvault'
   scope: resourceGroup
   params: {

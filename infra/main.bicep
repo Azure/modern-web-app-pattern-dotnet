@@ -470,6 +470,7 @@ module hubPostConfiguration './modules/hub-post-config.bicep' = {
     administratorUsername: administratorUsername
     databasePassword: databasePassword
     keyVaultName: isNetworkIsolated? hubNetwork.outputs.key_vault_name : workload.outputs.key_vault_name
+    resourceGroupName: deploymentSettings.isNetworkIsolated ? resourceGroups.outputs.hub_resource_group_name : resourceGroups.outputs.workload_resource_group_name
     resourceNames: naming.outputs.resourceNames
   }
 }
