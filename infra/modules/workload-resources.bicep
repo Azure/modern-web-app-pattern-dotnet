@@ -473,8 +473,7 @@ module redis '../core/database/azure-cache-for-redis.bicep' = {
     location: deploymentSettings.location
     diagnosticSettings: diagnosticSettings
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
-    keyVaultName: keyVault.outputs.name
-    keyVaultSecretName: redisConnectionSecretName
+    // vault provided by Hub resource group when network isolated
     redisCacheSku : deploymentSettings.isProduction ? 'Standard' : 'Basic'
     redisCacheFamily : 'C'
     redisCacheCapacity: deploymentSettings.isProduction ? 1 : 0
@@ -557,8 +556,11 @@ module workloadBudget '../core/cost-management/budget.bicep' = {
 // OUTPUTS
 // ========================================================================
 
+output key_vault_name string = deploymentSettings.isNetworkIsolated ? resourceNames.keyVault : keyVault.outputs.name
+output redis_cache_name string = redis.outputs.name
+
 output owner_managed_identity_id string = ownerManagedIdentity.outputs.id
-output key_vault_name string = keyVault.outputs.name
+
 output service_managed_identities object[] = [
   { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal', role: 'owner'       }
   { principalId: appManagedIdentity.outputs.principal_id,   principalType: 'ServicePrincipal', role: 'application' }

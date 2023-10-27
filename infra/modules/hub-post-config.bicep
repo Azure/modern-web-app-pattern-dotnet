@@ -88,23 +88,44 @@ param resourceNames object
 param keyVaultName string
 
 @description('Name of the resource group containing Key Vault.')
-param resourceGroupName string
+param keyVaultResourceGroupName string
+
+@description('Name of the resource group containing Azure Cache for Redis.')
+param redisCacheName string
+
+@description('Name of the resource group containing Azure Cache for Redis.')
+param redisCacheResourceGroupName string
+
+// ========================================================================
+// VARIABLES
+// ========================================================================
+
+var redisConnectionSecretName='App--RedisCache--ConnectionString'
 
 // ========================================================================
 // EXISTING RESOURCES
 // ========================================================================
 
-resource resourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
-  name: resourceGroupName
+resource keyVaultResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
+  name: keyVaultResourceGroupName
+}
+
+resource redisCacheResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
+  name: redisCacheResourceGroupName
+}
+
+resource cache 'Microsoft.Cache/redis@2023-04-01' existing = {
+  name: redisCacheName
+  scope: redisCacheResourceGroup
 }
 
 // ========================================================================
 // AZURE MODULES
 // ========================================================================
 
-module writeJumpHostCredentialsPrimaryVault '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isNetworkIsolated) {
+module writeJumpHostCredentialsToKeyVault '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isNetworkIsolated) {
   name: 'hub-write-jumphost-credentials'
-  scope: resourceGroup
+  scope: keyVaultResourceGroup
   params: {
     name: keyVaultName
     secrets: [
@@ -115,16 +136,26 @@ module writeJumpHostCredentialsPrimaryVault '../core/security/key-vault-secrets.
   }
 }
 
-
 /* write secrets to the KV in the workload resource group when appropriate */
-module writeSqlAdminInfoToPrimaryVault '../core/security/key-vault-secrets.bicep' = {
+module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = {
   name: 'write-sql-admin-info-to-keyvault'
-  scope: resourceGroup
+  scope: keyVaultResourceGroup
   params: {
     name: keyVaultName
     secrets: [
       { key: 'Relecloud--SqlAdministratorUsername', value: administratorUsername }
       { key: 'Relecloud--SqlAdministratorPassword', value: databasePassword }
+    ]
+  }
+}
+
+module writeRedisSecret '../core/security/key-vault-secrets.bicep' = {
+  name: 'write-redis-secret-to-keyvault'
+  scope: redisCacheResourceGroup
+  params: {
+    name: keyVaultName
+    secrets: [
+      { key: redisConnectionSecretName, value: '${cache.name}.redis.cache.windows.net:6380,password=${cache.listKeys().primaryKey},ssl=True,abortConnect=False' }
     ]
   }
 }
