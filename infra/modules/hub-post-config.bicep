@@ -93,7 +93,7 @@ param keyVaultName string
 // ========================================================================
 
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
-  name: resourceNames.hubResourceGroup
+  name: deploymentSettings.isNetworkIsolated ? resourceNames.hubResourceGroup : resourceNames.keyVault
 }
 
 module writeJumpHostCredentials '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isNetworkIsolated) {
