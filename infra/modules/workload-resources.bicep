@@ -248,7 +248,7 @@ module writeAppConfigValues './app-config-values.bicep' = {
     appConfigurationStoreName: appConfiguration.outputs.name
     devopsIdentityName: ownerManagedIdentityRoleAssignment.outputs.identity_name
     enablePublicNetworkAccess: deploymentSettings.isNetworkIsolated ? false : true
-    keyVaultUri: keyVault.outputs.vaultUri
+    keyVaultName: resourceNames.keyVault
     location: deploymentSettings.location
     relecloudApiBaseUri: 'https://${frontDoorSettings.hostname}/api'
     redisConnectionSecretName: redisConnectionSecretName
