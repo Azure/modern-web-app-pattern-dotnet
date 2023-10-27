@@ -258,9 +258,10 @@ module writeAppConfigValues './app-config-values.bicep' = {
 }
 
 /*
-** Key Vault - used for storing configuration secrets
+** Key Vault - used for storing configuration secrets.
+** This vault is deployed with the workload when not using Network Isolation.
 */
-module keyVault '../core/security/key-vault.bicep' = {
+module keyVault '../core/security/key-vault.bicep' = if (!deploymentSettings.isNetworkIsolated) {
   name: 'workload-key-vault'
   scope: resourceGroup
   params: {
@@ -273,17 +274,11 @@ module keyVault '../core/security/key-vault.bicep' = {
 
     // Settings
     diagnosticSettings: diagnosticSettings
-    enablePublicNetworkAccess: !deploymentSettings.isNetworkIsolated
+    enablePublicNetworkAccess: true
     ownerIdentities: [
       { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
     ]
-    privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
-      dnsResourceGroupName: dnsResourceGroupName
-      name: resourceNames.keyVaultPrivateEndpoint
-      resourceGroupName: resourceNames.spokeResourceGroup
-      subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
-    } : null
     readerIdentities: [
       { principalId: appManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
     ]
@@ -341,17 +336,6 @@ module sqlDatabase '../core/database/sql-database.bicep' = {
   }
 }
 
-module writeSqlAdminInfo '../core/security/key-vault-secrets.bicep' = if (createSqlServer) {
-  name: 'write-sql-admin-info-to-keyvault'
-  scope: resourceGroup
-  params: {
-    name: keyVault.outputs.name
-    secrets: [
-      { key: 'Relecloud--SqlAdministratorUsername', value: administratorUsername }
-      { key: 'Relecloud--SqlAdministratorPassword', value: databasePassword }
-    ]
-  }
-}
 
 /*
 ** App Services
@@ -574,7 +558,7 @@ module workloadBudget '../core/cost-management/budget.bicep' = {
 // ========================================================================
 
 output owner_managed_identity_id string = ownerManagedIdentity.outputs.id
-
+output key_vault_name string = keyVault.outputs.name
 output service_managed_identities object[] = [
   { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal', role: 'owner'       }
   { principalId: appManagedIdentity.outputs.principal_id,   principalType: 'ServicePrincipal', role: 'application' }

@@ -88,7 +88,6 @@ var defaultResourceNames = {
   hubFirewall: 'afw-${resourceToken}'
   hubFirewallPublicIpAddress: 'pip-afw-${resourceToken}'
   hubJumphost: 'vm-jump-${resourceToken}'
-  hubKeyVault: 'kv-hub-${resourceToken}'
   hubResourceGroup: '${resourceGroupPrefix}-hub'
   hubRouteTable: 'rt-${resourceToken}'
   hubSubnetBastionHost: 'AzureBastionSubnet'
@@ -164,7 +163,6 @@ output resourceNames object = {
   hubFirewall: contains(overrides, 'hubFirewall') && !empty(overrides.hubFirewall) ? overrides.hubFirewall : defaultResourceNames.hubFirewall
   hubFirewallPublicIpAddress: contains(overrides, 'hubFirewallPublicIpAddress') && !empty(overrides.hubFirewallPublicIpAddress) ? overrides.hubFirewallPublicIpAddress : defaultResourceNames.hubFirewallPublicIpAddress
   hubJumphost: contains(overrides, 'hubJumphost') && !empty(overrides.hubJumphost) ? overrides.hubJumphost : defaultResourceNames.hubJumphost
-  hubKeyVault: contains(overrides, 'hubKeyVault') && !empty(overrides.hubKeyVault) ? overrides.hubKeyVault : defaultResourceNames.hubKeyVault
   hubResourceGroup: contains(overrides, 'hubResourceGroup') && !empty(overrides.hubResourceGroup) ? overrides.hubResourceGroup : defaultResourceNames.hubResourceGroup
   hubRouteTable: contains(overrides, 'hubRouteTable') && !empty(overrides.hubRouteTable) ? overrides.hubRouteTable : defaultResourceNames.hubRouteTable
   hubSubnetBastionHost: contains(overrides, 'hubSubnetBastionHost') && !empty(overrides.hubSubnetBastionHost) ? overrides.hubSubnetBastionHost : defaultResourceNames.hubSubnetBastionHost

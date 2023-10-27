@@ -277,8 +277,6 @@ module hubNetwork './modules/hub-network.bicep' = if (willDeployHubNetwork) {
     logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
 
     // Settings
-    administratorPassword: administratorPasswordValue
-    administratorUsername: administratorUsername
     enableBastionHost: true
     enableDDoSProtection: deploymentSettings.isProduction
     enableFirewall: true
@@ -462,6 +460,18 @@ module workload2 './modules/workload-resources.bicep' =  if (isMultiLocationDepl
     spokeNetwork2
     privateDnsZones
   ]
+}
+
+module hubPostConfiguration './modules/hub-post-config.bicep' = {
+  name: '${prefix}-hub-postconfig'
+  params: {
+    deploymentSettings: deploymentSettings
+    administratorPassword: administratorPassword
+    administratorUsername: administratorUsername
+    databasePassword: databasePassword
+    keyVaultName: isNetworkIsolated? hubNetwork.outputs.key_vault_name : workload.outputs.key_vault_name
+    resourceNames: naming.outputs.resourceNames
+  }
 }
 
 /*

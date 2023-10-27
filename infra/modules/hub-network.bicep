@@ -72,18 +72,6 @@ type DiagnosticSettings = {
 // PARAMETERS
 // ========================================================================
 
-/*
-** Passwords - specify these!
-*/
-@secure()
-@minLength(12)
-@description('The password for the administrator account.  This will be used for the jump host, SQL server, and anywhere else a password is needed for creating a resource.')
-param administratorPassword string = newGuid()
-
-@minLength(8)
-@description('The username for the administrator account on the jump host.')
-param administratorUsername string = 'adminuser'
-
 @description('The deployment settings to use for this deployment.')
 param deploymentSettings DeploymentSettings
 
@@ -394,12 +382,16 @@ module bastionHost '../core/network/bastion-host.bicep' = if (enableBastionHost)
   }
 }
 
-
-module operationsKeyVault '../core/security/key-vault.bicep' = if (enableJumpHost) {
+/*
+  The vault will always be deployed because it stores Microsoft Entra app registration details.
+  The dynamic part of this feature is whether or not the Vault is located in the Hub (yes, when Network Isolated)
+  or if it is located in the Workload resource group (yes, when Network Isolation is not enabled).
+ */
+module operationsKeyVault '../core/security/key-vault.bicep' = {
   name: 'operations-key-vault'
   scope: resourceGroup
   params: {
-    name: resourceNames.hubKeyVault
+    name: resourceNames.keyVault
     location: deploymentSettings.location
     tags: moduleTags
 
@@ -408,21 +400,9 @@ module operationsKeyVault '../core/security/key-vault.bicep' = if (enableJumpHos
 
     // Settings
     diagnosticSettings: diagnosticSettings
+    enablePublicNetworkAccess: true
     ownerIdentities: [
       { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
-    ]
-  }
-}
-
-module writeJumpHostCredentials '../core/security/key-vault-secrets.bicep' = if (enableJumpHost) {
-  name: 'hub-write-jumphost-credentials'
-  scope: resourceGroup
-  params: {
-    name: operationsKeyVault.outputs.name
-    secrets: [
-      { key: 'Jumphost--AdministratorPassword', value: administratorPassword          }
-      { key: 'Jumphost--AdministratorUsername', value: administratorUsername          }
-      { key: 'Jumphost--ComputerName',          value: resourceNames.hubJumphost }
     ]
   }
 }
@@ -452,4 +432,4 @@ output firewall_ip_address string = enableFirewall ? firewall.outputs.internal_i
 output route_table_id string = enableFirewall ? routeTable.outputs.id : ''
 output virtual_network_id string = virtualNetwork.outputs.id
 output virtual_network_name string = virtualNetwork.outputs.name
-output key_vault_id string = enableJumpHost ? operationsKeyVault.outputs.id : ''
+output key_vault_name string = enableJumpHost ? operationsKeyVault.outputs.name : ''
