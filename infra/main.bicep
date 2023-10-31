@@ -472,7 +472,7 @@ module hubPostConfiguration './modules/hub-post-config.bicep' = {
     keyVaultName: isNetworkIsolated? hubNetwork.outputs.key_vault_name : workload.outputs.key_vault_name
     keyVaultResourceGroupName: deploymentSettings.isNetworkIsolated ? resourceGroups.outputs.hub_resource_group_name : resourceGroups.outputs.workload_resource_group_name
     redisCacheName: workload.outputs.redis_cache_name
-    redisCacheResourceGroupName: resourceGroups.outputs.workload_resource_group_name
+    redisCacheResourceGroupName: isNetworkIsolated ? resourceGroups.outputs.hub_resource_group_name : resourceGroups.outputs.workload_resource_group_name
     resourceNames: naming.outputs.resourceNames
   }
 }
