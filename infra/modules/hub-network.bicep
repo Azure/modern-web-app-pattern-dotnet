@@ -338,7 +338,7 @@ module firewall '../core/network/firewall.bicep' = if (enableFirewall) {
     // Settings
     diagnosticSettings: diagnosticSettings
     publicIpAddressName: resourceNames.hubFirewallPublicIpAddress
-    sku: 'Standard'
+    sku: deploymentSettings.isProduction ? 'Standard' : 'Basic'
     threatIntelMode: 'Deny'
     zoneRedundant: deploymentSettings.isProduction
 
