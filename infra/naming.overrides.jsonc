@@ -16,6 +16,7 @@
     // "hubSubnetBastionHost": "",
     // "hubSubnetFirewall": "",
     // "hubSubnetJumphost": "",
+    // "hubSubnetPrivateEndpoint": "",
     // "hubVirtualNetwork": "",
   
     // Spoke network resources

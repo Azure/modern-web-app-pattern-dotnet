@@ -279,6 +279,12 @@ module keyVault '../core/security/key-vault.bicep' = if (!deploymentSettings.isN
       { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
     ]
+    privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
+      dnsResourceGroupName: dnsResourceGroupName
+      name: resourceNames.keyVaultPrivateEndpoint
+      resourceGroupName: resourceNames.spokeResourceGroup
+      subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+    } : null
     readerIdentities: [
       { principalId: appManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
     ]

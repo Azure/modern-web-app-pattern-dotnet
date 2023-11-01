@@ -133,12 +133,20 @@ var subnetPrefixes = [ for i in range(0, 16): cidrSubnet(addressPrefix, 26, i)]
 var bastionHostSubnetDefinition = {
   name: resourceNames.hubSubnetBastionHost
   properties: {
-    addressPrefix: subnetPrefixes[1]
+    addressPrefix: subnetPrefixes[2]
     privateEndpointNetworkPolicies: 'Disabled'
   }
 }
 
 var firewallSubnetDefinition = {
+  name: resourceNames.hubSubnetFirewall
+  properties: {
+    addressPrefix: subnetPrefixes[1]
+    privateEndpointNetworkPolicies: 'Disabled'
+  }
+}
+
+var privateEndpointSubnet = {
   name: resourceNames.hubSubnetFirewall
   properties: {
     addressPrefix: subnetPrefixes[0]
@@ -147,6 +155,7 @@ var firewallSubnetDefinition = {
 }
 
 var subnets = union(
+  [privateEndpointSubnet],
   enableBastionHost ? [bastionHostSubnetDefinition] : [],
   enableFirewall ? [firewallSubnetDefinition] : []
 )
@@ -387,8 +396,8 @@ module bastionHost '../core/network/bastion-host.bicep' = if (enableBastionHost)
   The dynamic part of this feature is whether or not the Vault is located in the Hub (yes, when Network Isolated)
   or if it is located in the Workload resource group (yes, when Network Isolation is not enabled).
  */
-module operationsKeyVault '../core/security/key-vault.bicep' = {
-  name: 'operations-key-vault'
+module sharedKeyVault '../core/security/key-vault.bicep' = {
+  name: 'shared-key-vault'
   scope: resourceGroup
   params: {
     name: resourceNames.keyVault
@@ -404,6 +413,12 @@ module operationsKeyVault '../core/security/key-vault.bicep' = {
     ownerIdentities: [
       { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
     ]
+    privateEndpointSettings: {
+      dnsResourceGroupName: resourceNames.hubResourceGroup
+      name: resourceNames.keyVaultPrivateEndpoint
+      resourceGroupName: resourceNames.spokeResourceGroup
+      subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+    }
   }
 }
 
@@ -432,4 +447,4 @@ output firewall_ip_address string = enableFirewall ? firewall.outputs.internal_i
 output route_table_id string = enableFirewall ? routeTable.outputs.id : ''
 output virtual_network_id string = virtualNetwork.outputs.id
 output virtual_network_name string = virtualNetwork.outputs.name
-output key_vault_name string = enableJumpHost ? operationsKeyVault.outputs.name : ''
+output key_vault_name string = enableJumpHost ? sharedKeyVault.outputs.name : ''

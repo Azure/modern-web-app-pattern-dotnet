@@ -158,3 +158,7 @@ module writeRedisSecret '../core/security/key-vault-secrets.bicep' = {
     ]
   }
 }
+
+//TODO - give app permission to read shared KV secrets
+//TODO - save kv redis secret PER region
+//TODO - modify app configuration to map to regional redis secret
