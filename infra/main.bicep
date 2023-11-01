@@ -462,7 +462,7 @@ module workload2 './modules/workload-resources.bicep' =  if (isMultiLocationDepl
   ]
 }
 
-module hubPostConfiguration './modules/hub-post-config.bicep' = {
+module hubPostConfiguration './modules/hub-post-config.bicep' = if (deploymentSettings.isNetworkIsolated) {
   name: '${prefix}-hub-postconfig'
   params: {
     deploymentSettings: deploymentSettings

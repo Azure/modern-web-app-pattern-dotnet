@@ -336,6 +336,18 @@ module sqlDatabase '../core/database/sql-database.bicep' = {
   }
 }
 
+/* write secrets to the KV in the workload resource group when appropriate */
+module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = if (!deploymentSettings.isNetworkIsolated) {
+  name: 'write-sql-admin-info-to-keyvault'
+  scope: resourceGroup
+  params: {
+    name: !deploymentSettings.isNetworkIsolated ? keyVault.outputs.name : ''
+    secrets: [
+      { key: 'Relecloud--SqlAdministratorUsername', value: administratorUsername }
+      { key: 'Relecloud--SqlAdministratorPassword', value: databasePassword }
+    ]
+  }
+}
 
 /*
 ** App Services

@@ -106,7 +106,7 @@ var redisConnectionSecretName='App--RedisCache--ConnectionString'
 // EXISTING RESOURCES
 // ========================================================================
 
-resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = if (deploymentSettings.isNetworkIsolated) {
+resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
   name: hubResourceGroupName
 }
 
@@ -116,7 +116,7 @@ resource workloadResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' e
 
 resource cache 'Microsoft.Cache/redis@2023-04-01' existing = {
   name: redisCacheName
-  scope: deploymentSettings.isNetworkIsolated ? hubResourceGroup : workloadResourceGroup
+  scope: workloadResourceGroup
 }
 
 // ========================================================================
@@ -136,7 +136,6 @@ module writeJumpHostCredentialsToKeyVault '../core/security/key-vault-secrets.bi
   }
 }
 
-/* write secrets to the KV in the workload resource group when appropriate */
 module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = {
   name: 'write-sql-admin-info-to-keyvault'
   scope: hubResourceGroup
@@ -151,7 +150,7 @@ module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = 
 
 module writeRedisSecret '../core/security/key-vault-secrets.bicep' = {
   name: 'write-redis-secret-to-keyvault'
-  scope: deploymentSettings.isNetworkIsolated ? hubResourceGroup : workloadResourceGroup
+  scope: hubResourceGroup
   params: {
     name: keyVaultName
     secrets: [
