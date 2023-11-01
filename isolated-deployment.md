@@ -194,3 +194,6 @@ azd deploy
 ```
 
 It takes approximately 5 minutes to deploy the code.
+
+> **WARNING**
+> In some scenarios, the DNS entries for resources secured with Private Endpoint may have been cached incorrectly. It can take up to 10-minutes for the DNS cache to expire.
