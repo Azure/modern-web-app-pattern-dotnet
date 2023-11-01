@@ -87,14 +87,14 @@ param resourceNames object
 @description('The resource names for the resources to be created.')
 param keyVaultName string
 
-@description('Name of the resource group containing Key Vault.')
-param keyVaultResourceGroupName string
+@description('Name of the hub resource group.')
+param hubResourceGroupName string
 
 @description('Name of the resource group containing Azure Cache for Redis.')
 param redisCacheName string
 
 @description('Name of the resource group containing Azure Cache for Redis.')
-param redisCacheResourceGroupName string
+param workloadResourceGroupName string
 
 // ========================================================================
 // VARIABLES
@@ -106,17 +106,17 @@ var redisConnectionSecretName='App--RedisCache--ConnectionString'
 // EXISTING RESOURCES
 // ========================================================================
 
-resource keyVaultResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
-  name: keyVaultResourceGroupName
+resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = if (deploymentSettings.isNetworkIsolated) {
+  name: hubResourceGroupName
 }
 
-resource redisCacheResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
-  name: redisCacheResourceGroupName
+resource workloadResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
+  name: workloadResourceGroupName
 }
 
 resource cache 'Microsoft.Cache/redis@2023-04-01' existing = {
   name: redisCacheName
-  scope: redisCacheResourceGroup
+  scope: deploymentSettings.isNetworkIsolated ? hubResourceGroup : workloadResourceGroup
 }
 
 // ========================================================================
@@ -125,7 +125,7 @@ resource cache 'Microsoft.Cache/redis@2023-04-01' existing = {
 
 module writeJumpHostCredentialsToKeyVault '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isNetworkIsolated) {
   name: 'hub-write-jumphost-credentials'
-  scope: keyVaultResourceGroup
+  scope: hubResourceGroup
   params: {
     name: keyVaultName
     secrets: [
@@ -139,7 +139,7 @@ module writeJumpHostCredentialsToKeyVault '../core/security/key-vault-secrets.bi
 /* write secrets to the KV in the workload resource group when appropriate */
 module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = {
   name: 'write-sql-admin-info-to-keyvault'
-  scope: keyVaultResourceGroup
+  scope: hubResourceGroup
   params: {
     name: keyVaultName
     secrets: [
@@ -151,7 +151,7 @@ module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = 
 
 module writeRedisSecret '../core/security/key-vault-secrets.bicep' = {
   name: 'write-redis-secret-to-keyvault'
-  scope: redisCacheResourceGroup
+  scope: deploymentSettings.isNetworkIsolated ? hubResourceGroup : workloadResourceGroup
   params: {
     name: keyVaultName
     secrets: [

@@ -469,26 +469,11 @@ module hubPostConfiguration './modules/hub-post-config.bicep' = {
     administratorPassword: administratorPassword
     administratorUsername: administratorUsername
     databasePassword: databasePassword
+    hubResourceGroupName: resourceGroups.outputs.hub_resource_group_name
     keyVaultName: isNetworkIsolated? hubNetwork.outputs.key_vault_name : workload.outputs.key_vault_name
-    keyVaultResourceGroupName: deploymentSettings.isNetworkIsolated ? resourceGroups.outputs.hub_resource_group_name : resourceGroups.outputs.workload_resource_group_name
     redisCacheName: workload.outputs.redis_cache_name
-    redisCacheResourceGroupName: isNetworkIsolated ? resourceGroups.outputs.hub_resource_group_name : resourceGroups.outputs.workload_resource_group_name
     resourceNames: naming.outputs.resourceNames
-  }
-}
-
-module hubPostConfiguration2 './modules/hub-post-config.bicep' = if (isMultiLocationDeployment) {
-  name: '${prefix}-hub-postconfig2'
-  params: {
-    deploymentSettings: deploymentSettings
-    administratorPassword: administratorPassword
-    administratorUsername: administratorUsername
-    databasePassword: databasePassword
-    keyVaultName: isNetworkIsolated? hubNetwork.outputs.key_vault_name : workload.outputs.key_vault_name
-    keyVaultResourceGroupName: deploymentSettings.isNetworkIsolated ? resourceGroups.outputs.hub_resource_group_name : resourceGroups.outputs.workload_resource_group_name
-    redisCacheName: workload2.outputs.redis_cache_name
-    redisCacheResourceGroupName: resourceGroups2.outputs.workload_resource_group_name
-    resourceNames: naming.outputs.resourceNames
+    workloadResourceGroupName: resourceGroups.outputs.workload_resource_group_name
   }
 }
 
