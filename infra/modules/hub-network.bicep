@@ -147,7 +147,7 @@ var firewallSubnetDefinition = {
 }
 
 var privateEndpointSubnet = {
-  name: resourceNames.hubSubnetFirewall
+  name: resourceNames.hubSubnetPrivateEndpoint
   properties: {
     addressPrefix: subnetPrefixes[0]
     privateEndpointNetworkPolicies: 'Disabled'
@@ -414,10 +414,10 @@ module sharedKeyVault '../core/security/key-vault.bicep' = {
       { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
     ]
     privateEndpointSettings: {
-      dnsResourceGroupName: resourceNames.hubResourceGroup
+      dnsResourceGroupName: resourceGroup.name
       name: resourceNames.keyVaultPrivateEndpoint
-      resourceGroupName: resourceNames.spokeResourceGroup
-      subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+      resourceGroupName: resourceGroup.name
+      subnetId: virtualNetwork.outputs.subnets[privateEndpointSubnet.name].id
     }
   }
 }
@@ -434,6 +434,23 @@ module hubBudget '../core/cost-management/budget.bicep' = {
     resourceGroups: [
       resourceGroup.name
     ]
+  }
+}
+
+var virtualNetworkLinks = [
+  {
+    vnetName: virtualNetwork.outputs.name
+    vnetId: virtualNetwork.outputs.id
+    registrationEnabled: false
+  }
+]
+
+module privateDnsZones './private-dns-zones.bicep' = {
+  name: 'hub-private-dns-zone-deploy'
+  params:{
+    deploymentSettings: deploymentSettings
+    hubResourceGroupName: resourceGroup.name
+    virtualNetworkLinks: virtualNetworkLinks
   }
 }
 

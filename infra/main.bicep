@@ -458,7 +458,6 @@ module workload2 './modules/workload-resources.bicep' =  if (isMultiLocationDepl
   dependsOn: [
     resourceGroups2
     spokeNetwork2
-    privateDnsZones
   ]
 }
 
@@ -499,28 +498,6 @@ module buildAgent './modules/build-agent.bicep' = if (installBuildAgent) {
     adoToken: adoToken
     githubRepositoryUrl: githubRepositoryUrl
     githubToken: githubToken
-  }
-}
-
-var virtualNetworkLinks = [
-  {
-    vnetName: hubNetwork.outputs.virtual_network_name
-    vnetId: hubNetwork.outputs.virtual_network_id
-    registrationEnabled: false
-  }
-  {
-    vnetName: spokeNetwork.outputs.virtual_network_name
-    vnetId: spokeNetwork.outputs.virtual_network_id
-    registrationEnabled: false
-  }
-]
-
-module privateDnsZones './modules/private-dns-zones.bicep' = if (willDeployHubNetwork) {
-  name: '${prefix}-private-dns-zone-deploy'
-  params:{
-    deploymentSettings: deploymentSettings
-    hubResourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : ''
-    virtualNetworkLinks: willDeployHubNetwork ? virtualNetworkLinks : []
   }
 }
 

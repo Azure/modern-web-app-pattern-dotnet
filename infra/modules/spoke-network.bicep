@@ -378,6 +378,24 @@ module jumphost '../core/compute/windows-jumphost.bicep' = if (enableJumpHost) {
   }
 }
 
+var virtualNetworkLinks = [
+  {
+    vnetName: virtualNetwork.outputs.name
+    vnetId: virtualNetwork.outputs.id
+    registrationEnabled: false
+  }
+]
+
+module privateDnsZones './private-dns-zones.bicep' = {
+  name: 'hub-private-dns-zone-deploy'
+  params:{
+    createDnsZone: false //we are reusing the existing DNS zone and linking a vnet
+    deploymentSettings: deploymentSettings
+    hubResourceGroupName: resourceNames.hubResourceGroup
+    virtualNetworkLinks: virtualNetworkLinks
+  }
+}
+
 // ========================================================================
 // OUTPUTS
 // ========================================================================
