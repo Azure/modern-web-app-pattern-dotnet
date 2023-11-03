@@ -151,7 +151,7 @@ var budget = {
 }
 var budgetAmount = reduce(map(items(budget), (obj) => obj.value), 0, (total, amount) => total + amount)
 
-var redisConnectionSecretName='App--RedisCache--ConnectionString'
+var redisConnectionSecretName= deploymentSettings.isPrimaryLocation ? 'App--RedisCache--ConnectionString-Primary' : 'App--RedisCache--ConnectionString-Secondary'
 
 // describes the Azure Storage container where ticket images will be stored after they are rendered during purchase
 var ticketContainerName = 'tickets'
@@ -578,6 +578,7 @@ output key_vault_name string = deploymentSettings.isNetworkIsolated ? resourceNa
 output redis_cache_name string = redis.outputs.name
 
 output owner_managed_identity_id string = ownerManagedIdentity.outputs.id
+output app_managed_identity_id string = appManagedIdentity.outputs.id
 
 output service_managed_identities object[] = [
   { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal', role: 'owner'       }
