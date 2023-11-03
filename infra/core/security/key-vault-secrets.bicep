@@ -20,7 +20,6 @@ type KeyVaultSecret = {
   key: string
 
   @description('The value of the secret')
-  @secure()
   value: string
 }
 
