@@ -94,29 +94,50 @@ param hubResourceGroupName string
 param redisCacheName string
 
 @description('Name of the resource group containing Azure Cache for Redis.')
-param workloadResourceGroupName string
+param workloadResourceGroupNamePrimary string
+
+@description('Name of the resource group containing Azure Cache for Redis.')
+param workloadResourceGroupNameSecondary string
+
+@description('List of user assigned managed identities that will receive Secrets User role to the shared key vault')
+param readerIdentities object[]
 
 // ========================================================================
 // VARIABLES
 // ========================================================================
 
-var redisConnectionSecretName='App--RedisCache--ConnectionString'
+var redisCacheSecretNamePrimary = 'App--RedisCache--ConnectionString-Primary'
+var redisCacheSecretNameSecondary = 'App--RedisCache--ConnectionString-Secondary'
+var azureAdClientSecret = 'AzureAd--ClientSecret'
+
+var multiRegionalSecrets = deploymentSettings.isMultiLocationDeployment ? [redisCacheSecretNameSecondary] : []
+
+var listOfSecretNames = union([
+    redisCacheSecretNamePrimary
+    azureAdClientSecret
+  ], multiRegionalSecrets)
 
 // ========================================================================
 // EXISTING RESOURCES
 // ========================================================================
 
-resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
+resource existingHubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
   name: hubResourceGroupName
 }
 
-resource workloadResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
-  name: workloadResourceGroupName
+resource existingPrimaryRedisCache 'Microsoft.Cache/redis@2023-04-01' existing = {
+  name: redisCacheName
+  scope: resourceGroup(workloadResourceGroupNamePrimary)
 }
 
-resource cache 'Microsoft.Cache/redis@2023-04-01' existing = {
+resource existingSecondaryRediscache 'Microsoft.Cache/redis@2023-04-01' existing = if (deploymentSettings.isMultiLocationDeployment) {
   name: redisCacheName
-  scope: workloadResourceGroup
+  scope: resourceGroup(workloadResourceGroupNameSecondary)
+}
+
+resource existingKeyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
+  name: keyVaultName
+  scope: existingHubResourceGroup
 }
 
 // ========================================================================
@@ -125,9 +146,9 @@ resource cache 'Microsoft.Cache/redis@2023-04-01' existing = {
 
 module writeJumpHostCredentialsToKeyVault '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isNetworkIsolated) {
   name: 'hub-write-jumphost-credentials'
-  scope: hubResourceGroup
+  scope: existingHubResourceGroup
   params: {
-    name: keyVaultName
+    name: existingKeyVault.name
     secrets: [
       { key: 'Jumphost--AdministratorPassword', value: administratorPassword          }
       { key: 'Jumphost--AdministratorUsername', value: administratorUsername          }
@@ -138,9 +159,9 @@ module writeJumpHostCredentialsToKeyVault '../core/security/key-vault-secrets.bi
 
 module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = {
   name: 'write-sql-admin-info-to-keyvault'
-  scope: hubResourceGroup
+  scope: existingHubResourceGroup
   params: {
-    name: keyVaultName
+    name: existingKeyVault.name
     secrets: [
       { key: 'Relecloud--SqlAdministratorUsername', value: administratorUsername }
       { key: 'Relecloud--SqlAdministratorPassword', value: databasePassword }
@@ -148,17 +169,53 @@ module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = 
   }
 }
 
-module writeRedisSecret '../core/security/key-vault-secrets.bicep' = {
-  name: 'write-redis-secret-to-keyvault'
-  scope: hubResourceGroup
+module writePrimaryRedisSecret '../core/security/key-vault-secrets.bicep' = {
+  name: 'write-primary-redis-secret-to-keyvault'
+  scope: existingHubResourceGroup
   params: {
-    name: keyVaultName
+    name: existingKeyVault.name
     secrets: [
-      { key: redisConnectionSecretName, value: '${cache.name}.redis.cache.windows.net:6380,password=${cache.listKeys().primaryKey},ssl=True,abortConnect=False' }
+      { key: redisCacheSecretNamePrimary, value: '${existingPrimaryRedisCache.name}.redis.cache.windows.net:6380,password=${existingPrimaryRedisCache.listKeys().primaryKey},ssl=True,abortConnect=False' }
     ]
   }
 }
 
-//TODO - give app permission to read shared KV secrets
-//TODO - save kv redis secret PER region
-//TODO - modify app configuration to map to regional redis secret
+module writeSecondaryRedisSecret '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isMultiLocationDeployment) {
+  name: 'write-secondary-redis-secret-to-keyvault'
+  scope: existingHubResourceGroup
+  params: {
+    name: existingKeyVault.name
+    secrets: [
+      { key: redisCacheSecretNameSecondary, value: '${existingSecondaryRediscache.name}.redis.cache.windows.net:6380,password=${existingSecondaryRediscache.listKeys().primaryKey},ssl=True,abortConnect=False' }
+    ]
+  }
+}
+
+// ======================================================================== //
+// Azure AD Application Registration placeholders
+// ======================================================================== //
+
+module writeSecondaryAppRegistrationSecrets '../core/security/key-vault-secrets.bicep' = {
+  name: 'write-app-registration-secrets-to-keyvault'
+  scope: existingHubResourceGroup
+  params: {
+    name: existingKeyVault.name
+    secrets: [
+      { key: azureAdClientSecret, value: 'placeholder-populated-by-script' }
+    ]
+  }
+}
+
+// ======================================================================== //
+// Grant reader permissions for the web apps to access the key vault
+// ======================================================================== //
+
+module grantSecretsUserAccessBySecretName './grant-secret-user.bicep' = [ for secretName in listOfSecretNames: {
+  scope: existingHubResourceGroup
+  name: 'grant-kv-access-for-${secretName}'
+  params: {
+    keyVaultName: existingKeyVault.name
+    readerIdentities: readerIdentities
+    secretName: secretName
+  }
+}]

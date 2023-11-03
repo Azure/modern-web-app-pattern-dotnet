@@ -461,7 +461,7 @@ module workload2 './modules/workload-resources.bicep' =  if (isMultiLocationDepl
   ]
 }
 
-module hubPostConfiguration './modules/hub-post-config.bicep' = if (deploymentSettings.isNetworkIsolated) {
+module workloadPostConfiguration './modules/workload-post-config.bicep' = if (deploymentSettings.isNetworkIsolated) {
   name: '${prefix}-hub-postconfig'
   params: {
     deploymentSettings: deploymentSettings
@@ -470,9 +470,11 @@ module hubPostConfiguration './modules/hub-post-config.bicep' = if (deploymentSe
     databasePassword: databasePassword
     hubResourceGroupName: resourceGroups.outputs.hub_resource_group_name
     keyVaultName: isNetworkIsolated? hubNetwork.outputs.key_vault_name : workload.outputs.key_vault_name
+    readerIdentities: union([workload.outputs.app_managed_identity_id], deploymentSettings.isMultiLocationDeployment ? [workload.outputs.app_managed_identity_id] : [])
     redisCacheName: workload.outputs.redis_cache_name
     resourceNames: naming.outputs.resourceNames
-    workloadResourceGroupName: resourceGroups.outputs.workload_resource_group_name
+    workloadResourceGroupNamePrimary: resourceGroups.outputs.workload_resource_group_name
+    workloadResourceGroupNameSecondary: isMultiLocationDeployment ? resourceGroups2.outputs.workload_resource_group_name : ''
   }
 }
 
