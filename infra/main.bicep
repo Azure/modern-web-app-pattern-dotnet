@@ -470,7 +470,7 @@ module workloadPostConfiguration './modules/workload-post-config.bicep' = if (de
     databasePassword: databasePassword
     hubResourceGroupName: resourceGroups.outputs.hub_resource_group_name
     keyVaultName: isNetworkIsolated? hubNetwork.outputs.key_vault_name : workload.outputs.key_vault_name
-    readerIdentities: union([workload.outputs.app_managed_identity_id], deploymentSettings.isMultiLocationDeployment ? [workload.outputs.app_managed_identity_id] : [])
+    readerIdentities: union([workload.outputs.service_managed_identities], deploymentSettings.isMultiLocationDeployment ? [workload2.outputs.service_managed_identities] : [])
     redisCacheName: workload.outputs.redis_cache_name
     resourceNames: naming.outputs.resourceNames
     workloadResourceGroupNamePrimary: resourceGroups.outputs.workload_resource_group_name
