@@ -132,7 +132,7 @@ resource existingPrimaryRedisCache 'Microsoft.Cache/redis@2023-04-01' existing =
 
 resource existingSecondaryRediscache 'Microsoft.Cache/redis@2023-04-01' existing = if (deploymentSettings.isMultiLocationDeployment) {
   name: redisCacheName
-  scope: resourceGroup(workloadResourceGroupNameSecondary)
+  scope: resourceGroup(deploymentSettings.isMultiLocationDeployment ? workloadResourceGroupNameSecondary : workloadResourceGroupNamePrimary)
 }
 
 resource existingKeyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
