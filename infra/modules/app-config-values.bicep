@@ -156,7 +156,7 @@ resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01
       }
       {
         name: 'KEY_VAULT_URI'
-        value: 'https://${keyVaultName}.${environment().suffixes.keyvaultDns}'
+        value: 'https://${keyVaultName}${environment().suffixes.keyvaultDns}'
       }
       {
         name: 'LOGIN_ENDPOINT'
