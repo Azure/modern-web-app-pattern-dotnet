@@ -90,8 +90,11 @@ param keyVaultName string
 @description('Name of the hub resource group.')
 param hubResourceGroupName string
 
-@description('Name of the resource group containing Azure Cache for Redis.')
-param redisCacheName string
+@description('Name of the primary Azure Cache for Redis.')
+param redisCacheNamePrimary string
+
+@description('Name of the second Azure Cache for Redis.')
+param redisCacheNameSecondary string
 
 @description('Name of the resource group containing Azure Cache for Redis.')
 param workloadResourceGroupNamePrimary string
@@ -136,12 +139,12 @@ resource existingHubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01
 }
 
 resource existingPrimaryRedisCache 'Microsoft.Cache/redis@2023-04-01' existing = {
-  name: redisCacheName
+  name: redisCacheNamePrimary
   scope: resourceGroup(workloadResourceGroupNamePrimary)
 }
 
 resource existingSecondaryRediscache 'Microsoft.Cache/redis@2023-04-01' existing = if (deploymentSettings.isMultiLocationDeployment) {
-  name: redisCacheName
+  name: redisCacheNameSecondary
   scope: resourceGroup(deploymentSettings.isMultiLocationDeployment ? workloadResourceGroupNameSecondary : workloadResourceGroupNamePrimary)
 }
 
