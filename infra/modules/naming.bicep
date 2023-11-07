@@ -74,7 +74,8 @@ var resourceToken = uniqueString(subscription().id, deploymentSettings.name, dep
 
 // The prefix for resource groups
 var diffPrefix = !empty(differentiator) ? '-${differentiator}' : ''
-var resourceGroupPrefix = 'rg-${deploymentSettings.name}-${deploymentSettings.stage}-${deploymentSettings.location}${diffPrefix}'
+var hubResourceGroupPrefix = 'rg-${deploymentSettings.name}-${deploymentSettings.stage}-${deploymentSettings.location}'
+var resourceGroupPrefix = '${hubResourceGroupPrefix}${diffPrefix}'
 
 // The list of resource names that are used in the deployment.  The default
 // names use Cloud Adoption Framework abbreviations.
@@ -88,7 +89,7 @@ var defaultResourceNames = {
   hubFirewall: 'afw-${resourceToken}'
   hubFirewallPublicIpAddress: 'pip-afw-${resourceToken}'
   hubJumphost: 'vm-jump-${resourceToken}'
-  hubResourceGroup: '${resourceGroupPrefix}-hub'
+  hubResourceGroup: '${hubResourceGroupPrefix}-hub'
   hubRouteTable: 'rt-${resourceToken}'
   hubSubnetBastionHost: 'AzureBastionSubnet'
   hubSubnetFirewall: 'AzureFirewallSubnet'
