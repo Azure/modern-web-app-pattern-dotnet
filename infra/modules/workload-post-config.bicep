@@ -1,13 +1,13 @@
 targetScope = 'subscription'
 
 /*
-** Hub Network Infrastructure post-configuration
+** Workload Infrastructure post-configuration
 ** Copyright (C) 2023 Microsoft, Inc.
 ** All Rights Reserved
 **
 ***************************************************************************
 **
-** The Hub Network consists of a virtual network that hosts resources that
+** The Workload consists of a virtual network that has shared resources that
 ** are generally associated with a hub. This module provides post-configuration
 ** actions such as creating key-vault secrets to save information from
 ** modules that depend on the hub.
