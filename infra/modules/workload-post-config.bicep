@@ -109,12 +109,22 @@ param readerIdentities object[]
 var redisCacheSecretNamePrimary = 'App--RedisCache--ConnectionString-Primary'
 var redisCacheSecretNameSecondary = 'App--RedisCache--ConnectionString-Secondary'
 var azureAdClientSecret = 'AzureAd--ClientSecret'
+var azureAdTenantId = 'AzureAd--TenantId'
+var azureAdClientId = 'AzureAd--ClientId'
+var azureAdApiScope = 'App--RelecloudApi--AttendeeScope'
+var azureAdApiTenantId = 'Api--AzureAd--TenantId'
+var azureAdApiClientId = 'Api--AzureAd--ClientId'
 
 var multiRegionalSecrets = deploymentSettings.isMultiLocationDeployment ? [redisCacheSecretNameSecondary] : []
 
 var listOfSecretNames = union([
     redisCacheSecretNamePrimary
     azureAdClientSecret
+    azureAdTenantId
+    azureAdClientId
+    azureAdApiScope
+    azureAdApiTenantId
+    azureAdApiClientId
   ], multiRegionalSecrets)
 
 // ========================================================================
@@ -194,17 +204,16 @@ module writeSecondaryRedisSecret '../core/security/key-vault-secrets.bicep' = if
 // ======================================================================== //
 // Azure AD Application Registration placeholders
 // ======================================================================== //
-
-module writeSecondaryAppRegistrationSecrets '../core/security/key-vault-secrets.bicep' = {
-  name: 'write-app-registration-secrets-to-keyvault'
+module writeAppRegistrationSecrets '../core/security/key-vault-secrets.bicep' = [ for secretName in listOfSecretNames: {
+  name: 'write-temp-kv-secret-${secretName}'
   scope: existingHubResourceGroup
   params: {
     name: existingKeyVault.name
     secrets: [
-      { key: azureAdClientSecret, value: 'placeholder-populated-by-script' }
+      { key: secretName, value: 'placeholder-populated-by-script' }
     ]
   }
-}
+}]
 
 // ======================================================================== //
 // Grant reader permissions for the web apps to access the key vault
