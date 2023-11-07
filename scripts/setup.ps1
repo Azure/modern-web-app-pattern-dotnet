@@ -181,6 +181,11 @@ if ($SingleLocation -and $MultiLocation) {
     exit 1
 }
 
+if (!$SingleLocation -and !$MultiLocation) {
+    "You must specify either -SingleLocation or -MultiLocation"
+    exit 1
+}
+
 if ($Isolated -and $NoHub) {
     Write-Host 'Warning:' -ForegroundColor Yellow -BackgroundColor Black
     Write-Host "When deployed with isolation certain features, and access, will only be availble from within the vnet. You must attach a hub to activate these features."
