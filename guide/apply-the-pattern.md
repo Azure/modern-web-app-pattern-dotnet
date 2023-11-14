@@ -24,7 +24,8 @@ The following table lists the principles of the modern web app pattern and how t
 | --- | --- |
 | *Modern web app pattern principles:*<br>▪ Mature dev team practices for modern development<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▪ Accelerate feature development with vertical slice development <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▪ Evolutionary design changes instead of re-write<br>▪ Managed services<br>▪ Focused on vertical slice development to support<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▪ Non-functional requirements<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▪ Parallel workstream opportunities<br><br>*Well Architected Framework principles:*<br>▪ Cost optimized<br>▪ Observable<br>▪ Ingress secure<br>▪ Infrastructure as code<br>▪ Identity-centric security|▪ Backends for Frontends pattern <br>▪ Cache-aside pattern <br>▪ Federated Identity pattern<br>▪ Queue-Based Load Leveling pattern<br>▪ Gateway Routing pattern<br>▪ Rate Limiting pattern<br>▪ Strangler Fig pattern <br>▪ Rightsized resources <br>▪ Managed identities <br>▪ Private endpoints <br>▪ Secrets management <br>▪ Bicep deployment <br>▪ Telemetry, logging, monitoring |
 
-## Evolutionary Design Changes
+## Evolutionary design changes
+
 > ⚠️ Pending task Strangler Fig discussion - (Queue-based ticket rendering experience) covered by #1864681
 > In this section we will describe how the team approached updating the solution without rewriting it as part of the larger conversation for an application that 1) adds new features and 2) is sitting between monolith and microservices.
 
@@ -34,10 +35,12 @@ The following table lists the principles of the modern web app pattern and how t
 A modern web application is one that is both resilient and available. Resiliency is the ability of the system to recover from failures and continue to function. The goal of resiliency is to return the application to a fully functioning state after a failure occurs. Availability is a measure of whether your users can access your web application when they need to. You should use the Rate Limiting and Queue-Based Load Leveling patterns as steps toward improving application reliability. These design patterns address high throughput scenarios and help your application maximize the reliability features of the cloud.
 
 ### Queue-Based Load Leveling pattern
+
 > ⚠️ Pending task Queue-based Load Leveling pattern - (Queue-based ticket rendering experience) covered by  #1865952
 > This section will talk about how moving work out of the request processing stream will  create more bandwidth for request throughput by reducing long running operations that tie up CPU, RAM, and network connections. Improved request bandwidth provides additional benefits for scaling, and will smooth out edge case scenarios such as a user buying 20 tickets, that can lead to reliability problems as requests become queued during high throughput scenarios.
 
 ### Rate Limiting pattern
+
 > ⚠️ Pending task Rate Limiting pattern - (Multichannel API Capability experience) covered by #1864671
 
 <!-- #2 Security pillar -->
@@ -46,14 +49,17 @@ A modern web application is one that is both resilient and available. Resiliency
 Cloud applications are often composed of multiple Azure services. Communication between those services needs to be secure. Enforcing secure authentication, authorization, and accounting practices in your application is essential to your security posture. At this phase in the cloud journey, you should use managed identities, secrets management, and private endpoints. Here are the security recommendations for the modern web app pattern.
 
 ### Apply Federated Identity pattern for website authentication
+
 > ⚠️ Pending task Document the way Federated Identity Pattern was applied - (Public facing website experience) covered by  #1908023
 
 
 ### Secure Azure resources at the identity layer
+
 > ⚠️ Pending task Document recommended approach for Identity Layer - (Multichannel API Capability experience) covered by  #1865959
 
 
 ### Secure Azure resources with network isolation
+
 > ⚠️ Pending task Queue-based Load Leveling Pattern - (Multichannel API Capability experience) covered by  #1865959
 
 

@@ -1,4 +1,5 @@
 # Modern web app pattern for .NET - Plan the implementation
+
 The modern web app pattern provides essential implementation guidance for web apps moving to the cloud. It defines how you should incrementally apply updates (refactor) your web app to be successful in the cloud.
 
 There are two articles on the modern web app pattern for .NET. This article explains important decisions to plan the implementation of the pattern. The companion article provides code and architecture guidance to [apply the pattern](./apply-the-pattern.md). There's a [reference implementation](https://aka.ms/eap/mwa/dotnet) (sample web app) of the pattern that you can deploy.
@@ -22,7 +23,6 @@ The following table lists the principles of the modern web app pattern and how t
 | Modern web app pattern principles | How to implement the principles |
 | --- | --- |
 | *Modern web app pattern principles:*<br>▪ Mature dev team practices for modern development<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▪ Accelerate feature development with vertical slice development <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▪ Evolutionary design changes instead of re-write<br>▪ Managed services<br>▪ Focused on vertical slice development to support<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▪ Non-functional requirements<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▪ Parallel workstream opportunities<br><br>*Well Architected Framework principles:*<br>▪ Cost optimized<br>▪ Observable<br>▪ Ingress secure<br>▪ Infrastructure as code<br>▪ Identity-centric security|▪ Backends for Frontends pattern <br>▪ Cache-aside pattern <br>▪ Federated Identity pattern<br>▪ Queue-Based Load Leveling pattern<br>▪ Gateway Routing pattern<br>▪ Rate Limiting pattern<br>▪ Strangler Fig pattern <br>▪ Rightsized resources <br>▪ Managed identities <br>▪ Private endpoints <br>▪ Secrets management <br>▪ Bicep deployment <br>▪ Telemetry, logging, monitoring |
-
 
 ## Business scenario
 
