@@ -2,7 +2,9 @@
 
 The modern web app pattern provides implementation guidance for modernizing web apps (refactor) in the cloud. Modernizing a web in the cloud can be challenging. The number of services and design patterns to choose from is overwhelming. It's hard to know the right ones to choose and how to implement them. The modern web app pattern solves this problem.
 
-The modern web app pattern is a set of [principles](mwa-overview.md) to guide your web app modernization. The pattern is applicable to almost every web app and provides a roadmap to overcome the obstacles of web app modernization efforts. To make the guidance concrete, there's a [reference implementation](https://aka.ms/eap/mwa/dotnet) of the modern web app pattern to guide your implementation. The reference implementation is a production-quality web app that you can be easily deploy for learning and experimentation. For context, the guidance follows the journey of a fictional company called Relecloud.
+The modern web app pattern is a set of [principles](mwa-overview.md) to guide your web app modernization. The pattern is applicable to almost every web app and provides a roadmap to overcome the obstacles of web app modernization efforts.
+
+There's a [reference implementation](https://aka.ms/eap/mwa/dotnet) of the modern web app pattern to guide your implementation. The reference implementation is a production-quality web app that you can be easily deploy for learning and experimentation. For context, the guidance follows the journey of a fictional company called Relecloud.
 
 ## Architecture
 
@@ -14,12 +16,12 @@ The modern web app pattern uses a hub and spoke architecture. Shared resources a
 
 > ⚠️ The business scenario section is pending review - (Multichannel API Capability experience) covered by #1865953
 
-For business context, the guidance follows the cloud journey of a fictional company called Relecloud. Relecloud sells concert tickets. Their website is currently used by call center operators to buy tickets on behalf of their offline (telephone) customers. Relecloud has experienced increased sales volume over the last quarter with continued
-increases projected, and senior leadership has decided to invest more in direct customer sales online instead of expanding call center capacity.
+For business context, the guidance follows the cloud journey of a fictional company called Relecloud. Relecloud sells concert tickets. Their website is currently used by call center operators to buy tickets on behalf of their offline (telephone) customers. Relecloud has experienced increased sales volume over the last quarter with continued increases projected, and senior leadership has decided to invest more in direct customer sales online instead of expanding call center capacity.
 
-The website is a monolithic ASP.NET application with a Microsoft SQL Server database which suffers from common legacy challenges including extended timelines to build and ship new features and difficulty scaling different components of the application under higher load. By applying the changes outlined in the [Modern Web App](https://github.com/Azure/modern-web-app-pattern-dotnet/blob/main/business-scenario.md) Relecloud achieved their first set of objectives to modernize the application to sustain additional volume while maturing development team practices for modern development and operations.
-
-In this phase Relecloud will achieve their intermediate goals such as opening the application directly to online customers through multiple web and mobile experiences, improving availability targets, and scaling different components of the system independently to handle traffic spikes without compromising security. Their goal of significantly reducing the time required to deliver new features to the application will be addressed in the next phase of their journey. In this phase they will build on the Azure solution they have deployed to augment their existing solution with Azure's robust global platform and tremendous managed service capabilities that will support Relecloud's growth objectives for years to come.
+*Table 2. Relecloud's short-term and long-term goals.*
+|Short-term goals|Long-term goals|
+| --- | --- |
+|- Open the application directly to online customers <br> - Have multiple web and mobile experiences <br> - Improve availability <br> - Independently scale different components <br> - Maintain security posture <br> | - Reduce feature development time
 
 ## Existing web app
 
@@ -31,21 +33,21 @@ The existing web app was an on-premises web app migrated to the cloud with the [
 
 > ⚠️ The service level objective section is pending review - (Multichannel API Capability experience) covered by #1865953
 
-A service level objective (SLO) for availability defines how available you want a web app to be for users. You need to define an SLO and what *available* means for your web app. For example, Relecloud has a target SLO of 99.9% for availability, about 8.7 hours of downtime per year. The definition of *available* for Relecloud is when its call center employees can purchase tickets 99.9% of the time.
+A service level objective (SLO) for availability defines how available you want a web app to be for users. You need to define an SLO and what *available* means for your web app. For example, Relecloud has a target SLO of 99.9% for availability, about 8.7 hours of downtime per year. The definition of *available* for Relecloud is when its call center employees can purchase tickets 99.9% of the time. When you have a definition of *available* for your web app, the next step is to define the critical path of availability. List any dependency that needs to be running for you to meet the web app's definition of *available*. Dependencies should include Azure services and third-party integrations.
 
-When you have a definition of *available* for your web app, the next step is to list all the dependencies on the critical path of availability. Dependencies should include Azure services and third-party integrations.
+For each dependency in the critical path, you need to assign an availability goal. Service level agreements (SLAs) from Azure provide a good starting point. However, SLAs don't factor in (1) downtime that's associated with the application code running on the services (2) deployment and operation methodologies, (3) architecture choices to connect the services. The availability metric you assign to a dependency shouldn't exceed the SLA.
+
+Relecloud used Azure SLAs for Azure services. The following diagram illustrates Relecloud's dependency list with availability goals for each dependency (*see figure 2*).
 
 ## Choose the right services
 
 > ⚠️ The Choose the right services section, and the addition of new Azure services introduced for MWA, is pending review - (Multichannel API Capability experience) covered by #1865953
 
-The Azure services you choose should support your short-term objectives. They should also prepare you to reach any long-term goals. To accomplish both, you should pick services that (1) meet your SLO, (2) require minimal re-platforming effort, and (3) support future modernization plans.
-
-When you move a web app to the cloud, you should select Azure services that mirror key on-premises features. The alignment helps minimize the re-platforming effort. For example, you should keep the same database engine (from SQL Server to Azure SQL Database) and app hosting platform (from IIS on Windows Server to Azure App Service). Containerization of your application typically doesn't meet the short-term objectives of the modern web app pattern, but the application platform you choose now should support containerization if that's a long-term goal.
+The Azure services you choose should support your short-term and and long-term goals. To accomplish both, you should pick services that (1) meet your immediate business context, (2) SLO requirements, and (3) support future modernization plans.
 
 ### Application platform
 
-[Azure App Service](https://learn.microsoft.com/azure/app-service/overview) is an HTTP-based, managed service for hosting web apps, REST APIs, and mobile back ends. Azure has many viable compute options. For more information, see the [compute decision tree](https://learn.microsoft.com/azure/architecture/guide/technology-choices/compute-decision-tree). The web app uses Azure App Service because it meets the following requirements:
+[Azure App Service](https://learn.microsoft.com/azure/app-service/overview) is an HTTP-based, managed service for hosting web apps, REST APIs, and mobile back ends. Among Azure [compute options](https://learn.microsoft.com/azure/architecture/guide/technology-choices/compute-decision-tree), Relecloud chose Azure App Service because it meets the following requirements:
 
 - **High SLA.** It has a high SLA that meets the production environment SLO.
 - **Reduced management overhead.** It's a fully managed solution that handles scaling, health checks, and load balancing.
