@@ -464,6 +464,4 @@ output firewall_ip_address string = enableFirewall ? firewall.outputs.internal_i
 output route_table_id string = enableFirewall ? routeTable.outputs.id : ''
 output virtual_network_id string = virtualNetwork.outputs.id
 output virtual_network_name string = virtualNetwork.outputs.name
-
-output key_vault_id string = enableJumpHost ? sharedKeyVault.outputs.id : ''
 output key_vault_name string = enableJumpHost ? sharedKeyVault.outputs.name : ''
