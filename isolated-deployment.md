@@ -31,19 +31,6 @@ azd env set OWNER_EMAIL <an email address alerted by Azure budget>
 azd env set AZURE_LOCATION westus3
 ```
 
-> **Password Requirements**
->
-> - The `ADMIN_PASSWORD must be between 12 and 123 characters.
-> - The `DATABASE_PASSWRD` must be between 8 and 128 characters.
->
-> Both passwords must meet complexity requirements (having 3 different classes of character - lower case, upper case, number, and special characters).
-
-Set a password for the Azure jumphost VM where code will be deployed from:
-
-```shell
-azd env set ADMIN_PASSWORD "AV@lidPa33word"
-```
-
 Provision the Azure resources (about 55-minutes to provision):
 
 ```shell
