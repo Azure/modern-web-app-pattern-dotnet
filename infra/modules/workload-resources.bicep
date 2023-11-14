@@ -151,7 +151,7 @@ var budget = {
 }
 var budgetAmount = reduce(map(items(budget), (obj) => obj.value), 0, (total, amount) => total + amount)
 
-var redisConnectionSecretName='App--RedisCache--ConnectionString'
+var redisConnectionSecretName= deploymentSettings.isPrimaryLocation ? 'App--RedisCache--ConnectionString-Primary' : 'App--RedisCache--ConnectionString-Secondary'
 
 // describes the Azure Storage container where ticket images will be stored after they are rendered during purchase
 var ticketContainerName = 'tickets'
@@ -248,7 +248,7 @@ module writeAppConfigValues './app-config-values.bicep' = {
     appConfigurationStoreName: appConfiguration.outputs.name
     devopsIdentityName: ownerManagedIdentityRoleAssignment.outputs.identity_name
     enablePublicNetworkAccess: deploymentSettings.isNetworkIsolated ? false : true
-    keyVaultUri: keyVault.outputs.vaultUri
+    keyVaultName: resourceNames.keyVault
     location: deploymentSettings.location
     relecloudApiBaseUri: 'https://${frontDoorSettings.hostname}/api'
     redisConnectionSecretName: redisConnectionSecretName
@@ -258,9 +258,10 @@ module writeAppConfigValues './app-config-values.bicep' = {
 }
 
 /*
-** Key Vault - used for storing configuration secrets
+** Key Vault - used for storing configuration secrets.
+** This vault is deployed with the workload when not using Network Isolation.
 */
-module keyVault '../core/security/key-vault.bicep' = {
+module keyVault '../core/security/key-vault.bicep' = if (!deploymentSettings.isNetworkIsolated) {
   name: 'workload-key-vault'
   scope: resourceGroup
   params: {
@@ -273,7 +274,7 @@ module keyVault '../core/security/key-vault.bicep' = {
 
     // Settings
     diagnosticSettings: diagnosticSettings
-    enablePublicNetworkAccess: !deploymentSettings.isNetworkIsolated
+    enablePublicNetworkAccess: true
     ownerIdentities: [
       { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
@@ -341,11 +342,12 @@ module sqlDatabase '../core/database/sql-database.bicep' = {
   }
 }
 
-module writeSqlAdminInfo '../core/security/key-vault-secrets.bicep' = if (createSqlServer) {
+/* write secrets to the KV in the workload resource group when appropriate */
+module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = if (!deploymentSettings.isNetworkIsolated) {
   name: 'write-sql-admin-info-to-keyvault'
   scope: resourceGroup
   params: {
-    name: keyVault.outputs.name
+    name: !deploymentSettings.isNetworkIsolated ? keyVault.outputs.name : ''
     secrets: [
       { key: 'Relecloud--SqlAdministratorUsername', value: administratorUsername }
       { key: 'Relecloud--SqlAdministratorPassword', value: databasePassword }
@@ -489,8 +491,7 @@ module redis '../core/database/azure-cache-for-redis.bicep' = {
     location: deploymentSettings.location
     diagnosticSettings: diagnosticSettings
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
-    keyVaultName: keyVault.outputs.name
-    keyVaultSecretName: redisConnectionSecretName
+    // vault provided by Hub resource group when network isolated
     redisCacheSku : deploymentSettings.isProduction ? 'Standard' : 'Basic'
     redisCacheFamily : 'C'
     redisCacheCapacity: deploymentSettings.isProduction ? 1 : 0
@@ -573,7 +574,11 @@ module workloadBudget '../core/cost-management/budget.bicep' = {
 // OUTPUTS
 // ========================================================================
 
+output key_vault_name string = deploymentSettings.isNetworkIsolated ? resourceNames.keyVault : keyVault.outputs.name
+output redis_cache_name string = redis.outputs.name
+
 output owner_managed_identity_id string = ownerManagedIdentity.outputs.id
+output app_managed_identity_id string = appManagedIdentity.outputs.id
 
 output service_managed_identities object[] = [
   { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal', role: 'owner'       }
@@ -581,4 +586,3 @@ output service_managed_identities object[] = [
 ]
 
 output service_web_endpoints string[] = [ deploymentSettings.isPrimaryLocation ? webFrontendFrontDoorRoute.outputs.endpoint : webFrontend.outputs.app_service_uri ]
-output key_vault_name string = keyVault.outputs.name

@@ -11,12 +11,12 @@
     // "hubFirewall": "",
     // "hubFirewallPublicIpAddress": "",
     // "hubJumphost": "",
-    // "hubKeyVault": "",
     // "hubResourceGroup": "",
     // "hubRouteTable": "",
     // "hubSubnetBastionHost": "",
     // "hubSubnetFirewall": "",
     // "hubSubnetJumphost": "",
+    // "hubSubnetPrivateEndpoint": "",
     // "hubVirtualNetwork": "",
   
     // Spoke network resources

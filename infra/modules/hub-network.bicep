@@ -72,18 +72,6 @@ type DiagnosticSettings = {
 // PARAMETERS
 // ========================================================================
 
-/*
-** Passwords - specify these!
-*/
-@secure()
-@minLength(12)
-@description('The password for the administrator account.  This will be used for the jump host, SQL server, and anywhere else a password is needed for creating a resource.')
-param administratorPassword string = newGuid()
-
-@minLength(8)
-@description('The username for the administrator account on the jump host.')
-param administratorUsername string = 'adminuser'
-
 @description('The deployment settings to use for this deployment.')
 param deploymentSettings DeploymentSettings
 
@@ -145,7 +133,7 @@ var subnetPrefixes = [ for i in range(0, 16): cidrSubnet(addressPrefix, 26, i)]
 var bastionHostSubnetDefinition = {
   name: resourceNames.hubSubnetBastionHost
   properties: {
-    addressPrefix: subnetPrefixes[1]
+    addressPrefix: subnetPrefixes[2]
     privateEndpointNetworkPolicies: 'Disabled'
   }
 }
@@ -153,12 +141,21 @@ var bastionHostSubnetDefinition = {
 var firewallSubnetDefinition = {
   name: resourceNames.hubSubnetFirewall
   properties: {
+    addressPrefix: subnetPrefixes[1]
+    privateEndpointNetworkPolicies: 'Disabled'
+  }
+}
+
+var privateEndpointSubnet = {
+  name: resourceNames.hubSubnetPrivateEndpoint
+  properties: {
     addressPrefix: subnetPrefixes[0]
     privateEndpointNetworkPolicies: 'Disabled'
   }
 }
 
 var subnets = union(
+  [privateEndpointSubnet],
   enableBastionHost ? [bastionHostSubnetDefinition] : [],
   enableFirewall ? [firewallSubnetDefinition] : []
 )
@@ -394,12 +391,16 @@ module bastionHost '../core/network/bastion-host.bicep' = if (enableBastionHost)
   }
 }
 
-
-module operationsKeyVault '../core/security/key-vault.bicep' = if (enableJumpHost) {
-  name: 'operations-key-vault'
+/*
+  The vault will always be deployed because it stores Microsoft Entra app registration details.
+  The dynamic part of this feature is whether or not the Vault is located in the Hub (yes, when Network Isolated)
+  or if it is located in the Workload resource group (yes, when Network Isolation is not enabled).
+ */
+module sharedKeyVault '../core/security/key-vault.bicep' = {
+  name: 'shared-key-vault'
   scope: resourceGroup
   params: {
-    name: resourceNames.hubKeyVault
+    name: resourceNames.keyVault
     location: deploymentSettings.location
     tags: moduleTags
 
@@ -408,22 +409,16 @@ module operationsKeyVault '../core/security/key-vault.bicep' = if (enableJumpHos
 
     // Settings
     diagnosticSettings: diagnosticSettings
+    enablePublicNetworkAccess: true
     ownerIdentities: [
       { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
     ]
-  }
-}
-
-module writeJumpHostCredentials '../core/security/key-vault-secrets.bicep' = if (enableJumpHost) {
-  name: 'hub-write-jumphost-credentials'
-  scope: resourceGroup
-  params: {
-    name: operationsKeyVault.outputs.name
-    secrets: [
-      { key: 'Jumphost--AdministratorPassword', value: administratorPassword          }
-      { key: 'Jumphost--AdministratorUsername', value: administratorUsername          }
-      { key: 'Jumphost--ComputerName',          value: resourceNames.hubJumphost }
-    ]
+    privateEndpointSettings: {
+      dnsResourceGroupName: resourceGroup.name
+      name: resourceNames.keyVaultPrivateEndpoint
+      resourceGroupName: resourceGroup.name
+      subnetId: virtualNetwork.outputs.subnets[privateEndpointSubnet.name].id
+    }
   }
 }
 
@@ -442,6 +437,23 @@ module hubBudget '../core/cost-management/budget.bicep' = {
   }
 }
 
+var virtualNetworkLinks = [
+  {
+    vnetName: virtualNetwork.outputs.name
+    vnetId: virtualNetwork.outputs.id
+    registrationEnabled: false
+  }
+]
+
+module privateDnsZones './private-dns-zones.bicep' = {
+  name: 'hub-private-dns-zone-deploy'
+  params:{
+    deploymentSettings: deploymentSettings
+    hubResourceGroupName: resourceGroup.name
+    virtualNetworkLinks: virtualNetworkLinks
+  }
+}
+
 // ========================================================================
 // OUTPUTS
 // ========================================================================
@@ -452,5 +464,6 @@ output firewall_ip_address string = enableFirewall ? firewall.outputs.internal_i
 output route_table_id string = enableFirewall ? routeTable.outputs.id : ''
 output virtual_network_id string = virtualNetwork.outputs.id
 output virtual_network_name string = virtualNetwork.outputs.name
-output key_vault_id string = enableJumpHost ? operationsKeyVault.outputs.id : ''
-output key_vault_name string = enableJumpHost ? operationsKeyVault.outputs.name : ''
+
+output key_vault_id string = enableJumpHost ? sharedKeyVault.outputs.id : ''
+output key_vault_name string = enableJumpHost ? sharedKeyVault.outputs.name : ''

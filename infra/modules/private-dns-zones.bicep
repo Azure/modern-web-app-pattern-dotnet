@@ -73,6 +73,9 @@ param privateDnsZones array = [
 @description('The hub resource group name.')
 param hubResourceGroupName string
 
+@description('Specifies if DNS zone will be created, or if we are attaching to an existing one')
+param createDnsZone bool = true
+
 @description('Array of custom objects describing vNet links of the DNS zone. Each object should contain vnetName, vnetId, registrationEnabled')
 param virtualNetworkLinks array = []
 
@@ -95,8 +98,8 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing 
   name: hubResourceGroupName
 }
 
-module dnsZones '../core/network/private-dns-zone.bicep' = [ for dnsZoneName in privateDnsZones: {
-  name: 'dns-zone-${dnsZoneName}'
+module createNewDnsZones '../core/network/private-dns-zone.bicep' = [ for dnsZoneName in createDnsZone ? privateDnsZones : []: {
+  name: 'create-new-dns-zone-${dnsZoneName}'
   scope: resourceGroup
   params: {
     name: dnsZoneName
@@ -104,3 +107,14 @@ module dnsZones '../core/network/private-dns-zone.bicep' = [ for dnsZoneName in 
     virtualNetworkLinks: virtualNetworkLinks
   }
 }]
+
+module updateVnetLinkForDnsZones '../core/network/private-dns-zone-link.bicep' = [ for dnsZoneName in !createDnsZone ? privateDnsZones : []: {
+  name: 'update-vnet-link-for-dns-${dnsZoneName}'
+  scope: resourceGroup
+  params: {
+    name: dnsZoneName
+    virtualNetworkLinks: virtualNetworkLinks
+  }
+}]
+
+output dns_resource_group_name string = resourceGroup.name

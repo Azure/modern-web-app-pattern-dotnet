@@ -69,8 +69,8 @@ param azureStorageTicketUri string
 @description('The name of the identity that runs the script (requires access to change public network settings on App Configuration)')
 param devopsIdentityName string
 
-@description('The URI for the key vault that stores the key vault referenced secrets')
-param keyVaultUri string
+@description('The name for the key vault that stores the key vault referenced secrets')
+param keyVaultName string
 
 @description('The Azure region for the resource.')
 param location string
@@ -156,7 +156,7 @@ resource openConfigSvcForEdits 'Microsoft.Resources/deploymentScripts@2020-10-01
       }
       {
         name: 'KEY_VAULT_URI'
-        value: keyVaultUri 
+        value: 'https://${keyVaultName}${environment().suffixes.keyvaultDns}'
       }
       {
         name: 'LOGIN_ENDPOINT'

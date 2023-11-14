@@ -69,18 +69,12 @@ param tags object = {}
 @description('The ID of the Log Analytics workspace to use for diagnostics and logging.')
 param logAnalyticsWorkspaceId string = ''
 
-@description('The name of the key vault that will store the connection string')
-param keyVaultName string = ''
-
 /*
 ** Settings
 */
 
 @description('Specify a boolean value that indicates whether to allow access via non-SSL ports.')
 param enableNonSslPort bool = false
-
-@description('Specify the name for the secret in key vault')
-param keyVaultSecretName string
 
 @description('Specify the pricing tier of the new Azure Redis Cache.')
 @allowed([
@@ -115,11 +109,6 @@ param privateEndpointSettings PrivateEndpointSettings?
 // ========================================================================
 // AZURE RESOURCES
 // ========================================================================
-
-
-resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
-  name: keyVaultName
-}
 
 resource cache 'Microsoft.Cache/redis@2023-04-01' = {
   name: name
@@ -170,16 +159,6 @@ resource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' 
         category: 'AllMetrics'
         enabled: diagnosticSettings!.enableMetrics
       }
-    ]
-  }
-}
-
-module writeRedisSecret '../security/key-vault-secrets.bicep' = {
-  name: 'write-redis-secret-to-keyvault'
-  params: {
-    name: keyVault.name
-    secrets: [
-      { key: keyVaultSecretName, value: '${cache.name}.redis.cache.windows.net:6380,password=${cache.listKeys().primaryKey},ssl=True,abortConnect=False' }
     ]
   }
 }

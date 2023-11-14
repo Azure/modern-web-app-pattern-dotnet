@@ -5,7 +5,13 @@
     variable and sets the `azd env set` command to set it within Azure Developer CLI as well.
 #>
 
-$ipaddr = Invoke-RestMethod -Uri https://api.ipify.org
+$ipaddr = Invoke-RestMethod -Uri https://ipinfo.io/ip
+
+# if $ipaddress is empty, exit with error
+if ([string]::IsNullOrEmpty($ipaddr)) {
+    Write-Error "Unable to retrieve public IP address"
+    exit 1
+}
 
 $env:AZD_IP_ADDRESS = $ipaddr
 azd env set AZD_IP_ADDRESS $ipaddr

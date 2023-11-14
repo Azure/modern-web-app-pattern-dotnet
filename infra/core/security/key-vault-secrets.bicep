@@ -44,7 +44,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
   name: name
 }
 
-resource keyVaultSecrets 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = [for secret in secrets: {
+resource keyVaultSecretResources 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = [for secret in secrets: {
   name: secret.key
   parent: keyVault
   properties: {
@@ -52,3 +52,6 @@ resource keyVaultSecrets 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = [for s
     value: secret.value
   }
 }]
+
+#disable-next-line outputs-should-not-contain-secrets // Doesn't contain a secret, just contains the ID references
+output secret_ids array = [for (secret, i) in secrets: keyVaultSecretResources[i].id]
