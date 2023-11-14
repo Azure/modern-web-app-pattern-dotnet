@@ -12,7 +12,7 @@
         "value": "${AZD_IP_ADDRESS}"
     },
     "databasePassword": {
-        "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} databasePassword)"
+        "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} Relecloud--SqlAdministratorPassword)"
     },
     "differentiator": {
         "value": "${AZURE_CI_DIFFERENTIATOR=none}"
@@ -33,7 +33,7 @@
         "value": "${GITHUB_TOKEN}"
     },
     "jumphostAdministratorPassword": {
-        "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} jumphostAdminPassword)"
+        "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} Jumphost--AdministratorPassword)"
     },
     "location": {
         "value": "${AZURE_LOCATION}"

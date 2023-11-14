@@ -347,10 +347,6 @@ azd env set COMMON_APP_SERVICE_PLAN $(if ($casp) { "true" } else { "false" })
 azd env set OWNER_EMAIL $emailAddr
 azd env set OWNER_NAME "$ownerName"
 
-if ($Isolated) {
-    azd env set ADMIN_PASSWORD (New-Guid).ToString()
-}
-
 if ($MultiLocation) {
     azd env set SECONDARY_AZURE_LOCATION $secondAzureLocationCmd
 }
