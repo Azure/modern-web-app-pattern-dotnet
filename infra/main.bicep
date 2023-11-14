@@ -44,17 +44,15 @@ param principalType string = 'ServicePrincipal'
 ** Passwords - specify these!
 */
 @secure()
-@minLength(12)
-@description('The password for the jump host administrator account.')
-param administratorPassword string = newGuid()
-
-@secure()
-param administratorPasswordParam string = ''
-
-@secure()
 @minLength(8)
 @description('The password for the SQL administrator account. This will be used for the jump host, SQL server, and anywhere else a password is needed for creating a resource.')
-param databasePassword string = newGuid()
+param databasePassword string
+
+@secure()
+@minLength(12)
+@description('The password for the jump host administrator account.')
+param jumphostAdministratorPassword string
+
 
 @minLength(8)
 @description('The username for the administrator account.  This will be used for the jump host, SQL server, and anywhere else a password is needed for creating a resource.')
@@ -121,9 +119,6 @@ param useCommonAppServicePlan string = 'auto'
 // ========================================================================
 // VARIABLES
 // ========================================================================
-
-// initializes the database password to a GUID and allows an override with the AZD env var administratorPasswordParam
-var administratorPasswordValue = length(administratorPasswordParam) > 0 ? administratorPasswordParam : administratorPassword
 
 var prefix = '${environmentName}-${environmentType}'
 
@@ -277,7 +272,7 @@ module hubNetwork './modules/hub-network.bicep' = if (willDeployHubNetwork) {
     logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
 
     // Settings
-    administratorPassword: administratorPasswordValue
+    administratorPassword: jumphostAdministratorPassword
     administratorUsername: administratorUsername
     enableBastionHost: true
     enableDDoSProtection: deploymentSettings.isProduction
@@ -313,7 +308,7 @@ module spokeNetwork './modules/spoke-network.bicep' = if (isNetworkIsolated) {
 
     // Settings
     addressPrefix: spokeAddressPrefixPrimary
-    administratorPassword: administratorPasswordValue
+    administratorPassword: jumphostAdministratorPassword
     administratorUsername: administratorUsername
     createDevopsSubnet: isNetworkIsolated
     enableJumpHost: true
@@ -336,7 +331,7 @@ module spokeNetwork2 './modules/spoke-network.bicep' = if (isNetworkIsolated && 
 
     // Settings
     addressPrefix: spokeAddressPrefixSecondary
-    administratorPassword: administratorPasswordValue
+    administratorPassword: jumphostAdministratorPassword
     administratorUsername: administratorUsername
     createDevopsSubnet: true
     enableJumpHost: true
@@ -480,7 +475,7 @@ module buildAgent './modules/build-agent.bicep' = if (installBuildAgent) {
     subnets: isNetworkIsolated ? spokeNetwork.outputs.subnets : {}
 
     // Settings
-    administratorPassword: administratorPasswordValue
+    administratorPassword: jumphostAdministratorPassword
     administratorUsername: administratorUsername
     adoOrganizationUrl: adoOrganizationUrl
     adoToken: adoToken
@@ -541,3 +536,4 @@ output build_agent string = installBuildAgent ? buildAgent.outputs.build_agent_h
 output AZURE_RESOURCE_GROUP string = resourceGroups.outputs.workload_resource_group_name
 output service_managed_identities object[] = workload.outputs.service_managed_identities
 output service_web_endpoints string[] = workload.outputs.service_web_endpoints
+output AZURE_OPS_VAULT_NAME string = isNetworkIsolated ? hubNetwork.outputs.key_vault_name : workload.outputs.azops_vault_name

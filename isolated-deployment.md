@@ -44,12 +44,6 @@ Set a password for the Azure jumphost VM where code will be deployed from:
 azd env set ADMIN_PASSWORD "AV@lidPa33word"
 ```
 
-Set a password for the Azure SQL Database.
-
-```shell
-azd env set DATABASE_PASSWORD "AV@lidPa33word"
-```
-
 Provision the Azure resources (about 55-minutes to provision):
 
 ```shell

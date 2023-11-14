@@ -453,3 +453,4 @@ output route_table_id string = enableFirewall ? routeTable.outputs.id : ''
 output virtual_network_id string = virtualNetwork.outputs.id
 output virtual_network_name string = virtualNetwork.outputs.name
 output key_vault_id string = enableJumpHost ? operationsKeyVault.outputs.id : ''
+output key_vault_name string = enableJumpHost ? operationsKeyVault.outputs.name : ''

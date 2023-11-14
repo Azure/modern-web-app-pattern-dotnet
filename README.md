@@ -49,7 +49,6 @@ For users familiar with the deployment process, you can use the following list o
 git clone https://github.com/Azure/modern-web-app-pattern-dotnet.git
 cd modern-web-app-pattern-dotnet
 azd env new eapdotnetmwa
-azd env set DATABASE_PASSWORD "AV@lidPa33word"
 azd env set AZURE_LOCATION westus3
 azd up
 ```
@@ -95,12 +94,6 @@ Run the following commands to set these values and create a new environment:
 
 ```shell
 azd env new eapdotnetmwa
-```
-
-Set a password for the Azure SQL Database.
-> ⚠️ Password must be longer than 8 (no more than 128) and have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character.
-```
-azd env set DATABASE_PASSWORD "AV@lidPa33word"
 ```
 
 Substitute the environment name and database password for your own values.

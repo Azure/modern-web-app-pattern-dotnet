@@ -581,3 +581,4 @@ output service_managed_identities object[] = [
 ]
 
 output service_web_endpoints string[] = [ deploymentSettings.isPrimaryLocation ? webFrontendFrontDoorRoute.outputs.endpoint : webFrontend.outputs.app_service_uri ]
+output key_vault_name string = keyVault.outputs.name
