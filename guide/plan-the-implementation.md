@@ -52,7 +52,7 @@ The Azure services you choose should support your short-term and and long-term g
 - **High SLA.** It has a high SLA that meets the production environment SLO.
 - **Reduced management overhead.** It's a fully managed solution that handles scaling, health checks, and load balancing.
 - **.NET support.** It supports the version of .NET that the application is written in.
-- **Containerization capability.** It allows the web app can converge on the cloud without containerizing, but the application platform also supports containerization without changing Azure services.
+- **Containerization capability.** The application platform also supports containerization without changing Azure services.
 - **Autoscaling.** The web app can automatically scale up, down, in, and out based on user traffic and settings.
 
 ### Identity management
@@ -70,7 +70,6 @@ The Azure services you choose should support your short-term and and long-term g
 
 - **Reliability.** The general-purpose tier provides a high SLA and multi-region redundancy. It can support a high user load.
 - **Reduced management overhead.** It provides a managed SQL database instance.
-- **Migration support.** It supports database migration from on-premises SQL Server.
 - **Consistency with on-premises configurations.** It supports the existing stored procedures, functions, and views.
 - **Resiliency.** It supports backups and point-in-time restore.
 - **Expertise and minimal rework.** SQL Database takes advantage of in-house expertise and requires minimal rework.
