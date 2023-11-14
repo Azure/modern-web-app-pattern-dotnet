@@ -1,4 +1,5 @@
 # Modern web app pattern for .NET - Apply the pattern
+
 The modern web app pattern provides essential implementation guidance for web apps moving to the cloud. It defines how you should update (re-platform) your web app to be successful in the cloud.
 
 There are two articles on the modern web app pattern for .NET. This article provides code and architecture implementation guidance. The companion article provides [planning guidance](./plan-the-implementation.md). There's a [reference implementation](https://aka.ms/eap/mwa/dotnet) (sample web app) of the pattern that you can deploy.
@@ -71,6 +72,7 @@ Cloud applications are often composed of multiple Azure services. Communication 
 Cost optimization principles balance business goals with budget justification to create a cost-effective web application. Cost optimization is about reducing unnecessary expenses and improving operational efficiency. Here are our recommendations for cost optimization. The code changes optimize for horizontal scale to reduce costs rather than optimizing existing business processes. The latter can lead to higher risks.
 
 *Reference implementation:* The checkout process in the reference implementation has a hot path of rendering ticket images during request processing. You can isolate the checkout process to improve cost optimization and performance efficiency, but this change is beyond the scope of the modern web app pattern. You should address it in future modernizations.
+
 ### Rightsize resources for each environment
 
 Production environments need SKUs that meet the service level agreements (SLA), features, and scale needed for production. But non-production environments don't normally need the same capabilities. You can optimize costs in non-production environments by using cheaper SKUs that have lower capacity and SLAs. You should consider Azure Dev/Test pricing and Azure Reservations. How or whether you use these cost-saving methods depends on your environment.
@@ -133,6 +135,7 @@ resource webAppScaleRule 'Microsoft.Insights/autoscalesettings@2021-05-01-previe
 Infrastructure as Code (IaC) is often considered an operational best practice, but it's also a way to manage costs. IaC can create and delete entire environments. You should delete non-production environments after hours or during holidays to optimize cost.
 
 ### Leverage and reuse resources for shared responsibilities
+
 > ⚠️Pending documentation associated with - (Multichannel API Capability experience) covered by #1908512
 > In this section of the guide we would discuss the shared resources in the solution. The decision criteria that were considered and the associated cost savings from having consolidated services and the reduced operational costs associated with management and monitoring a single resource.
 
@@ -142,6 +145,7 @@ Infrastructure as Code (IaC) is often considered an operational best practice, b
 A DevOps methodology provides a greater return on investment for application teams in the cloud. IaC is a key tenet of DevOps. The modern web app pattern requires the use of IaC to deploy application infrastructure, configure services, and set up application telemetry. Monitoring operational health requires telemetry to measure security, cost, reliability, and performance gains. The cloud offers built-in features to capture telemetry. When this telemetry is fed into a DevOps framework, it can help you rapidly improve your application.
 
 ### Gateway Routing pattern
+
 > ⚠️ Pending implementation and documentation associated with - (Multichannel API Capability experience) covered by #1864679
 
 ### Distributed tracing and logging
@@ -155,6 +159,7 @@ A DevOps methodology provides a greater return on investment for application tea
 
 <!-- #5 Performance efficiency pillar -->
 ## Performance efficiency
+
 Performance efficiency is the ability of a workload to scale and meet the demands placed on it by users in an efficient manner. In cloud environments, a workload should anticipate increases in demand to meet business requirements. You should use the Cache-Aside pattern to manage application data while improving performance and optimizing costs.
 
 ### Apply the Backends for Frontends pattern
