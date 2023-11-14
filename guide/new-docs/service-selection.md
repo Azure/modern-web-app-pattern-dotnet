@@ -1,40 +1,3 @@
-# Modern web app pattern for .NET - Plan the implementation
-
-The modern web app pattern provides implementation guidance for modernizing web apps (refactor) in the cloud. Modernizing a web in the cloud can be challenging. The number of services and design patterns to choose from is overwhelming. It's hard to know the right ones to choose and how to implement them. The modern web app pattern solves this problem.
-
-The modern web app pattern is a set of [principles](mwa-overview.md) to guide your web app modernization. The pattern is applicable to almost every web app and provides a roadmap to overcome the obstacles of web app modernization efforts. To make the guidance concrete, there's a [reference implementation](https://aka.ms/eap/mwa/dotnet) of the modern web app pattern to guide your implementation. The reference implementation is a production-quality web app that you can be easily deploy for learning and experimentation. For context, the guidance follows the journey of a fictional company called Relecloud.
-
-## Architecture
-
-The modern web app pattern uses a hub and spoke architecture. Shared resources are the hub virtual network and application endpoints sit in the spoke virtual network. The modern web app pattern is a set of principles, not a specific architecture. The following diagram (*figure 1*) represents the architecture of the reference implementation. It's one example that illustrates the principles of the modern web app pattern. Your business context, existing web app, and desired service level objective (SLO) are factors that shape the specific architecture of your web app.
-
-![Diagram showing the architecture of the reference implementation.](../docs/images/relecloud-solution-diagram.png)
-
-## Business context
-
-> ⚠️ The business scenario section is pending review - (Multichannel API Capability experience) covered by #1865953
-
-For business context, the guidance follows the cloud journey of a fictional company called Relecloud. Relecloud sells concert tickets. Their website is currently used by call center operators to buy tickets on behalf of their offline (telephone) customers. Relecloud has experienced increased sales volume over the last quarter with continued
-increases projected, and senior leadership has decided to invest more in direct customer sales online instead of expanding call center capacity.
-
-The website is a monolithic ASP.NET application with a Microsoft SQL Server database which suffers from common legacy challenges including extended timelines to build and ship new features and difficulty scaling different components of the application under higher load. By applying the changes outlined in the [Modern Web App](https://github.com/Azure/modern-web-app-pattern-dotnet/blob/main/business-scenario.md) Relecloud achieved their first set of objectives to modernize the application to sustain additional volume while maturing development team practices for modern development and operations.
-
-In this phase Relecloud will achieve their intermediate goals such as opening the application directly to online customers through multiple web and mobile experiences, improving availability targets, and scaling different components of the system independently to handle traffic spikes without compromising security. Their goal of significantly reducing the time required to deliver new features to the application will be addressed in the next phase of their journey. In this phase they will build on the Azure solution they have deployed to augment their existing solution with Azure's robust global platform and tremendous managed service capabilities that will support Relecloud's growth objectives for years to come.
-
-## Existing web app
-
-> ⚠️ The existing web app section is pending review - (Multichannel API Capability experience) covered by #1865953
-
-The existing web app was an on-premises web app migrated to the cloud with the [Reliable Web App pattern](https://aka.ms/eap/rwa/dotnet/doc). The web app is a monolithic ASP.NET web app. It runs an eCommerce, line-of-business web app on two App Service Plans and has a Azure SQL database. The web app is employee-facing. The only application users are Relecloud's call center employees. Relecloud employees use the application to buy tickets on behalf of Relecloud customers. The on-premises web app suffers from common challenges. These challenges include extended timelines to build and ship new features difficulty scaling different components of the application under a higher load.
-
-## Service level objective
-
-> ⚠️ The service level objective section is pending review - (Multichannel API Capability experience) covered by #1865953
-
-A service level objective (SLO) for availability defines how available you want a web app to be for users. You need to define an SLO and what *available* means for your web app. For example, Relecloud has a target SLO of 99.9% for availability, about 8.7 hours of downtime per year. The definition of *available* for Relecloud is when its call center employees can purchase tickets 99.9% of the time.
-
-When you have a definition of *available* for your web app, the next step is to list all the dependencies on the critical path of availability. Dependencies should include Azure services and third-party integrations.
-
 ## Choose the right services
 
 > ⚠️ The Choose the right services section, and the addition of new Azure services introduced for MWA, is pending review - (Multichannel API Capability experience) covered by #1865953
@@ -144,7 +107,6 @@ Review [App Configuration best practices](https://learn.microsoft.com/azure/azur
 - **Integration.** It provides native integration with the Azure configuration store (App Configuration) and web hosting platform (App Service).
 
 You can incorporate Key Vault in .NET apps by using the [ConfigurationBuilder object](https://learn.microsoft.com/azure/azure-app-configuration/quickstart-dotnet-core-app).
-
 
 ### Endpoint security
 

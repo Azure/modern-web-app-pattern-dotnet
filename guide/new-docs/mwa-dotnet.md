@@ -1,4 +1,33 @@
-# Modern web app pattern for .NET - Apply the pattern
+# Modern web app pattern for .NET - Plan the implementation
+
+The modern web app pattern provides implementation guidance for modernizing web apps (refactor) in the cloud. Modernizing a web in the cloud can be challenging. The number of services and design patterns to choose from is overwhelming. It's hard to know the right ones to choose and how to implement them. The modern web app pattern solves this problem.
+
+The modern web app pattern is a set of [principles](mwa-overview.md) to guide your web app modernization. The guidance is applicable to almost every web app and covers architecture and code design. To make the guidance concrete, there's a [reference implementation](https://aka.ms/eap/mwa/dotnet) of the modern web app pattern to guide your implementation.  (*figure 1*).
+
+![Diagram showing the architecture of the reference implementation.](../docs/images/relecloud-solution-diagram.png)
+
+The reference implementation is a production-quality web app that you can be easily deploy for learning and experimentation. It's important that your web app adheres to the principles of the modern web app pattern, not necessarily this specific architecture. Your business scenario, existing web app, and service level objective (SLO) should shape the architecture of your web app.
+
+## Business scenario
+
+> ⚠️ The business scenario section is pending review - (Multichannel API Capability experience) covered by #1865953
+
+The modern web app pattern is applicable to anyone that wants to modernize a monolithic .NET web app in the cloud.
+
+## Existing web app
+
+> ⚠️ The existing web app section is pending review - (Multichannel API Capability experience) covered by #1865953
+
+The web app is a monolithic ASP.NET web app. It started as an on-premises web app but Relecloud migrated it the cloud using the [Reliable Web App pattern](https://aka.ms/eap/rwa/dotnet/doc). It runs an eCommerce, line-of-business web app on two App Service Plans and has a Azure SQL database. The web app is employee-facing. The only application users are Relecloud's call center employees. Relecloud employees use the application to buy tickets on behalf of Relecloud customers. The on-premises web app suffers from common challenges. These challenges include extended timelines to build and ship new features difficulty scaling different components of the application under a higher load.
+
+## Service level objective
+
+> ⚠️ The service level objective section is pending review - (Multichannel API Capability experience) covered by #1865953
+
+A service level objective (SLO) for availability defines how available you want a web app to be for users. You need to define an SLO and what *available* means for your web app. Relecloud has a target SLO of 99.9% for availability, about 8.7 hours of downtime per year. For Relecloud, the web app is available when call center employees can purchase tickets 99.9% of the time. When you have a definition of *available*, list all the dependencies on the critical path of availability. Dependencies should include Azure services and third-party integrations.
+
+
+## Apply the pattern
 
 The modern web app pattern provides implementation guidance for modernizing web apps (refactor) in the cloud.
 
@@ -8,6 +37,18 @@ The modern web app pattern provides both code and architecture guidance. The gui
 
 ![Diagram showing the architecture of the reference implementation.](../docs/images/relecloud-solution-diagram.png)
 *Figure 1. The architecture of the reference implementation.*
+
+## Principles and implementation
+
+> ⚠️ The entire principles and implementation section is pending review - (Multichannel API Capability experience) covered by #1865953
+
+The following table lists the principles of the modern web app pattern and how to implement those principles in your web app. For more information, see the [modern web app pattern overview](https://aka.ms/eap/mwa/dotnet/doc).
+
+*Table 1. Pattern principles and how to implement them.*
+
+| Modern web app pattern principles | How to implement the principles |
+| --- | --- |
+| *Modern web app pattern principles:*<br>▪ Mature dev team practices for modern development<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▪ Accelerate feature development with vertical slice development <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▪ Evolutionary design changes instead of re-write<br>▪ Managed services<br>▪ Focused on vertical slice development to support<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▪ Non-functional requirements<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▪ Parallel workstream opportunities<br><br>*Well Architected Framework principles:*<br>▪ Cost optimized<br>▪ Observable<br>▪ Ingress secure<br>▪ Infrastructure as code<br>▪ Identity-centric security|▪ Backends for Frontends pattern <br>▪ Cache-aside pattern <br>▪ Federated Identity pattern<br>▪ Queue-Based Load Leveling pattern<br>▪ Gateway Routing pattern<br>▪ Rate Limiting pattern<br>▪ Strangler Fig pattern <br>▪ Rightsized resources <br>▪ Managed identities <br>▪ Private endpoints <br>▪ Secrets management <br>▪ Bicep deployment <br>▪ Telemetry, logging, monitoring |
 
 ## Evolutionary design changes
 
