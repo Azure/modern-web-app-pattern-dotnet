@@ -79,7 +79,7 @@ Requirements | Azure App Service | Azure Container Apps |
 
 - **Reliability.** The general-purpose tier provides a high SLA and multi-region redundancy. It can support a high user load.
 - **Reduced management overhead.** It provides a managed SQL database instance.
-- **Consistency with on-premises configurations.** It supports the existing stored procedures, functions, and views.
+- **Configuration consistency.** It supports the existing stored procedures, functions, and views.
 - **Resiliency.** It supports backups and point-in-time restore.
 - **Expertise and minimal rework.** SQL Database takes advantage of in-house expertise and requires minimal rework.
 
@@ -90,7 +90,6 @@ Requirements | Azure App Service | Azure Container Apps |
 - **Anomaly detection.** It automatically detects performance anomalies.
 - **Troubleshooting.** It helps you diagnose problems in the running app.
 - **Telemetry.** It collects information about how users are using the app and allows you to easily track custom events.
-- **Solving an on-premises visibility gap.** The on-premises solution didn't have APM. Application Insights provides easy integration with the application platform and code.
 
 Azure Monitor is a comprehensive suite of monitoring tools that collect data from various Azure services. For more information, see:
 
@@ -106,7 +105,7 @@ Azure Monitor is a comprehensive suite of monitoring tools that collect data fro
 
 [Azure Cache for Redis](https://learn.microsoft.com/azure/azure-cache-for-redis/cache-overview) is a managed in-memory data store based on the Redis software. The web app's load is heavily skewed toward viewing concerts and venue details. It needs a cache that provides the following benefits:
 
-- **Reduced management overhead.** It's a fully managed service.
+- **Reduced management overhead.** It's a fully-managed service.
 - **Speed and volume.** It has high-data throughput and low latency reads for commonly accessed, slow changing data.
 - **Diverse supportability.** It's a unified cache location for all instances of the web app to use.
 - **Externalized.** The on-premises application servers performed VM-local caching. This setup didn't offload highly frequented data, and it couldn't invalidate data.
@@ -114,13 +113,16 @@ Azure Monitor is a comprehensive suite of monitoring tools that collect data fro
 
 ### Global load balancer
 
-[Azure Front Door](https://learn.microsoft.com/azure/frontdoor/front-door-overview) is a layer-7 global load balancer that uses the Azure backbone network to route traffic between regions. Relecloud needed to a multi-region architecture to meet their 99.9% SLO. They needed Front Door to provide layer-7 routing between regions. Front Door also provides extra features, such as Web Application Firewall, and positions Relecloud to use a content delivery network. The content delivery network provides site acceleration as the traffic to the web app increases. The web app uses Azure Front Door because it provides the following benefits:
+[Azure Front Door](https://learn.microsoft.com/azure/frontdoor/front-door-overview) is a layer-7 global load balancer that uses the Azure backbone network to route traffic between regions. Relecloud uses Azure Front Door because it provides the following benefits:
 
+- **Cross-region routing.** Front Door provides layer-7 routing between regions. Relecloud needed to a multi-region architecture to meet their 99.9% SLO.
+- **Content delivery network.** Front Door positions Relecloud to use a content delivery network. The content delivery network provides site acceleration as the traffic to the web app increases.
 - **Routing flexibility.** It allows the application team to configure ingress needs to support future changes in the application.
 - **Traffic acceleration.** It uses anycast to reach the nearest Azure point of presence and find the fastest route to the web app.
 - **Custom domains.** It supports custom domain names with flexible domain validation.
 - **Health probes.** The application needs intelligent health probe monitoring. Azure Front Door uses responses from the probe to determine the best origin for routing client requests.
 - **Monitoring support.** It supports built-in reports with an all-in-one dashboard for both Front Door and security patterns. You can configure alerts that integrate with Azure Monitor. It lets the application log each request and failed health probes.
+- **Web application firewall.** Front Door integrates natively with Azure Web Application Firewall.
 - **DDoS protection.** It has built-in layer 3-4 DDoS protection.
 
 Azure has several load balancers. Evaluate your current system capabilities and the requirements for the new app running on Azure, and then [choose the best load balancer for your app](https://learn.microsoft.com/azure/architecture/guide/technology-choices/load-balancing-overview).
@@ -131,7 +133,6 @@ Azure has several load balancers. Evaluate your current system capabilities and 
 
 - **Global protection.** It provides improved global web app protection without sacrificing performance.
 - **Botnet protection.** The team can monitor and configure to address security concerns from botnets.
-- **Parity with on-premises.** The on-premises solution was running behind a web application firewall managed by IT.
 
 ### Configuration storage
 
@@ -145,7 +146,7 @@ Review [App Configuration best practices](https://learn.microsoft.com/azure/azur
 
 ### Secrets manager
 
-[Azure Key Vault](https://learn.microsoft.com/azure/key-vault/general/overview) provides centralized storage of application secrets to control their distribution. It supports X.509 certificates, connection strings, and API keys to integrate with third-party services. Managed identities are the preferred solution for intra-Azure service communication, but the application still has secrets to manage. The on-premises web app stored secrets on-premises in code configuration files, but it's a better security practice to externalize secrets. The web app uses Key Vault because it provides the following features:
+[Azure Key Vault](https://learn.microsoft.com/azure/key-vault/general/overview) provides centralized storage of application secrets to control their distribution. The web app uses Key Vault because it provides the following features:
 
 - **Encryption.** It supports encryption at rest and in transit.
 - **Managed identities.** The application services can use managed identities to access the secret store.
@@ -155,10 +156,9 @@ Review [App Configuration best practices](https://learn.microsoft.com/azure/azur
 
 You can incorporate Key Vault in .NET apps by using the [ConfigurationBuilder object](https://learn.microsoft.com/azure/azure-app-configuration/quickstart-dotnet-core-app).
 
-
 ### Endpoint security
 
-[Azure Private Link](https://learn.microsoft.com/azure/private-link/private-link-overview) provides access to PaaS services (such as Azure Cache for Redis and SQL Database) over a private endpoint in your virtual network. Traffic between your virtual network and the service travels across the Microsoft backbone network. Azure DNS with Azure Private Link enables your solution to communicate via an enhanced security link with Azure services like SQL Database. The web app uses Private Link for these reasons:
+[Azure Private Link](https://learn.microsoft.com/azure/private-link/private-link-overview) provides access to PaaS services (such as Azure Cache for Redis and SQL Database) over a private endpoint in your virtual network. Traffic between your virtual network and the service travels across the Microsoft backbone network. The web app uses Private Link for these reasons:
 
 - **Enhanced security communication.** It lets the application privately access services on the Azure platform and reduces the network footprint of data stores to help protect against data leakage.
-- **Minimal effort.** The private endpoints support the web app platform and database platform the web app uses. Both platforms mirror existing on-premises configurations for minimal change.
+- **Minimal effort.** The private endpoints support the web app platform and database platform the web app uses.
