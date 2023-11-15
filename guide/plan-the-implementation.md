@@ -55,10 +55,14 @@ The Azure services you choose should support your short-term and and long-term g
 - **Containerization capability.** The application platform also supports containerization without changing Azure services.
 - **Autoscaling.** The web app can automatically scale up, down, in, and out based on user traffic and settings.
 
-| Service | High SLA | Fully-managed | .NET support | Container support | Autoscaling | Current platform |
-| --- | --- | --- | --- | --- | --- | --- |
-| Azure App Service |&#x2705;|&#x2705;|&#x2705;|&#x2705;|&#x2705;|&#x2705;|
-| Azure Container Apps |&#x2705;|&#x2705;|&#x2705;|&#x2705;|&#x2705;| |
+Requirements | Azure App Service | Azure Container Apps |
+| --- | --- | --- |
+| High SLA | &#x2705; | &#x2705; |
+| Fully-managed | &#x2705; | &#x2705; |
+| .NET support | &#x2705; | &#x2705; |
+| Container support | &#x2705; | &#x2705; |
+| Autoscaling | &#x2705; | &#x2705; |
+| Current platform | &#x2705; | |
 
 ### Identity management
 
