@@ -52,7 +52,6 @@ The Azure services you choose should support your short-term and and long-term g
 - **High SLA.** It has a high SLA that meets the production environment SLO.
 - **Reduced management overhead.** It's a fully managed solution that handles scaling, health checks, and load balancing.
 - **.NET support.** It supports the version of .NET that the application is written in.
-- **Containerization capability.** The application platform also supports containerization without changing Azure services.
 - **Autoscaling.** The web app can automatically scale up, down, in, and out based on user traffic and settings.
 
 Requirements | Azure App Service | Azure Container Apps |
