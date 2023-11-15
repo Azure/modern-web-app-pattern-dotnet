@@ -1,10 +1,14 @@
 # Modern web app pattern for .NET - Apply the pattern
 
-The modern web app pattern provides implementation guidance for modernizing web apps (refactor) in the cloud.
+The modern web app pattern provides implementation guidance for modernizing web apps (refactor) in the cloud. Modernizing a web in the cloud can be challenging. The number of services and design patterns to choose from is overwhelming. It's hard to know the right ones to choose and how to implement them. The modern web app pattern solves this problem.
 
-> ⚠️ The entire architecture and code section is pending review - (Multichannel API Capability experience) covered by #1865953
+The modern web app pattern is a set of [principles](mwa-overview.md) to guide your web app modernization. The pattern is applicable to almost every web app and provides a roadmap to overcome the obstacles of web app modernization efforts.
 
-The modern web app pattern provides both code and architecture guidance. The guidance is structured around the five pillars of workload design from the Azure Well-Architected Framework. It reinforces the close relationship between code and architecture. This guidance uses the reference implementation architecture to illustrate the principles of the modern web app pattern (*see figure 1*). The modern web app pattern is a set of principles with implementation guidance. It's not a specific architecture. It's important that your web app adheres to the principles of the pattern, not this specific architecture.
+There's a [reference implementation](https://aka.ms/eap/mwa/dotnet) of the modern web app pattern to guide your implementation. The reference implementation is a production-quality web app that you can be easily deploy for learning and experimentation. For context, the guidance follows the journey of a fictional company called Relecloud.
+
+## Architecture
+
+The modern web app pattern uses a hub and spoke architecture. Shared resources are the hub virtual network and application endpoints sit in the spoke virtual network. The modern web app pattern is a set of principles, not a specific architecture. The following diagram (*figure 1*) represents the architecture of the reference implementation. It's one example that illustrates the principles of the modern web app pattern. Your business context, existing web app, and desired service level objective (SLO) are factors that shape the specific architecture of your web app.
 
 ![Diagram showing the architecture of the reference implementation.](../docs/images/relecloud-solution-diagram.png)
 *Figure 1. The architecture of the reference implementation.*
@@ -12,7 +16,7 @@ The modern web app pattern provides both code and architecture guidance. The gui
 ## Evolutionary design changes
 
 > ⚠️ Pending task Strangler Fig discussion - (Queue-based ticket rendering experience) covered by #1864681
-> In this section we will describe how the team approached updating the solution without rewriting it as part of the larger conversation for an application that 1) adds new features and 2) is sitting between monolith and microservices.
+> In this section, we describe how the team approached updating the solution without rewriting it as part of the larger conversation for an application that (1) adds new features and (2) is sitting between monolith and microservices.
 
 <!-- #1 Reliability pillar -->
 ## Reliability
@@ -37,11 +41,9 @@ Cloud applications are often composed of multiple Azure services. Communication 
 
 > ⚠️ Pending task Document the way Federated Identity Pattern was applied - (Public facing website experience) covered by  #1908023
 
-
 ### Secure Azure resources at the identity layer
 
 > ⚠️ Pending task Document recommended approach for Identity Layer - (Multichannel API Capability experience) covered by  #1865959
-
 
 ### Secure Azure resources with network isolation
 

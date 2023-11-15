@@ -47,7 +47,7 @@ The Azure services you choose should support your short-term and and long-term g
 
 ### Application platform
 
-[Azure App Service](https://learn.microsoft.com/azure/app-service/overview) is an HTTP-based, managed service for hosting web apps, REST APIs, and mobile back ends. Among Azure [compute options](https://learn.microsoft.com/azure/architecture/guide/technology-choices/compute-decision-tree), Relecloud chose Azure App Service because it meets the following requirements:
+[Azure App Service](https://learn.microsoft.com/azure/app-service/overview) is an HTTP-based, managed service for hosting web apps, REST APIs, and mobile back ends. Relecloud chose Azure App Service because it meets the following requirements:
 
 - **High SLA.** It has a high SLA that meets the production environment SLO.
 - **Reduced management overhead.** It's a fully managed solution that handles scaling, health checks, and load balancing.
@@ -64,6 +64,8 @@ Requirements | Azure App Service | Azure Container Apps |
 | Autoscaling | &#x2705; | &#x2705; |
 | Current platform | &#x2705; | |
 
+For more information, see [Azure compute decision tree](https://learn.microsoft.com/azure/architecture/guide/technology-choices/compute-decision-tree).
+
 ### Identity management
 
 [Microsoft Entra ID](https://learn.microsoft.com/azure/active-directory/fundamentals/active-directory-whatis) is a cloud-based identity and access management service. It authenticates and authorizes users based on roles that integrate with our application. Microsoft Entra ID provides the application with the following abilities:
@@ -75,7 +77,7 @@ Requirements | Azure App Service | Azure Container Apps |
 
 ### Database
 
-[Azure SQL Database](https://learn.microsoft.com/azure/azure-sql/azure-sql-iaas-vs-paas-what-is-overview?view=azuresql) is a general-purpose relational database and managed service in that supports relational and spatial data, JSON, spatial, and XML. The web app used SQL Server on-premises, and the team wants to use the existing database schema, stored procedures, and functions. Several SQL products are available on Azure, but the web app uses Azure SQL Database because it meets the following requirements:
+[Azure SQL Database](https://learn.microsoft.com/azure/azure-sql/azure-sql-iaas-vs-paas-what-is-overview?view=azuresql) is a general-purpose relational database and managed service in that supports relational and spatial data, JSON, spatial, and XML. The web app uses Azure SQL Database because it meets the following requirements:
 
 - **Reliability.** The general-purpose tier provides a high SLA and multi-region redundancy. It can support a high user load.
 - **Reduced management overhead.** It provides a managed SQL database instance.
@@ -136,7 +138,7 @@ Azure has several load balancers. Evaluate your current system capabilities and 
 
 ### Configuration storage
 
-[Azure App Configuration](https://learn.microsoft.com/azure/azure-app-configuration/overview) is a service for centrally managing application settings and feature flags. The goal is to replace the file-based configuration with a central configuration store that integrates with the application platform and code. App Config provides the following benefits:
+[Azure App Configuration](https://learn.microsoft.com/azure/azure-app-configuration/overview) is a service for centrally managing application settings and feature flags. App Config provides the following benefits:
 
 - **Flexibility.** It supports feature flags. Feature flags allow users to opt in and out of early preview features in a production environment without redeploying the app.
 - **Supports Git pipeline.** The source of truth for configuration data needed to be a Git repository. The pipeline needed to update the data in the central configuration store.
