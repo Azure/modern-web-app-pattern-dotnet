@@ -1,6 +1,6 @@
 # Modern web app pattern for .NET - Plan the implementation
 
-The modern web app pattern provides implementation guidance for modernizing web apps (refactor) in the cloud. Modernizing a web in the cloud can be challenging. The number of services and design patterns to choose from is overwhelming. It's hard to know the right ones to choose and how to implement them. The modern web app pattern solves this problem.
+The modern web app pattern provides implementation guidance for modernizing web apps (refactor) in the cloud. Modernizing a web in the cloud can be challenging. The number of services and design patterns to choose from can be overwhelming. It's hard to know the right ones to choose and how to implement them. The modern web app pattern solves this problem.
 
 The modern web app pattern is a set of [principles](mwa-overview.md) to guide your web app modernization. The pattern is applicable to almost every web app and provides a roadmap to overcome the obstacles of web app modernization efforts.
 
