@@ -55,6 +55,11 @@ The Azure services you choose should support your short-term and and long-term g
 - **Containerization capability.** The application platform also supports containerization without changing Azure services.
 - **Autoscaling.** The web app can automatically scale up, down, in, and out based on user traffic and settings.
 
+| Service | High SLA | Fully-managed | .NET support | Container support | Autoscaling | Current platform |
+| --- | --- | --- | --- | --- | --- | --- |
+| Azure App Service |&#x2705;|&#x2705;|&#x2705;|&#x2705;|&#x2705;|&#x2705;|
+| Azure Container Apps |&#x2705;|&#x2705;|&#x2705;|&#x2705;|&#x2705;| |
+
 ### Identity management
 
 [Microsoft Entra ID](https://learn.microsoft.com/azure/active-directory/fundamentals/active-directory-whatis) is a cloud-based identity and access management service. It authenticates and authorizes users based on roles that integrate with our application. Microsoft Entra ID provides the application with the following abilities:
