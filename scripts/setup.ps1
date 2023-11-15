@@ -181,7 +181,7 @@ if ($SingleLocation -and $MultiLocation) {
     exit 1
 }
 
-if (!$SingleLocation -and !$MultiLocation) {
+if (!$SingleLocation -and !$MultiLocation -and !$NotIsolated) {
     "You must specify either -SingleLocation or -MultiLocation"
     exit 1
 }
