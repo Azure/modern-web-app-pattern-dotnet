@@ -200,12 +200,11 @@ module naming2 './modules/naming.bicep' = {
 }
 
 /*
-** Resources are organized into one of four resource groups:
+** Workload resources are organized into one of three resource groups:
 **
 **  hubResourceGroup      - contains the hub network resources
 **  spokeResourceGroup    - contains the spoke network resources
-**  sqlResourceGroup      - contains the SQL resources
-**  workloadResourceGroup - contains the workload resources 
+**  applicationResourceGroup - contains the application resources 
 ** 
 ** Not all of the resource groups are necessarily available - it
 ** depends on the settings.
@@ -236,7 +235,7 @@ module resourceGroups2 './modules/resource-groups.bicep' = if (isMultiLocationDe
 ** Azure Monitor Resources
 **
 ** Azure Monitor resources (Log Analytics Workspace and Application Insights) are
-** homed in the hub network when it's available, and the workload resource group
+** homed in the hub network when it's available, and the application resource group
 ** when it's not available.
 */
 module azureMonitor './modules/azure-monitor.bicep' = {
@@ -244,7 +243,7 @@ module azureMonitor './modules/azure-monitor.bicep' = {
   params: {
     deploymentSettings: deploymentSettings
     resourceNames: naming.outputs.resourceNames
-    resourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : resourceGroups.outputs.workload_resource_group_name
+    resourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : resourceGroups.outputs.application_resource_group_name
   }
 }
 
@@ -259,7 +258,7 @@ module azureMonitor './modules/azure-monitor.bicep' = {
 **  A route table that is used within the spoke to reach the firewall
 **
 ** We also set up a budget with cost alerting for the hub network (separate
-** from the workload budget)
+** from the application budget)
 */
 module hubNetwork './modules/hub-network.bicep' = if (willDeployHubNetwork) {
   name: '${prefix}-hub-network'
@@ -286,12 +285,12 @@ module hubNetwork './modules/hub-network.bicep' = if (willDeployHubNetwork) {
 
 /*
 ** The hub network MAY have created an Azure Monitor workspace.  If it did, we don't need
-** to do it again.  If not, we'll create one in the workload resource group
+** to do it again.  If not, we'll create one in the application resource group
 */
 
 
 /*
-** The spoke network is the network that the workload resources are deployed into.
+** The spoke network is the network that the application resources are deployed into.
 */
 module spokeNetwork './modules/spoke-network.bicep' = if (isNetworkIsolated) {
   name: '${prefix}-spoke-network'
@@ -404,8 +403,8 @@ module frontdoor './modules/shared-frontdoor.bicep' = {
   }
 }
 
-module workload './modules/workload-resources.bicep' = {
-  name: '${prefix}-workload'
+module application './modules/application-resources.bicep' = {
+  name: '${prefix}-application'
   params: {
     deploymentSettings: deploymentSettings
     diagnosticSettings: diagnosticSettings
@@ -430,8 +429,8 @@ module workload './modules/workload-resources.bicep' = {
   ]
 }
 
-module workload2 './modules/workload-resources.bicep' =  if (isMultiLocationDeployment) {
-  name: '${prefix}-workload2'
+module application2 './modules/application-resources.bicep' =  if (isMultiLocationDeployment) {
+  name: '${prefix}-application2'
   params: {
     deploymentSettings: deploymentSettings2
     diagnosticSettings: diagnosticSettings
@@ -456,21 +455,21 @@ module workload2 './modules/workload-resources.bicep' =  if (isMultiLocationDepl
   ]
 }
 
-module workloadPostConfiguration './modules/workload-post-config.bicep' = if (deploymentSettings.isNetworkIsolated) {
-  name: '${prefix}-workload-postconfig'
+module applicationPostConfiguration './modules/application-post-config.bicep' = if (deploymentSettings.isNetworkIsolated) {
+  name: '${prefix}-application-postconfig'
   params: {
     deploymentSettings: deploymentSettings
     administratorPassword: jumphostAdministratorPassword
     administratorUsername: administratorUsername
     databasePassword: databasePassword
     hubResourceGroupName: resourceGroups.outputs.hub_resource_group_name
-    keyVaultName: isNetworkIsolated? hubNetwork.outputs.key_vault_name : workload.outputs.key_vault_name
-    readerIdentities: union(workload.outputs.service_managed_identities, deploymentSettings.isMultiLocationDeployment ? workload2.outputs.service_managed_identities : [])
-    redisCacheNamePrimary: workload.outputs.redis_cache_name
-    redisCacheNameSecondary: isMultiLocationDeployment ? workload2.outputs.redis_cache_name : workload.outputs.redis_cache_name
+    keyVaultName: isNetworkIsolated? hubNetwork.outputs.key_vault_name : application.outputs.key_vault_name
+    readerIdentities: union(application.outputs.service_managed_identities, deploymentSettings.isMultiLocationDeployment ? application2.outputs.service_managed_identities : [])
+    redisCacheNamePrimary: application.outputs.redis_cache_name
+    redisCacheNameSecondary: isMultiLocationDeployment ? application2.outputs.redis_cache_name : application.outputs.redis_cache_name
     resourceNames: naming.outputs.resourceNames
-    workloadResourceGroupNamePrimary: resourceGroups.outputs.workload_resource_group_name
-    workloadResourceGroupNameSecondary: isMultiLocationDeployment ? resourceGroups2.outputs.workload_resource_group_name : ''
+    applicationResourceGroupNamePrimary: resourceGroups.outputs.application_resource_group_name
+    applicationResourceGroupNameSecondary: isMultiLocationDeployment ? resourceGroups2.outputs.application_resource_group_name : ''
   }
 }
 
@@ -486,7 +485,7 @@ module buildAgent './modules/build-agent.bicep' = if (installBuildAgent) {
 
     // Dependencies
     logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
-    managedIdentityId: workload.outputs.owner_managed_identity_id
+    managedIdentityId: application.outputs.owner_managed_identity_id
     subnets: isNetworkIsolated ? spokeNetwork.outputs.subnets : {}
 
     // Settings
@@ -509,7 +508,7 @@ param enableTelemetry bool = true
 module telemetry './modules/telemetry.bicep' = if (enableTelemetry) {
   name: '${prefix}-telemetry'
   params: {
-    resourceGroupName: resourceGroups.outputs.workload_resource_group_name
+    resourceGroupName: resourceGroups.outputs.application_resource_group_name
     deploymentSettings: deploymentSettings
   }
 }
@@ -525,8 +524,8 @@ output firewall_hostname string = willDeployHubNetwork ? hubNetwork.outputs.fire
 // Spoke resources
 output build_agent string = installBuildAgent ? buildAgent.outputs.build_agent_hostname : ''
 
-// Workload resources
-output AZURE_RESOURCE_GROUP string = resourceGroups.outputs.workload_resource_group_name
-output service_managed_identities object[] = workload.outputs.service_managed_identities
-output service_web_endpoints string[] = workload.outputs.service_web_endpoints
-output AZURE_OPS_VAULT_NAME string = isNetworkIsolated ? hubNetwork.outputs.key_vault_name : workload.outputs.key_vault_name
+// Application resources
+output AZURE_RESOURCE_GROUP string = resourceGroups.outputs.application_resource_group_name
+output service_managed_identities object[] = application.outputs.service_managed_identities
+output service_web_endpoints string[] = application.outputs.service_web_endpoints
+output AZURE_OPS_VAULT_NAME string = isNetworkIsolated ? hubNetwork.outputs.key_vault_name : application.outputs.key_vault_name

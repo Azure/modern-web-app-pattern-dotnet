@@ -11,7 +11,7 @@
     The prefix of the Azure environment to clean up.  Provide this OR the ResourceGroup parameter to
     clean up a specific environment.
 .PARAMETER ResourceGroup
-    The name of the workload resource group to clean up.  Provide this OR the Prefix parameter to clean
+    The name of the application resource group to clean up.  Provide this OR the Prefix parameter to clean
     up a specific environment.
 .PARAMETER SpokeResourceGroup
     If you provide the ResourceGroup parameter and are using network isolation, then you must also provide
@@ -24,7 +24,7 @@
 .PARAMETER AsJob
     Use The -AsJob parameter to delete the resource groups in the background.
 .EXAMPLE
-    .\cleanup.ps1 -AsJob -Prefix rg-rele231011v1-dev-westus3-workload
+    .\cleanup.ps1 -AsJob -Prefix rg-rele231011v1-dev-westus3-application
     This command will clean up the Azure environment with the prefix "myenv".
 .NOTES
     This command requires that Az modules are installed and imported. It also requires that you have an
@@ -56,13 +56,13 @@ else {
 
 # Default Settings
 $rgPrefix = ""
-$rgWorkload = ""
+$rgApplication = ""
 $rgSpoke = ""
 $rgHub = ""
 
 if ($Prefix) {
     $rgPrefix = $Prefix
-    $rgWorkload = "$rgPrefix-workload"
+    $rgApplication = "$rgPrefix-application"
     $rgSpoke = "$rgPrefix-spoke"
     $rgHub = "$rgPrefix-hub"
 } else {
@@ -76,13 +76,13 @@ if ($Prefix) {
         $environmentType = $azdConfig['AZURE_ENV_TYPE'] ?? 'dev'
         $location = $azdConfig['AZURE_LOCATION']
         $rgPrefix = "rg-$environmentName-$environmentType-$location"
-        $rgWorkload = "$rgPrefix-workload"
+        $rgApplication = "$rgPrefix-application"
         $rgSpoke = "$rgPrefix-spoke"
         $rgHub = "$rgPrefix-hub"
         $CleanupAzureDirectory = $true
     } else {
-        $rgWorkload = $ResourceGroup
-        $rgPrefix = $resourceGroup.Substring(0, $resourceGroup.IndexOf('-workload'))
+        $rgApplication = $ResourceGroup
+        $rgPrefix = $resourceGroup.Substring(0, $resourceGroup.IndexOf('-application'))
     }
 }
 
@@ -168,13 +168,13 @@ function Remove-ResourceGroupFromAzure($resourceGroupName, $asJob) {
     }
 }
 
-"`nCleaning up environment for workload $rgWorkload" | Write-Output
+"`nCleaning up environment for application $rgApplication" | Write-Output
 
 # Get the list of resource groups to deal with
 $resourceGroups = [System.Collections.ArrayList]@()
-if (Test-ResourceGroupExists -ResourceGroupName $rgWorkload) {
-    "`tFound workload resource group: $rgWorkload" | Write-Output
-    $resourceGroups.Add($rgWorkload) | Out-Null
+if (Test-ResourceGroupExists -ResourceGroupName $rgApplication) {
+    "`tFound application resource group: $rgApplication" | Write-Output
+    $resourceGroups.Add($rgApplication) | Out-Null
 }
 if (Test-ResourceGroupExists -ResourceGroupName $rgSpoke) {
     "`tFound spoke resource group: $rgSpoke" | Write-Output
@@ -202,7 +202,7 @@ foreach ($resourceGroupName in $resourceGroups) {
 }
 
 "`nRemoving resource groups in order..." | Write-Output
-Remove-ResourceGroupFromAzure -ResourceGroupName $rgWorkload -AsJob:$AsJob
+Remove-ResourceGroupFromAzure -ResourceGroupName $rgApplication -AsJob:$AsJob
 Remove-ResourceGroupFromAzure -ResourceGroupName $rgSpoke -AsJob:$AsJob
 Remove-ResourceGroupFromAzure -ResourceGroupName $rgHub -AsJob:$AsJob
 

@@ -113,12 +113,14 @@ var defaultResourceNames = {
   spokeWebOutboundSubnet: 'Web-Outbound-${resourceToken}'
   spokeWebOutboundNSG: 'nsg-web-out-${resourceToken}'
 
-  // Common resources - may be in hub or workload resource group
+  // Common resources - may be in hub or application resource group
   applicationInsights: 'appi-${resourceToken}'
   buildAgent: 'vm-buildagent-${resourceToken}'
   logAnalyticsWorkspace: 'log-${resourceToken}'
+  keyVault: 'kv-${resourceToken}'
+  keyVaultPrivateEndpoint: 'pep-kv-${resourceToken}'
 
-  // Workload resources
+  // Application resources
   apiAppService: 'app-api-${resourceToken}'
   apiAppServicePlan: 'asp-api-${resourceToken}'
   apiPrivateEndpoint: 'pep-api-${resourceToken}'
@@ -129,10 +131,8 @@ var defaultResourceNames = {
   commonAppServicePlan: 'asp-common-${resourceToken}'
   frontDoorEndpoint: 'fde-${resourceToken}'
   frontDoorProfile: 'afd-${resourceToken}'
-  keyVault: 'kv-${resourceToken}'
-  keyVaultPrivateEndpoint: 'pep-kv-${resourceToken}'
   ownerManagedIdentity: 'id-owner-${resourceToken}'
-  resourceGroup: '${resourceGroupPrefix}-workload'
+  resourceGroup: '${resourceGroupPrefix}-application'
   redis: 'redis-${resourceToken}'
   redisPrivateEndpoint: 'pep-redis-${resourceToken}'
   storageAccount: 'st${deploymentSettings.stage}${resourceToken}'
@@ -141,7 +141,7 @@ var defaultResourceNames = {
   sqlDatabase: 'relecloud-${resourceToken}'
   sqlDatabasePrivateEndpoint: 'pep-sqldb-${resourceToken}'
   sqlServer: 'sql-${resourceToken}'
-  sqlResourceGroup: '${resourceGroupPrefix}-workload'
+  sqlResourceGroup: '${resourceGroupPrefix}-application'
   webAppFrontend: 'app-webfrontend-${resourceToken}'
   webAppService: 'app-webservice-${resourceToken}'
   webAppServicePlan: 'asp-web-${resourceToken}'
@@ -189,12 +189,12 @@ output resourceNames object = {
   spokeWebOutboundSubnet: contains(overrides, 'spokeWebOutboundSubnet') && !empty(overrides.spokeWebOutboundSubnet) ? overrides.spokeWebOutboundSubnet : defaultResourceNames.spokeWebOutboundSubnet
   spokeWebOutboundNSG: contains(overrides, 'spokeWebOutboundNSG') && !empty(overrides.spokeWebOutboundNSG) ? overrides.spokeWebOutboundNSG : defaultResourceNames.spokeWebOutboundNSG
 
-  // Common services - may be in hub or workload resource group
+  // Common services - may be in hub or application resource group
   applicationInsights: contains(overrides, 'applicationInsights') && !empty(overrides.applicationInsights) ? overrides.applicationInsights : defaultResourceNames.applicationInsights
   buildAgent: contains(overrides, 'buildAgent') && !empty(overrides.buildAgent) ? overrides.buildAgent : defaultResourceNames.buildAgent
   logAnalyticsWorkspace: contains(overrides, 'logAnalyticsWorkspace') && !empty(overrides.logAnalyticsWorkspace) ? overrides.logAnalyticsWorkspace : defaultResourceNames.logAnalyticsWorkspace
 
-  // Workload resources
+  // Application resources
   apiAppService: contains(overrides, 'apiAppService') && !empty(overrides.apiAppService) ? overrides.apiAppService : defaultResourceNames.apiAppService
   apiAppServicePlan: contains(overrides, 'apiAppServicePlan') && !empty(overrides.apiAppServicePlan) ? overrides.apiAppServicePlan : defaultResourceNames.apiAppServicePlan
   apiPrivateEndpoint: contains(overrides, 'apiPrivateEndpoint') && !empty(overrides.apiPrivateEndpoint) ? overrides.apiPrivateEndpoint : defaultResourceNames.apiPrivateEndpoint

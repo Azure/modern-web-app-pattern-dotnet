@@ -1,13 +1,13 @@
 targetScope = 'subscription'
 
 /*
-** Workload Infrastructure post-configuration
+** Application Infrastructure post-configuration
 ** Copyright (C) 2023 Microsoft, Inc.
 ** All Rights Reserved
 **
 ***************************************************************************
 **
-** The Workload consists of a virtual network that has shared resources that
+** The Application consists of a virtual network that has shared resources that
 ** are generally associated with a hub. This module provides post-configuration
 ** actions such as creating key-vault secrets to save information from
 ** modules that depend on the hub.
@@ -97,10 +97,10 @@ param redisCacheNamePrimary string
 param redisCacheNameSecondary string
 
 @description('Name of the resource group containing Azure Cache for Redis.')
-param workloadResourceGroupNamePrimary string
+param applicationResourceGroupNamePrimary string
 
 @description('Name of the resource group containing Azure Cache for Redis.')
-param workloadResourceGroupNameSecondary string
+param applicationResourceGroupNameSecondary string
 
 @description('List of user assigned managed identities that will receive Secrets User role to the shared key vault')
 param readerIdentities object[]
@@ -140,12 +140,12 @@ resource existingHubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01
 
 resource existingPrimaryRedisCache 'Microsoft.Cache/redis@2023-04-01' existing = {
   name: redisCacheNamePrimary
-  scope: resourceGroup(workloadResourceGroupNamePrimary)
+  scope: resourceGroup(applicationResourceGroupNamePrimary)
 }
 
 resource existingSecondaryRediscache 'Microsoft.Cache/redis@2023-04-01' existing = if (deploymentSettings.isMultiLocationDeployment) {
   name: redisCacheNameSecondary
-  scope: resourceGroup(deploymentSettings.isMultiLocationDeployment ? workloadResourceGroupNameSecondary : workloadResourceGroupNamePrimary)
+  scope: resourceGroup(deploymentSettings.isMultiLocationDeployment ? applicationResourceGroupNameSecondary : applicationResourceGroupNamePrimary)
 }
 
 resource existingKeyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {

@@ -87,10 +87,10 @@ param enablePublicNetworkAccess bool = true
 @description('If set, the private endpoint settings for this resource')
 param privateEndpointSettings PrivateEndpointSettings?
 
-@description('The list of application identities to be granted owner access to the workload resources.')
+@description('The list of application identities to be granted owner access to the application resources.')
 param ownerIdentities ApplicationIdentity[] = []
 
-@description('The list of application identities to be granted reader access to the workload resources.')
+@description('The list of application identities to be granted reader access to the application resources.')
 param readerIdentities ApplicationIdentity[] = []
 
 @description('Specifies the SKU of the app configuration store.')

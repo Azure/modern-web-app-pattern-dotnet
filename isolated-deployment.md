@@ -75,7 +75,7 @@ Now that you have the username and password:
 > Microsoft employees:
 >
 > - The jump host must be InTune managed.
-> - Turn off the firewall on the WORKLOAD Key Vault.
+> - Turn off the firewall on the rg-HUB Key Vault.
 > - Create the Entra application registrations from the same system that you used to initially provision resources.
 > - Once the application registrations have been created, you can optionally turn on the firewall again.
 >
@@ -140,7 +140,7 @@ Set up the required Azure Developer CLI environment:
 ```shell
 azd env new <Name of created environment>
 azd env set AZURE_LOCATION <Location>
-azd env set AZURE_RESOURCE_GROUP <name of workload resource group from Azure Portal>
+azd env set AZURE_RESOURCE_GROUP <name of application resource group from Azure Portal>
 azd env set AZURE_SUBSCRIPTION_ID "<Azure subscription ID>"
 az account set --subscription "<Azure Subscription ID>"
 ```
@@ -149,11 +149,11 @@ Ensure you use the same configuration you used when provisioning the services.
 
 ### Register the application in Microsoft Entra
 
-Give yourself permission to access the WORKLOAD key vault and app config resources.
+Give yourself permission to access the rg-HUB key vault and app config resources.
 
 - If running from your local system instead of the jump host, turn off the firewall in the key vault and app config resources.
-- In the WORKLOAD key vault, add yourself to the _Key Vault Secrets Officer_ role in **Access Control (IAM)**.
-- In the WORKLOAD app config, add yourself to the _App Configuration Data Owner_ role in **Access Control (IAM)**.
+- In the rg-HUB key vault, add yourself to the _Key Vault Secrets Officer_ role in **Access Control (IAM)**.
+- In the rg-APPLICATION app config, add yourself to the _App Configuration Data Owner_ role in **Access Control (IAM)**.
 
 > **WARNING**
 >
@@ -163,7 +163,7 @@ Create the Entra application registrations:
 
 - Open a new PowerShell terminal.
 - Change directory to the `modern-web-app-pattern-dotnet` directory.
-- Run `.\infra\scripts\create-app-registrations.ps1` -g `<name of your workload resource group>`
+- Run `.\infra\scripts\create-app-registrations.ps1` -g `<name of your application resource group>`
 - Wait approximately 5 minutes for the registration to propagate.
 
 ### Deploy the code from the jump host

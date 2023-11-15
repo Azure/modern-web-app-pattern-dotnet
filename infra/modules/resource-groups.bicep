@@ -90,7 +90,7 @@ resource spokeResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = if
   tags: union(deploymentSettings.tags, deploymentSettings.workloadTags)
 }
 
-resource workloadResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
+resource applicationResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   name: resourceNames.resourceGroup
   location: deploymentSettings.location
   tags: union(deploymentSettings.tags, deploymentSettings.workloadTags)
@@ -101,6 +101,6 @@ resource workloadResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' =
 // ========================================================================
 
 
-output workload_resource_group_name string = workloadResourceGroup.name
+output application_resource_group_name string = applicationResourceGroup.name
 output spoke_resource_group_name string = createSpoke ? spokeResourceGroup.name : 'spoke-not-created'
 output hub_resource_group_name string = createHub ? hubResourceGroup.name : 'hub-not-created'

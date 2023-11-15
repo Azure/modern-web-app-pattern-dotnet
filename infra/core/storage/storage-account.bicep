@@ -84,7 +84,7 @@ param allowCrossTenantReplication bool = true
 @description('Indicates whether the storage account permits requests to be authorized with the account access key via Shared Key. If false, then all requests, including shared access signatures, must be authorized with Azure Active Directory (Azure AD). The default value is null, which is equivalent to true.')
 param allowSharedKeyAccess bool = true
 
-@description('The list of application identities to be granted contributor access to the workload resources.')
+@description('The list of application identities to be granted contributor access to the application resources.')
 param contributorIdentities ApplicationIdentity[] = []
 
 @description('Whether or not public endpoint access is allowed for this server')
@@ -98,7 +98,7 @@ param kind string = 'StorageV2'
 @allowed(['TLS1_0','TLS1_1','TLS1_2'])
 param minimumTlsVersion string = 'TLS1_2'
 
-@description('The list of application identities to be granted owner access to the workload resources.')
+@description('The list of application identities to be granted owner access to the application resources.')
 param ownerIdentities ApplicationIdentity[] = []
 
 @description('If set, the private endpoint settings for this resource')

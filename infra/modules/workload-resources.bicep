@@ -137,7 +137,7 @@ param useCommonAppServicePlan bool
 // The tags to apply to all resources in this workload
 var moduleTags = union(deploymentSettings.tags, deploymentSettings.workloadTags)
 
-// If the sqlResourceGroup != the workload resource group, don't create a server.
+// If the sqlResourceGroup != the application resource group, don't create a server.
 var createSqlServer = resourceNames.sqlResourceGroup == resourceNames.resourceGroup
 
 // Budget amounts
@@ -208,7 +208,7 @@ module ownerManagedIdentityRoleAssignment '../core/identity/resource-group-role-
 ** App Configuration - used for storing configuration data
 */
 module appConfiguration '../core/config/app-configuration.bicep' = {
-  name: 'workload-app-configuration'
+  name: 'application-app-configuration'
   scope: resourceGroup
   params: {
     name: resourceNames.appConfiguration
@@ -259,10 +259,10 @@ module writeAppConfigValues './app-config-values.bicep' = {
 
 /*
 ** Key Vault - used for storing configuration secrets.
-** This vault is deployed with the workload when not using Network Isolation.
+** This vault is deployed with the application when not using Network Isolation.
 */
 module keyVault '../core/security/key-vault.bicep' = if (!deploymentSettings.isNetworkIsolated) {
-  name: 'workload-key-vault'
+  name: 'application-key-vault'
   scope: resourceGroup
   params: {
     name: resourceNames.keyVault
@@ -295,7 +295,7 @@ module keyVault '../core/security/key-vault.bicep' = if (!deploymentSettings.isN
 ** SQL Database
 */
 module sqlServer '../core/database/sql-server.bicep' = if (createSqlServer) {
-  name: 'workload-sql-server'
+  name: 'application-sql-server'
   scope: resourceGroup
   params: {
     name: resourceNames.sqlServer
@@ -317,7 +317,7 @@ module sqlServer '../core/database/sql-server.bicep' = if (createSqlServer) {
 }
 
 module sqlDatabase '../core/database/sql-database.bicep' = {
-  name: 'workload-sql-database'
+  name: 'application-sql-database'
   scope: az.resourceGroup(resourceNames.sqlResourceGroup)
   params: {
     name: resourceNames.sqlDatabase
@@ -342,7 +342,7 @@ module sqlDatabase '../core/database/sql-database.bicep' = {
   }
 }
 
-/* write secrets to the KV in the workload resource group when appropriate */
+/* write secrets to the KV in the application resource group when appropriate */
 module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = if (!deploymentSettings.isNetworkIsolated) {
   name: 'write-sql-admin-info-to-keyvault'
   scope: resourceGroup
@@ -359,7 +359,7 @@ module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = 
 ** App Services
 */
 module commonAppServicePlan '../core/hosting/app-service-plan.bicep' = if (useCommonAppServicePlan) {
-  name: 'workload-app-service-plan'
+  name: 'application-app-service-plan'
   scope: resourceGroup
   params: {
     name: resourceNames.commonAppServicePlan
@@ -377,8 +377,8 @@ module commonAppServicePlan '../core/hosting/app-service-plan.bicep' = if (useCo
   }
 }
 
-module webService './workload-appservice.bicep' = {
-  name: 'workload-webservice'
+module webService './application-appservice.bicep' = {
+  name: 'application-webservice'
   scope: resourceGroup
   params: {
     deploymentSettings: deploymentSettings
@@ -429,8 +429,8 @@ module webServiceFrontDoorRoute '../core/security/front-door-route.bicep' = if (
   }
 }
 
-module webFrontend './workload-appservice.bicep' = {
-  name: 'workload-webfrontend'
+module webFrontend './application-appservice.bicep' = {
+  name: 'application-webfrontend'
   scope: resourceGroup
   params: {
     deploymentSettings: deploymentSettings
@@ -484,7 +484,7 @@ module webFrontendFrontDoorRoute '../core/security/front-door-route.bicep' = if 
 */
 
 module redis '../core/database/azure-cache-for-redis.bicep' = {
-  name: 'workload-redis'
+  name: 'application-redis'
   scope: resourceGroup
   params: {
     name: resourceNames.redis
@@ -510,7 +510,7 @@ module redis '../core/database/azure-cache-for-redis.bicep' = {
 */
 
 module storageAccount '../core/storage/storage-account.bicep' = {
-  name: 'workload-storage-account'
+  name: 'application-storage-account'
   scope: resourceGroup
   params: {
     location: deploymentSettings.location
@@ -532,7 +532,7 @@ module storageAccount '../core/storage/storage-account.bicep' = {
 }
 
 module storageAccountContainer '../core/storage/storage-account-blob.bicep' = {
-  name: 'workload-storage-account-container'
+  name: 'application-storage-account-container'
   scope: resourceGroup
   params: {
     name: resourceNames.storageAccountContainer
@@ -557,8 +557,8 @@ module approveFrontDoorPrivateLinks '../core/security/front-door-route-approval.
   }
 }
 
-module workloadBudget '../core/cost-management/budget.bicep' = {
-  name: 'workload-budget'
+module applicationBudget '../core/cost-management/budget.bicep' = {
+  name: 'application-budget'
   scope: resourceGroup
   params: {
     name: resourceNames.budget
