@@ -174,7 +174,7 @@ App Configuration so that the web app can read this data
 (about 3-minutes to register).
 
 ```sh
-./infra/scripts/create-app-registrations.sh -g '<name from Azure portal for workload resource group>'
+./infra/scripts/create-app-registrations.sh -g '<name from Azure portal for application resource group>'
 ```
 
 ### 7. Deploy the application

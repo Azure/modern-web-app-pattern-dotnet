@@ -125,7 +125,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing 
 ** Azure Front Door with Web Application Firewall
 */
 module frontDoor '../core/security/front-door-with-waf.bicep' = {
-  name: 'workload-front-door-with-waf'
+  name: 'application-front-door-with-waf'
   scope: resourceGroup
   params: {
     frontDoorEndpointName: resourceNames.frontDoorEndpoint

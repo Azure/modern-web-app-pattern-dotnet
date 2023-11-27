@@ -35,12 +35,14 @@
     // "spokeWebOutboundSubnet": "",
     // "spokeWebOutboundNSG": "",
   
-    // Common services - may be in hub or workload resource group
+    // Common services - may be in hub or application resource group
     // "applicationInsights": "",
     // "buildAgent": "",
+    // "keyVault": "",
+    // "keyVaultPrivateEndpoint": "",
     // "logAnalyticsWorkspace": "",
   
-    // Workload resources
+    // Application resources
     // "apiAppService": "",
     // "apiAppServicePlan": "",
     // "apiPrivateEndpoint": "",
@@ -51,8 +53,6 @@
     // "commonAppServicePlan": "",
     // "frontDoorEndpoint": "",
     // "frontDoorProfile": "",
-    // "keyVault": "",
-    // "keyVaultPrivateEndpoint": "",
     // "ownerManagedIdentity": "",
     // "redis": "",
     // "redisPrivateEndpoint": "",

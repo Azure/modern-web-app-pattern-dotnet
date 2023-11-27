@@ -56,7 +56,7 @@ type DeploymentSettings = {
 @description('The deployment settings to use for this deployment.')
 param deploymentSettings DeploymentSettings
 
-@description('The name of the workload resource group')
+@description('The name of the application resource group')
 param resourceGroupName string
 
 // ========================================================================

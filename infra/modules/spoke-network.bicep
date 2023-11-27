@@ -387,7 +387,7 @@ var virtualNetworkLinks = [
 ]
 
 module privateDnsZones './private-dns-zones.bicep' = {
-  name: 'hub-private-dns-zone-deploy'
+  name: 'spoke-private-dns-zone-deploy'
   params:{
     createDnsZone: false //we are reusing the existing DNS zone and linking a vnet
     deploymentSettings: deploymentSettings
