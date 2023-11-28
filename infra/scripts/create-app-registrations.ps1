@@ -28,9 +28,9 @@
     Vault services in this resource group with Azure AD app registration config data.
 
 .EXAMPLE
-    PS C:\> .\create-app-registrations.ps1 -ResourceGroupName rele231116v1
+    PS C:\> .\create-app-registrations.ps1 -ResourceGroupName rg-rele231127v4-dev-westus3-application
 
-    This example will create the app registrations for the rele231116v1 environment.
+    This example will create the app registrations for the rele231127v4 environment.
 #>
 
 Param(
@@ -99,9 +99,13 @@ function Get-RelecloudEnvironment {
 function Get-RelecloudFrontendAppRegistration {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$apiAppRegistrationName,
+        [string]$appRegistrationName,
         [Parameter(Mandatory = $true)]
-        [string]$websiteUri
+        [string]$azureWebsiteRedirectUri,
+        [Parameter(Mandatory = $true)]
+        [string]$azureWebsiteLogoutUri,
+        [Parameter(Mandatory = $true)]
+        [string]$localhostWebsiteRedirectUri
     )
     
     # get an existing Relecloud Front-end App Registration
@@ -109,7 +113,11 @@ function Get-RelecloudFrontendAppRegistration {
 
     # if it doesn't exist, then return a new one we created
     if (!$frontEndAppRegistration) {
-        return New-RelecloudFrontendAppRegistration -appRegistrationName $appRegistrationName -websiteUri $websiteUri
+        return New-RelecloudFrontendAppRegistration `
+            -azureWebsiteRedirectUri $azureWebsiteRedirectUri `
+            -azureWebsiteLogoutUri $azureWebsiteLogoutUri `
+            -localhostWebsiteRedirectUri $localhostWebsiteRedirectUri `
+            -appRegistrationName $frontEndAppRegistrationName
     }
 
     return $frontEndAppRegistration
@@ -120,17 +128,27 @@ function New-RelecloudFrontendAppRegistration {
         [Parameter(Mandatory = $true)]
         [string]$appRegistrationName,
         [Parameter(Mandatory = $true)]
-        [string]$websiteUri
+        [string]$azureWebsiteRedirectUri,
+        [Parameter(Mandatory = $true)]
+        [string]$azureWebsiteLogoutUri,
+        [Parameter(Mandatory = $true)]
+        [string]$localhostWebsiteRedirectUri
     )
-    
+    $websiteApp = @{
+        "LogoutUrl" = $azureWebsiteLogoutUri
+        "RedirectUris" = @($azureWebsiteRedirectUri, $localhostWebsiteRedirectUri)
+        "ImplicitGrantSetting" = @{
+            "EnableAccessTokenIssuance" = $false
+            "EnableIdTokenIssuance" = $true
+        }
+    }
+
     # create an Azure AD App Registration for the front-end web app
-    $frontEndAppRegistration = New-AzADApplication
-         -DisplayName $frontEndAppRegistrationName
-         -SignInAudience "AzureADMyOrg"
-         -Oauth2AllowIdTokenImplicitFlow $true
-         -ReplyUrls @("https://$websiteUri/signin-oidc", "https://localhost:7227/signin-oidc")
-         -LogoutUrl "https://$websiteUri/signout-oidc"
-         -ErrorAction Stop
+    $frontEndAppRegistration = New-AzADApplication `
+        -DisplayName $appRegistrationName `
+        -SignInAudience "AzureADMyOrg" `
+        -Web $websiteApp `
+        -ErrorAction Stop
 
     $clientId = ""
     while ($clientId -eq "" -and $attempts -lt $MAX_RETRY_ATTEMPTS)
@@ -169,19 +187,6 @@ else {
     exit 11
 }
 
-function Get-AzureFrontDoorResource {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$ResourceGroupName
-    )
-
-    $frontDoorName = (Get-AzResource -ResourceGroupName $ResourceGroupName -ResourceType "Microsoft.Cdn/profiles").Name
-
-    $frontDoorResource = Get-AzFrontDoorFrontendEndpoint -ResourceGroupName $ResourceGroupName -FrontDoorName $frontDoorName -ErrorAction SilentlyContinue
-    
-    return $frontDoorResource
-}
-
 # End of feature checking
 
 # Set defaults
@@ -189,39 +194,53 @@ $defaultFrontEndAppRegistrationName = "$(Get-RelecloudWorkloadName -ResourceGrou
 $defaultApiAppRegistrationName = "$(Get-RelecloudWorkloadName -ResourceGroupName $ResourceGroupName)-$(Get-RelecloudEnvironment -ResourceGroupName $ResourceGroupName)-api-webapp-$(Get-RelecloudWorkloadResourceToken -ResourceGroupName $ResourceGroupName)"
 $defaultKeyVaultname = "kv-$(Get-RelecloudWorkloadResourceToken -ResourceGroupName $ResourceGroupName)"
 
-$defaultWebsiteUri = (Get-AzureFrontDoorResource -ResourceGroupName $ResourceGroupName).FrontendEndpoints[0].HostNames[0]
+$frontDoorProfile = (Get-AzFrontDoorCdnProfile -ResourceGroupName $ResourceGroupName)
+$frontDoorEndpoint = (Get-AzFrontDoorCdnEndpoint -ProfileName $frontDoorProfile.Name -ResourceGroupName $ResourceGroupName)
+$defaultAzureWebsiteUri = "https://$($frontDoorEndpoint.HostName)"
 
 # End of Set defaults
+
+# Prompt formatting features
+
+$defaultColor = if ($Host.UI.SupportsVirtualTerminal) { "`e[0m" } else { "" }
+$highlightColor = if ($Host.UI.SupportsVirtualTerminal) { "`e[36m" } else { "" }
+
+# End of Prompt formatting features
 
 # Gather inputs
 
 # The Relecloud web app has two websites so we need to create two app registrations.
-# This app registration is for the front-end website that users will interact with.
-$frontEndAppRegistrationName = Read-Host -Prompt "`nWhat should the name of the Front-end web app registration be? [default: $defaultFrontEndAppRegistrationName]"
-
-if ($frontEndAppRegistrationName -eq "") {
-    $frontEndAppRegistrationName = $defaultFrontEndAppRegistrationName
-}
-
 # This app registration is for the back-end API that the front-end website will call.
-$apiAppRegistrationName = Read-Host -Prompt "`nWhat should the name of the API web app registration be? [default: $defaultApiAppRegistrationName]"
+$apiAppRegistrationName = Read-Host -Prompt "`nWhat should the name of the API web app registration be? [default: $highlightColor$defaultApiAppRegistrationName$defaultColor]"
 
 if ($apiAppRegistrationName -eq "") {
     $apiAppRegistrationName = $defaultApiAppRegistrationName
 }
 
+# This app registration is for the front-end website that users will interact with.
+$frontEndAppRegistrationName = Read-Host -Prompt "`nWhat should the name of the Front-end web app registration be? [default: $highlightColor$defaultFrontEndAppRegistrationName$defaultColor]"
+
+if ($frontEndAppRegistrationName -eq "") {
+    $frontEndAppRegistrationName = $defaultFrontEndAppRegistrationName
+}
+
 # This is where the App Registration details will be stored
-$keyVaultName = Read-Host -Prompt "`nWhat is the name of the Key Vault that should store the App Registration details? [default: $defaultKeyVaultname]"
+$keyVaultName = Read-Host -Prompt "`nWhat is the name of the Key Vault that should store the App Registration details? [default: $highlightColor$defaultKeyVaultname$defaultColor]"
 
 if ($keyVaultName -eq "") {
     $keyVaultName = $defaultKeyVaultname
 }
 
-$websiteUri = Read-Host -Prompt "`nWhat is the uri of the website? [default: $defaultWebsiteUri]"
+$azureWebsiteUri = Read-Host -Prompt "`nWhat is the login redirect uri of the website? [default: $highlightColor$defaultAzureWebsiteUri$defaultColor]"
 
-if ($websiteUri -eq "") {
-    $websiteUri = $defaultWebsiteUri
+if ($azureWebsiteUri -eq "") {
+    $azureWebsiteUri = $defaultAzureWebsiteUri
 }
+
+# hard coded localhost URL comes from startup properties of the web app
+$localhostWebsiteRedirectUri = "https://localhost:7227/signin-oidc"
+$azureWebsiteRedirectUri = "$azureWebsiteUri/signin-oidc"
+$azureWebsiteLogoutUri = "$azureWebsiteUri/signout-oidc"
 
 # End of Gather inputs
 
@@ -229,9 +248,11 @@ if ($websiteUri -eq "") {
 Write-Host "`nRelecloud Setup for App Registrations" -ForegroundColor Yellow
 Write-Host "`tresourceGroupName='$resourceGroupName'"
 Write-Host "`tfrontEndAppRegistrationName='$frontEndAppRegistrationName'"
-Write-Host "`tapiAppRegistrationName='$apiAppRegistrationName'"
 Write-Host "`tkeyVaultName='$keyVaultName'"
-Write-Host "`twebsiteUri='$websiteUri'"
+Write-Host "`tlocalhostWebsiteRedirectUri='$localhostWebsiteRedirectUri'"
+Write-Host "`tazureWebsiteRedirectUri='$azureWebsiteRedirectUri'"
+Write-Host "`tazureWebsiteLogoutUri='$azureWebsiteLogoutUri'"
+Write-Host "`tapiAppRegistrationName='$apiAppRegistrationName'"
 Write-Host ""
 
 $confirmation = Read-Host -Prompt "`nHit enter proceed with creating app registrations"
@@ -268,7 +289,13 @@ Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--SignedOutCal
 
 
 # Create the front-end app registration
-$frontEndAppRegistration = Get-RelecloudFrontendAppRegistration -websiteUri $websiteUri -appRegistrationName $frontEndAppRegistrationName
+$frontEndAppRegistration = Get-RelecloudFrontendAppRegistration `
+    -azureWebsiteRedirectUri $azureWebsiteRedirectUri `
+    -azureWebsiteLogoutUri $azureWebsiteLogoutUri `
+    -localhostWebsiteRedirectUri $localhostWebsiteRedirectUri `
+    -appRegistrationName $frontEndAppRegistrationName
+
+Write-Host "`nRetrieved the front-end app registration '$frontEndAppRegistrationName'"
 
 # all done
 exit 0
