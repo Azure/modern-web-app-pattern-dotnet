@@ -8,11 +8,21 @@
 .DESCRIPTION
     The Relecloud web app uses Azure AD to authenticate and authorize the users that can
     make concert ticket purchases. To prove that the website is a trusted, and secure, resource
-    the web app must handshake with Azure AD by providing the configuration settings like the following.
-    - TenantID identifies which Azure AD instance holds the users that should be authorized
-    - ClientID identifies which app this code says it represents
+    the web app must handshake with Azure AD by providing the configuration settings. like the following.
+    - TenantID 
+    - ClientID 
     - ClientSecret provides a secret known only to Azure AD, and shared with the web app, to
     validate that Azure AD can trust this web app
+
+        Api--AzureAd--ClientId              Identifies the web app to Azure AD
+        Api--AzureAd--TenantId              Identifies which Azure AD instance holds the users that should be authorized
+        AzureAd--CallbackPath               The path that Azure AD should redirect to after a successful login
+        AzureAd--ClientId                   Identifies the web app to Azure AD
+        AzureAd--ClientSecret               Provides a secret known only to Azure AD, and shared with the web app, to validate that Azure AD can trust this web app
+        AzureAd--Instance                   Identifies which Azure AD instance holds the users that should be authorized
+        AzureAd--SignedOutCallbackPath      The path that Azure AD should redirect to after a successful logout
+        AzureAd--TenantId                   Identifies which Azure AD instance holds the users that should be authorized
+
 
     This script will create the App Registrations that provide these configurations. Once those
     are created the configuration data will be saved to Azure App Configuration and the secret
@@ -26,7 +36,7 @@
     A required parameter for the name of resource group that contains the environment that was
     created by the azd command. The cmdlet will populate the App Config Svc and Key
     Vault services in this resource group with Azure AD app registration config data.
-
+    
 .EXAMPLE
     PS C:\> .\create-app-registrations.ps1 -ResourceGroupName rg-rele231127v4-dev-westus3-application
 
@@ -40,6 +50,14 @@ Param(
 )
 
 $MAX_RETRY_ATTEMPTS = 10
+
+# Prompt formatting features
+
+$defaultColor = if ($Host.UI.SupportsVirtualTerminal) { "`e[0m" } else { "" }
+$successColor = if ($Host.UI.SupportsVirtualTerminal) { "`e[32m" } else { "" }
+$highlightColor = if ($Host.UI.SupportsVirtualTerminal) { "`e[36m" } else { "" }
+
+# End of Prompt formatting features
 
 # Function definitions
 
@@ -85,7 +103,6 @@ function Get-RelecloudWorkloadResourceToken {
     return $resourceGroup.Tags["ResourceToken"]
 }
 
-
 function Get-RelecloudEnvironment {
     param(
         [Parameter(Mandatory = $true)]
@@ -94,6 +111,55 @@ function Get-RelecloudEnvironment {
     $resourceGroup = Get-CachedResourceGroup -ResourceGroupName $ResourceGroupName
     # Something like 'dev', 'test', 'prod'
     return $resourceGroup.Tags["Environment"]
+}
+
+function Get-RelecloudApiAppRegistration {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$appRegistrationName
+    )
+    
+    # get an existing Relecloud Front-end App Registration
+    $apiAppRegistration = Get-AzADApplication -DisplayName $appRegistrationName -ErrorAction SilentlyContinue
+
+    # if it doesn't exist, then return a new one we created
+    if (!$apiAppRegistration) {
+        Write-Host "`tCreating the API registration $highlightColor'$($appRegistrationName)'$defaultColor" 
+
+        return New-RelecloudApiAppRegistration `
+            -appRegistrationName $appRegistrationName
+    }
+
+    Write-Host "`tRetrieved the existing API registration $highlightColor'$($apiAppRegistration.Id)'$defaultColor"
+    return $apiAppRegistration
+}
+
+function New-RelecloudApiAppRegistration {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$appRegistrationName
+    )
+
+    # create an Azure AD App Registration for the front-end web app
+    $apiAppRegistration = New-AzADApplication `
+        -DisplayName $appRegistrationName `
+        -SignInAudience "AzureADMyOrg" `
+        -ErrorAction Stop
+
+    $clientId = ""
+    while ($clientId -eq "" -and $attempts -lt $MAX_RETRY_ATTEMPTS)
+    {
+        $MAX_RETRY_ATTEMPTS = $MAX_RETRY_ATTEMPTS + 1
+        try {
+            $clientId = (Get-AzADApplication -DisplayName $appRegistrationName -ErrorAction Stop).ApplicationId
+        }
+        catch {
+            Write-Host "`t`tFailed to retrieve the client ID for the front-end app registration. Will try again in 3 seconds."
+            Start-Sleep -Seconds 3
+        }
+    }
+
+    return $apiAppRegistration
 }
 
 function Get-RelecloudFrontendAppRegistration {
@@ -109,18 +175,21 @@ function Get-RelecloudFrontendAppRegistration {
     )
     
     # get an existing Relecloud Front-end App Registration
-    $frontEndAppRegistration = Get-AzADApplication -DisplayName $frontEndAppRegistrationName -ErrorAction SilentlyContinue
+    $frontendAppRegistration = Get-AzADApplication -DisplayName $appRegistrationName -ErrorAction SilentlyContinue
 
     # if it doesn't exist, then return a new one we created
-    if (!$frontEndAppRegistration) {
+    if (!$frontendAppRegistration) {
+        Write-Host "`tCreating the front-end app registration $highlightColor'$($appRegistrationName)'$defaultColor"    
+
         return New-RelecloudFrontendAppRegistration `
             -azureWebsiteRedirectUri $azureWebsiteRedirectUri `
             -azureWebsiteLogoutUri $azureWebsiteLogoutUri `
             -localhostWebsiteRedirectUri $localhostWebsiteRedirectUri `
-            -appRegistrationName $frontEndAppRegistrationName
+            -appRegistrationName $appRegistrationName
     }
 
-    return $frontEndAppRegistration
+    Write-Host "`tRetrieved the existing front-end app registration $highlightColor'$($frontendAppRegistration.Id)'$defaultColor"
+    return $frontendAppRegistration
 }
 
 function New-RelecloudFrontendAppRegistration {
@@ -144,7 +213,7 @@ function New-RelecloudFrontendAppRegistration {
     }
 
     # create an Azure AD App Registration for the front-end web app
-    $frontEndAppRegistration = New-AzADApplication `
+    $frontendAppRegistration = New-AzADApplication `
         -DisplayName $appRegistrationName `
         -SignInAudience "AzureADMyOrg" `
         -Web $websiteApp `
@@ -155,7 +224,7 @@ function New-RelecloudFrontendAppRegistration {
     {
         $MAX_RETRY_ATTEMPTS = $MAX_RETRY_ATTEMPTS + 1
         try {
-            $clientId = (Get-AzADApplication -DisplayName $frontEndAppRegistrationName -ErrorAction Stop).ApplicationId
+            $clientId = (Get-AzADApplication -DisplayName $appRegistrationName -ErrorAction Stop).ApplicationId
         }
         catch {
             Write-Host "`t`tFailed to retrieve the client ID for the front-end app registration. Will try again in 3 seconds."
@@ -163,8 +232,7 @@ function New-RelecloudFrontendAppRegistration {
         }
     }
 
-    # Something like 'dev', 'test', 'prod'
-    return $frontEndAppRegistration
+    return $frontendAppRegistration
 }
 
 # End of function definitions
@@ -200,13 +268,6 @@ $defaultAzureWebsiteUri = "https://$($frontDoorEndpoint.HostName)"
 
 # End of Set defaults
 
-# Prompt formatting features
-
-$defaultColor = if ($Host.UI.SupportsVirtualTerminal) { "`e[0m" } else { "" }
-$highlightColor = if ($Host.UI.SupportsVirtualTerminal) { "`e[36m" } else { "" }
-
-# End of Prompt formatting features
-
 # Gather inputs
 
 # The Relecloud web app has two websites so we need to create two app registrations.
@@ -218,10 +279,10 @@ if ($apiAppRegistrationName -eq "") {
 }
 
 # This app registration is for the front-end website that users will interact with.
-$frontEndAppRegistrationName = Read-Host -Prompt "`nWhat should the name of the Front-end web app registration be? [default: $highlightColor$defaultFrontEndAppRegistrationName$defaultColor]"
+$frontendAppRegistrationName = Read-Host -Prompt "`nWhat should the name of the Front-end web app registration be? [default: $highlightColor$defaultFrontEndAppRegistrationName$defaultColor]"
 
-if ($frontEndAppRegistrationName -eq "") {
-    $frontEndAppRegistrationName = $defaultFrontEndAppRegistrationName
+if ($frontendAppRegistrationName -eq "") {
+    $frontendAppRegistrationName = $defaultFrontEndAppRegistrationName
 }
 
 # This is where the App Registration details will be stored
@@ -237,6 +298,8 @@ if ($azureWebsiteUri -eq "") {
     $azureWebsiteUri = $defaultAzureWebsiteUri
 }
 
+$tenantId = (Get-AzContext).Tenant.Id
+
 # hard coded localhost URL comes from startup properties of the web app
 $localhostWebsiteRedirectUri = "https://localhost:7227/signin-oidc"
 $azureWebsiteRedirectUri = "$azureWebsiteUri/signin-oidc"
@@ -246,14 +309,14 @@ $azureWebsiteLogoutUri = "$azureWebsiteUri/signout-oidc"
 
 # Display working state for confirmation
 Write-Host "`nRelecloud Setup for App Registrations" -ForegroundColor Yellow
+Write-Host "`ttenantId='$tenantId'"
 Write-Host "`tresourceGroupName='$resourceGroupName'"
-Write-Host "`tfrontEndAppRegistrationName='$frontEndAppRegistrationName'"
+Write-Host "`tfrontendAppRegistrationName='$frontendAppRegistrationName'"
 Write-Host "`tkeyVaultName='$keyVaultName'"
 Write-Host "`tlocalhostWebsiteRedirectUri='$localhostWebsiteRedirectUri'"
 Write-Host "`tazureWebsiteRedirectUri='$azureWebsiteRedirectUri'"
 Write-Host "`tazureWebsiteLogoutUri='$azureWebsiteLogoutUri'"
 Write-Host "`tapiAppRegistrationName='$apiAppRegistrationName'"
-Write-Host ""
 
 $confirmation = Read-Host -Prompt "`nHit enter proceed with creating app registrations"
 if ($confirmation -ne "") {
@@ -283,19 +346,62 @@ try {
 # Set static values
 $secretValue = ConvertTo-SecureString -String '/signin-oidc' -AsPlainText -Force
 Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--CallbackPath' -SecretValue $secretValue -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'AzureAd--CallbackPath'$defaultColor to Key Vault"
 
 $secretValue = ConvertTo-SecureString -String '/signout-oidc' -AsPlainText -Force
 Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--SignedOutCallbackPath' -SecretValue $secretValue -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'AzureAd--SignedOutCallbackPath'$defaultColor to Key Vault"
 
+# Write TenantId to Key Vault
+$secretValue = ConvertTo-SecureString -String $tenantId -AsPlainText -Force
+Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'Api--AzureAd--TenantId' -SecretValue $secretValue -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'Api--AzureAd--TenantId'$defaultColor to Key Vault"
 
-# Create the front-end app registration
-$frontEndAppRegistration = Get-RelecloudFrontendAppRegistration `
+$secretValue = ConvertTo-SecureString -String $tenantId -AsPlainText -Force
+Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--TenantId' -SecretValue $secretValue -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'AzureAd--TenantId'$defaultColor to Key Vault"
+
+# Get or Create the front-end app registration
+$frontendAppRegistration = Get-RelecloudFrontendAppRegistration `
     -azureWebsiteRedirectUri $azureWebsiteRedirectUri `
     -azureWebsiteLogoutUri $azureWebsiteLogoutUri `
     -localhostWebsiteRedirectUri $localhostWebsiteRedirectUri `
-    -appRegistrationName $frontEndAppRegistrationName
+    -appRegistrationName $frontendAppRegistrationName
 
-Write-Host "`nRetrieved the front-end app registration '$frontEndAppRegistrationName'"
+# Write to Key Vault
+$secretValue = ConvertTo-SecureString -String $frontendAppRegistration.AppId -AsPlainText -Force
+Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--ClientId' -SecretValue $secretValue -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'AzureAd--ClientId'$defaultColor to Key Vault"
+
+# List client secrets
+$clientSecrets = Get-AzADAppCredential -ObjectId $frontendAppRegistration.Id -ErrorAction SilentlyContinue
+# If there are secrets, then delete them
+if ($clientSecrets) {
+    # for each client secret
+    foreach ($clientSecret in $clientSecrets) {
+        # delete the client secret
+        Remove-AzADAppCredential -ObjectId $frontendAppRegistration.Id -KeyId $clientSecret.KeyId -ErrorAction Stop > $null
+    }
+}
+
+# Create a new client secret with a 1 year expiration
+$clientSecrets = New-AzADAppCredential -ObjectId $frontendAppRegistration.Id -EndDate (Get-Date).AddYears(1) -ErrorAction Stop
+
+# Write to Key Vault
+$secretValue = ConvertTo-SecureString -String $clientSecrets.SecretText -AsPlainText -Force
+Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--ClientSecret' -SecretValue $secretValue -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'AzureAd--ClientSecret'$defaultColor to Key Vault"
+
+# Get or Create the api app registration
+$apiAppRegistration = Get-RelecloudApiAppRegistration `
+    -appRegistrationName $apiAppRegistrationName
+
+# Write to Key Vault
+$secretValue = ConvertTo-SecureString -String $apiAppRegistration.AppId -AsPlainText -Force
+Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'Api--AzureAd--ClientId' -SecretValue $secretValue -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'Api--AzureAd--ClientId'$defaultColor to Key Vault"
+
+Write-Host "`nFinished $($successColor)successfully$($defaultColor)."
 
 # all done
 exit 0
