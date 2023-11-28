@@ -2,6 +2,7 @@
 .SYNOPSIS
     Creates Azure AD app registrations for the call center web and api applications
     and saves the configuration data in App Configuration Svc and Key Vault.
+        Depends on Az module.
 
     <This command should only be run after using the azd command to deploy resources to Azure>
     
@@ -9,10 +10,6 @@
     The Relecloud web app uses Azure AD to authenticate and authorize the users that can
     make concert ticket purchases. To prove that the website is a trusted, and secure, resource
     the web app must handshake with Azure AD by providing the configuration settings. like the following.
-    - TenantID 
-    - ClientID 
-    - ClientSecret provides a secret known only to Azure AD, and shared with the web app, to
-    validate that Azure AD can trust this web app
 
         Api--AzureAd--ClientId              Identifies the web app to Azure AD
         Api--AzureAd--TenantId              Identifies which Azure AD instance holds the users that should be authorized
@@ -22,7 +19,6 @@
         AzureAd--Instance                   Identifies which Azure AD instance holds the users that should be authorized
         AzureAd--SignedOutCallbackPath      The path that Azure AD should redirect to after a successful logout
         AzureAd--TenantId                   Identifies which Azure AD instance holds the users that should be authorized
-
 
     This script will create the App Registrations that provide these configurations. Once those
     are created the configuration data will be saved to Azure App Configuration and the secret
