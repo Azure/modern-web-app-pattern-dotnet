@@ -238,25 +238,6 @@ module appConfiguration '../core/config/app-configuration.bicep' = {
   }
 }
 
-module writeAppConfigValues './app-config-values.bicep' = {
-  name: 'scripted-write-app-config-store-values'
-  scope: resourceGroup
-  params: {
-    azureFrontDoorHostName: frontDoorSettings.hostname
-    azureStorageTicketContainerName: ticketContainerName
-    azureStorageTicketUri:storageAccount.outputs.primaryEndpoints.blob
-    appConfigurationStoreName: appConfiguration.outputs.name
-    devopsIdentityName: ownerManagedIdentityRoleAssignment.outputs.identity_name
-    enablePublicNetworkAccess: deploymentSettings.isNetworkIsolated ? false : true
-    keyVaultName: resourceNames.keyVault
-    location: deploymentSettings.location
-    relecloudApiBaseUri: 'https://${frontDoorSettings.hostname}/api'
-    redisConnectionSecretName: redisConnectionSecretName
-    sqlDatabaseConnectionString: sqlDatabase.outputs.connection_string    
-    tags: moduleTags
-  }
-}
-
 /*
 ** Key Vault - used for storing configuration secrets.
 ** This vault is deployed with the application when not using Network Isolation.

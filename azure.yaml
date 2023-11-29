@@ -7,10 +7,17 @@ hooks:
   preprovision:
     posix:
       interactive: true
-      run: ./infra/scripts/whats-my-ip.sh
+      run: ./infra/scripts/preprovision/whats-my-ip.sh
     windows:
       interactive: true
-      run: ./infra/scripts/whats-my-ip.ps1
+      run: ./infra/scripts/preprovision/whats-my-ip.ps1
+  predeploy:
+    posix:
+      interactive: true
+      run: ./infra/scripts/predeploy/set-app-configuration.sh
+    windows:
+      interactive: true
+      run: ./infra/scripts/predeploy/set-app-configuration.ps1
 services:
   web-callcenter-service:
     project: src/Relecloud.Web.CallCenter.Api
