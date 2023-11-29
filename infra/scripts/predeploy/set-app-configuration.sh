@@ -1,3 +1,6 @@
-#!/bin/sh
+# This script is run by azd pre-provision hook and is part of the deployment lifecycle run when deploying the code for the Relecloud web app.
 
-pwsh set-app-configuration.ps1
+#!/bin/bash
+
+# Remove additional
+pwsh ./infra/scripts/predeploy/set-app-configuration.ps1
