@@ -46,7 +46,7 @@ Param(
 )
 
 $MAX_RETRY_ATTEMPTS = 10
-$RELECLOUD_API_SCOPE_NAME = "relecloud.api"
+$API_SCOPE_NAME = "relecloud.api"
 
 # Prompt formatting features
 
@@ -79,7 +79,7 @@ function Get-CachedResourceGroup {
     return $resourceGroup
 }
 
-function Get-RelecloudWorkloadName {
+function Get-WorkloadName {
     param(
         [Parameter(Mandatory = $true)]
         [string]$ResourceGroupName
@@ -90,7 +90,7 @@ function Get-RelecloudWorkloadName {
     return $resourceGroup.Tags["WorkloadName"]
 }
 
-function Get-RelecloudWorkloadResourceToken {
+function Get-WorkloadResourceToken {
     param(
         [Parameter(Mandatory = $true)]
         [string]$ResourceGroupName
@@ -100,7 +100,7 @@ function Get-RelecloudWorkloadResourceToken {
     return $resourceGroup.Tags["ResourceToken"]
 }
 
-function Get-RelecloudEnvironment {
+function Get-WorkloadEnvironment {
     param(
         [Parameter(Mandatory = $true)]
         [string]$ResourceGroupName
@@ -110,7 +110,7 @@ function Get-RelecloudEnvironment {
     return $resourceGroup.Tags["Environment"]
 }
 
-function Get-RelecloudApiAppRegistration {
+function Get-ApiAppRegistration {
     param(
         [Parameter(Mandatory = $true)]
         [string]$appRegistrationName
@@ -123,7 +123,7 @@ function Get-RelecloudApiAppRegistration {
     if (!$apiAppRegistration) {
         Write-Host "`tCreating the API registration $highlightColor'$($appRegistrationName)'$defaultColor" 
 
-        return New-RelecloudApiAppRegistration `
+        return New-ApiAppRegistration `
             -appRegistrationName $appRegistrationName
     }
 
@@ -131,7 +131,7 @@ function Get-RelecloudApiAppRegistration {
     return $apiAppRegistration
 }
 
-function New-RelecloudApiAppRegistration {
+function New-ApiAppRegistration {
     param(
         [Parameter(Mandatory = $true)]
         [string]$appRegistrationName
@@ -146,7 +146,7 @@ function New-RelecloudApiAppRegistration {
             adminConsentDescription = "Allow the app to access Relecloud API as a user"
             adminConsentDisplayName = "Access Relecloud API"
             isEnabled = $true
-            value = "relecloud.api"
+            value = $API_SCOPE_NAME
             userConsentDescription = "Allow the app to access Relecloud API on your behalf"
             userConsentDisplayName = "Access Relecloud API"
         })
@@ -175,7 +175,7 @@ function New-RelecloudApiAppRegistration {
     return $apiAppRegistration
 }
 
-function Get-RelecloudFrontendAppRegistration {
+function Get-FrontendAppRegistration {
     param(
         [Parameter(Mandatory = $true)]
         [string]$appRegistrationName,
@@ -194,7 +194,7 @@ function Get-RelecloudFrontendAppRegistration {
     if (!$frontendAppRegistration) {
         Write-Host "`tCreating the front-end app registration $highlightColor'$($appRegistrationName)'$defaultColor"    
 
-        return New-RelecloudFrontendAppRegistration `
+        return New-FrontendAppRegistration `
             -azureWebsiteRedirectUri $azureWebsiteRedirectUri `
             -azureWebsiteLogoutUri $azureWebsiteLogoutUri `
             -localhostWebsiteRedirectUri $localhostWebsiteRedirectUri `
@@ -205,7 +205,7 @@ function Get-RelecloudFrontendAppRegistration {
     return $frontendAppRegistration
 }
 
-function New-RelecloudFrontendAppRegistration {
+function New-FrontendAppRegistration {
     param(
         [Parameter(Mandatory = $true)]
         [string]$appRegistrationName,
@@ -271,9 +271,9 @@ else {
 # End of feature checking
 
 # Set defaults
-$defaultFrontEndAppRegistrationName = "$(Get-RelecloudWorkloadName -ResourceGroupName $ResourceGroupName)-$(Get-RelecloudEnvironment -ResourceGroupName $ResourceGroupName)-front-webapp-$(Get-RelecloudWorkloadResourceToken -ResourceGroupName $ResourceGroupName)"
-$defaultApiAppRegistrationName = "$(Get-RelecloudWorkloadName -ResourceGroupName $ResourceGroupName)-$(Get-RelecloudEnvironment -ResourceGroupName $ResourceGroupName)-api-webapp-$(Get-RelecloudWorkloadResourceToken -ResourceGroupName $ResourceGroupName)"
-$defaultKeyVaultname = "kv-$(Get-RelecloudWorkloadResourceToken -ResourceGroupName $ResourceGroupName)"
+$defaultFrontEndAppRegistrationName = "$(Get-WorkloadName -ResourceGroupName $ResourceGroupName)-$(Get-WorkloadEnvironment -ResourceGroupName $ResourceGroupName)-front-webapp-$(Get-WorkloadResourceToken -ResourceGroupName $ResourceGroupName)"
+$defaultApiAppRegistrationName = "$(Get-WorkloadName -ResourceGroupName $ResourceGroupName)-$(Get-WorkloadEnvironment -ResourceGroupName $ResourceGroupName)-api-webapp-$(Get-WorkloadResourceToken -ResourceGroupName $ResourceGroupName)"
+$defaultKeyVaultname = "kv-$(Get-WorkloadResourceToken -ResourceGroupName $ResourceGroupName)"
 
 $frontDoorProfile = (Get-AzFrontDoorCdnProfile -ResourceGroupName $ResourceGroupName)
 $frontDoorEndpoint = (Get-AzFrontDoorCdnEndpoint -ProfileName $frontDoorProfile.Name -ResourceGroupName $ResourceGroupName)
@@ -375,7 +375,7 @@ Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--TenantId' -S
 Write-Host "`tSaved the $highlightColor'AzureAd--TenantId'$defaultColor to Key Vault"
 
 # Get or Create the front-end app registration
-$frontendAppRegistration = Get-RelecloudFrontendAppRegistration `
+$frontendAppRegistration = Get-FrontendAppRegistration `
     -azureWebsiteRedirectUri $azureWebsiteRedirectUri `
     -azureWebsiteLogoutUri $azureWebsiteLogoutUri `
     -localhostWebsiteRedirectUri $localhostWebsiteRedirectUri `
@@ -406,7 +406,7 @@ Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--ClientSecret
 Write-Host "`tSaved the $highlightColor'AzureAd--ClientSecret'$defaultColor to Key Vault"
 
 # Get or Create the api app registration
-$apiAppRegistration = Get-RelecloudApiAppRegistration `
+$apiAppRegistration = Get-ApiAppRegistration `
     -appRegistrationName $apiAppRegistrationName
 
 # Write to Key Vault
@@ -414,9 +414,9 @@ $secretValue = ConvertTo-SecureString -String $apiAppRegistration.AppId -AsPlain
 Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'Api--AzureAd--ClientId' -SecretValue $secretValue -ErrorAction Stop > $null
 Write-Host "`tSaved the $highlightColor'Api--AzureAd--ClientId'$defaultColor to Key Vault"
 
-$scopeDetails = $apiAppRegistration.Api.Oauth2PermissionScope | Where-Object { $_.Value -eq $RELECLOUD_API_SCOPE_NAME }
+$scopeDetails = $apiAppRegistration.Api.Oauth2PermissionScope | Where-Object { $_.Value -eq $API_SCOPE_NAME }
 if (!$scopeDetails) {
-    Write-Error "Unable to find the scope '$RELECLOUD_API_SCOPE_NAME' in the API app registration. Please check the API app registration in Azure AD."
+    Write-Error "Unable to find the scope '$API_SCOPE_NAME' in the API app registration. Please check the API app registration in Azure AD."
     exit 15
 }
 
