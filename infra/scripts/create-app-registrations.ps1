@@ -46,6 +46,7 @@ Param(
 )
 
 $MAX_RETRY_ATTEMPTS = 10
+$RELECLOUD_API_SCOPE_NAME = "relecloud.api"
 
 # Prompt formatting features
 
@@ -136,10 +137,26 @@ function New-RelecloudApiAppRegistration {
         [string]$appRegistrationName
     )
 
+    # Define the OAuth2 permissions (scopes) for the API
+    # https://learn.microsoft.com/en-us/dotnet/api/microsoft.azure.powershell.cmdlets.resources.msgraph.models.apiv10.imicrosoftgraphpermissionscope?view=az-ps-latest
+    $apiPermissions = @{
+        oauth2PermissionScopes = @(@{
+            id = (New-Guid).ToString()
+            type = "User"
+            adminConsentDescription = "Allow the app to access Relecloud API as a user"
+            adminConsentDisplayName = "Access Relecloud API"
+            isEnabled = $true
+            value = "relecloud.api"
+            userConsentDescription = "Allow the app to access Relecloud API on your behalf"
+            userConsentDisplayName = "Access Relecloud API"
+        })
+    }
+
     # create an Azure AD App Registration for the front-end web app
     $apiAppRegistration = New-AzADApplication `
         -DisplayName $appRegistrationName `
         -SignInAudience "AzureADMyOrg" `
+        -Api $apiPermissions `
         -ErrorAction Stop
 
     $clientId = ""
@@ -396,6 +413,21 @@ $apiAppRegistration = Get-RelecloudApiAppRegistration `
 $secretValue = ConvertTo-SecureString -String $apiAppRegistration.AppId -AsPlainText -Force
 Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'Api--AzureAd--ClientId' -SecretValue $secretValue -ErrorAction Stop > $null
 Write-Host "`tSaved the $highlightColor'Api--AzureAd--ClientId'$defaultColor to Key Vault"
+
+$scopeDetails = $apiAppRegistration.Api.Oauth2PermissionScope | Where-Object { $_.Value -eq $RELECLOUD_API_SCOPE_NAME }
+if (!$scopeDetails) {
+    Write-Error "Unable to find the scope '$RELECLOUD_API_SCOPE_NAME' in the API app registration. Please check the API app registration in Azure AD."
+    exit 15
+}
+
+Write-Host "`tFound the scope $highlightColor'$($scopeDetails.Value)'$defaultColor with ID $highlightColor'$($scopeDetails.Id)'$defaultColor"
+
+# Check permission for front-end app registration to verify it has access to the API app registration
+$apiPermission = Get-AzADAppPermission -ObjectId $frontendAppRegistration.Id -ErrorAction SilentlyContinue | Where-Object { $_.ResourceId -eq $apiAppRegistration.Id -and $_.Scope -eq $scopeDetails.Id }
+if (!$apiPermission) {
+    Write-Host "`tCreating the permission for the front-end app registration to access the API app registration"
+    $apiPermission = Add-AzADAppPermission -ObjectId $frontendAppRegistration.Id -ApiId $apiAppRegistration.AppId -PermissionId $scopeDetails.Id -ErrorAction Stop
+}
 
 Write-Host "`nFinished $($successColor)successfully$($defaultColor)."
 
