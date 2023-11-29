@@ -57,6 +57,8 @@ These scripts are used by the engineering team to accelerate the testing process
     ./scripts/setup.ps1 -NotIsolated -Development -CommonAppServicePlan -SingleRegion -Name reledev7 
     ```
 
+    <!-- ./scripts/setup.ps1 -Hub -Isolated -Development -NoCommonAppServicePlan -SingleLocation -Name rele231129v1 -->
+
 1. Run a deployment
 
     ```pwsh
