@@ -129,7 +129,7 @@ var isNetworkIsolated = networkIsolation == 'true' || (networkIsolation == 'auto
 var willDeployHubNetwork = isNetworkIsolated && (deployHubNetwork == 'true' || (deployHubNetwork == 'auto' && !isProduction))
 var willDeployCommonAppServicePlan = useCommonAppServicePlan == 'true' || (useCommonAppServicePlan == 'auto' && !isProduction)
 
-var deploymentSettings = {
+var defaultDeploymentSettings = {
   isMultiLocationDeployment: isMultiLocationDeployment
   isProduction: isProduction
   isNetworkIsolated: isNetworkIsolated
@@ -146,6 +146,7 @@ var deploymentSettings = {
     'azd-owner-name': ownerName
   }
   workloadTags: {
+    WorkloadIdentifier: environmentName
     WorkloadName: environmentName
     Environment: environmentType
     OwnerName: ownerEmail
@@ -154,11 +155,22 @@ var deploymentSettings = {
   }
 }
 
+var primaryDeployment = {
+  workloadTags: {
+    ResourceToken: naming.outputs.resourceToken
+  }
+}
+var primaryDeploymentSettings = union(defaultDeploymentSettings, primaryDeployment)
+
 var secondDeployment = {
   isPrimaryLocation: false
+  workloadTags: {
+    ResourceToken: naming2.outputs.resourceToken
+  }
 }
+
 // a copy of the deploymentSettings that is aware these details describe a second deployment
-var deploymentSettings2 = union(deploymentSettings, secondDeployment)
+var secondaryDeploymentSettings = union(defaultDeploymentSettings, secondDeployment)
 
 var diagnosticSettings = {
   logRetentionInDays: isProduction ? 30 : 3
@@ -184,7 +196,7 @@ var spokeAddressPrefixSecondary = '10.0.32.0/20'
 module naming './modules/naming.bicep' = {
   name: '${prefix}-naming'
   params: {
-    deploymentSettings: deploymentSettings
+    deploymentSettings: defaultDeploymentSettings
     differentiator: differentiator != 'none' ? differentiator : ''
     overrides: loadJsonContent('./naming.overrides.jsonc')
   }
@@ -193,7 +205,7 @@ module naming './modules/naming.bicep' = {
 module naming2 './modules/naming.bicep' = {
   name: '${prefix}-naming2'
   params: {
-    deploymentSettings: deploymentSettings
+    deploymentSettings: defaultDeploymentSettings
     differentiator: differentiator != 'none' ? '${differentiator}2' : '2'
     overrides: loadJsonContent('./naming.overrides.jsonc')
   }
@@ -212,7 +224,7 @@ module naming2 './modules/naming.bicep' = {
 module resourceGroups './modules/resource-groups.bicep' = {
   name: '${prefix}-resource-groups'
   params: {
-    deploymentSettings: deploymentSettings
+    deploymentSettings: primaryDeploymentSettings
     resourceNames: naming.outputs.resourceNames
 
     // Settings
@@ -223,7 +235,7 @@ module resourceGroups './modules/resource-groups.bicep' = {
 module resourceGroups2 './modules/resource-groups.bicep' = if (isMultiLocationDeployment) {
   name: '${prefix}-resource-groups2'
   params: {
-    deploymentSettings: deploymentSettings2
+    deploymentSettings: secondaryDeploymentSettings
     resourceNames: naming2.outputs.resourceNames
 
     // Settings
@@ -241,7 +253,7 @@ module resourceGroups2 './modules/resource-groups.bicep' = if (isMultiLocationDe
 module azureMonitor './modules/azure-monitor.bicep' = {
   name: '${prefix}-azure-monitor'
   params: {
-    deploymentSettings: deploymentSettings
+    deploymentSettings: primaryDeploymentSettings
     resourceNames: naming.outputs.resourceNames
     resourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : resourceGroups.outputs.application_resource_group_name
   }
@@ -263,7 +275,7 @@ module azureMonitor './modules/azure-monitor.bicep' = {
 module hubNetwork './modules/hub-network.bicep' = if (willDeployHubNetwork) {
   name: '${prefix}-hub-network'
   params: {
-    deploymentSettings: deploymentSettings
+    deploymentSettings: primaryDeploymentSettings
     diagnosticSettings: diagnosticSettings
     resourceNames: naming.outputs.resourceNames
 
@@ -272,7 +284,7 @@ module hubNetwork './modules/hub-network.bicep' = if (willDeployHubNetwork) {
 
     // Settings
     enableBastionHost: true
-    enableDDoSProtection: deploymentSettings.isProduction
+    enableDDoSProtection: primaryDeploymentSettings.isProduction
     enableFirewall: true
     enableJumpHost: willDeployHubNetwork
     spokeAddressPrefixPrimary: spokeAddressPrefixPrimary
@@ -295,7 +307,7 @@ module hubNetwork './modules/hub-network.bicep' = if (willDeployHubNetwork) {
 module spokeNetwork './modules/spoke-network.bicep' = if (isNetworkIsolated) {
   name: '${prefix}-spoke-network'
   params: {
-    deploymentSettings: deploymentSettings
+    deploymentSettings: primaryDeploymentSettings
     diagnosticSettings: diagnosticSettings
     resourceNames: naming.outputs.resourceNames
 
@@ -318,7 +330,7 @@ module spokeNetwork './modules/spoke-network.bicep' = if (isNetworkIsolated) {
 module spokeNetwork2 './modules/spoke-network.bicep' = if (isNetworkIsolated && isMultiLocationDeployment) {
   name: '${prefix}-spoke-network2'
   params: {
-    deploymentSettings: deploymentSettings2
+    deploymentSettings: secondaryDeploymentSettings
     diagnosticSettings: diagnosticSettings
     resourceNames: naming2.outputs.resourceNames
 
@@ -394,7 +406,7 @@ module peerSpokeVirtualNetworks './modules/peer-networks.bicep' = if (willDeploy
 module frontdoor './modules/shared-frontdoor.bicep' = {
   name: '${prefix}-frontdoor'
   params: {
-    deploymentSettings: deploymentSettings
+    deploymentSettings: primaryDeploymentSettings
     diagnosticSettings: diagnosticSettings
     resourceNames: naming.outputs.resourceNames
 
@@ -406,7 +418,7 @@ module frontdoor './modules/shared-frontdoor.bicep' = {
 module application './modules/application-resources.bicep' = {
   name: '${prefix}-application'
   params: {
-    deploymentSettings: deploymentSettings
+    deploymentSettings: primaryDeploymentSettings
     diagnosticSettings: diagnosticSettings
     resourceNames: naming.outputs.resourceNames
 
@@ -432,7 +444,7 @@ module application './modules/application-resources.bicep' = {
 module application2 './modules/application-resources.bicep' =  if (isMultiLocationDeployment) {
   name: '${prefix}-application2'
   params: {
-    deploymentSettings: deploymentSettings2
+    deploymentSettings: secondaryDeploymentSettings
     diagnosticSettings: diagnosticSettings
     resourceNames: naming2.outputs.resourceNames
 
@@ -455,16 +467,16 @@ module application2 './modules/application-resources.bicep' =  if (isMultiLocati
   ]
 }
 
-module applicationPostConfiguration './modules/application-post-config.bicep' = if (deploymentSettings.isNetworkIsolated) {
+module applicationPostConfiguration './modules/application-post-config.bicep' = if (defaultDeploymentSettings.isNetworkIsolated) {
   name: '${prefix}-application-postconfig'
   params: {
-    deploymentSettings: deploymentSettings
+    deploymentSettings: primaryDeploymentSettings
     administratorPassword: jumphostAdministratorPassword
     administratorUsername: administratorUsername
     databasePassword: databasePassword
     hubResourceGroupName: resourceGroups.outputs.hub_resource_group_name
     keyVaultName: isNetworkIsolated? hubNetwork.outputs.key_vault_name : application.outputs.key_vault_name
-    readerIdentities: union(application.outputs.service_managed_identities, deploymentSettings.isMultiLocationDeployment ? application2.outputs.service_managed_identities : [])
+    readerIdentities: union(application.outputs.service_managed_identities, defaultDeploymentSettings.isMultiLocationDeployment ? application2.outputs.service_managed_identities : [])
     redisCacheNamePrimary: application.outputs.redis_cache_name
     redisCacheNameSecondary: isMultiLocationDeployment ? application2.outputs.redis_cache_name : application.outputs.redis_cache_name
     resourceNames: naming.outputs.resourceNames
@@ -479,7 +491,7 @@ module applicationPostConfiguration './modules/application-post-config.bicep' = 
 module buildAgent './modules/build-agent.bicep' = if (installBuildAgent) {
   name: '${prefix}-build-agent'
   params: {
-    deploymentSettings: deploymentSettings
+    deploymentSettings: primaryDeploymentSettings
     diagnosticSettings: diagnosticSettings
     resourceNames: naming.outputs.resourceNames
 
@@ -509,7 +521,7 @@ module telemetry './modules/telemetry.bicep' = if (enableTelemetry) {
   name: '${prefix}-telemetry'
   params: {
     resourceGroupName: resourceGroups.outputs.application_resource_group_name
-    deploymentSettings: deploymentSettings
+    deploymentSettings: primaryDeploymentSettings
   }
 }
 

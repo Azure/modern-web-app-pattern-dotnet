@@ -2,17 +2,23 @@
 .SYNOPSIS
     Creates Azure AD app registrations for the call center web and api applications
     and saves the configuration data in App Configuration Svc and Key Vault.
+        Depends on Az module.
 
     <This command should only be run after using the azd command to deploy resources to Azure>
     
 .DESCRIPTION
     The Relecloud web app uses Azure AD to authenticate and authorize the users that can
-    make concert ticket purchases. To prove that the website is a trusted, and secure, resource
-    the web app must handshake with Azure AD by providing the configuration settings like the following.
-    - TenantID identifies which Azure AD instance holds the users that should be authorized
-    - ClientID identifies which app this code says it represents
-    - ClientSecret provides a secret known only to Azure AD, and shared with the web app, to
-    validate that Azure AD can trust this web app
+    make concert ticket purchases. This script configures the required settings and saves them in Key Vault.
+    The following settings are configured:
+
+        Api--AzureAd--ClientId              Identifies the web app to Azure AD
+        Api--AzureAd--TenantId              Identifies which Azure AD instance holds the users that should be authorized
+        AzureAd--CallbackPath               The path that Azure AD should redirect to after a successful login
+        AzureAd--ClientId                   Identifies the web app to Azure AD
+        AzureAd--ClientSecret               Provides a secret known only to Azure AD, and shared with the web app, to validate that Azure AD can trust this web app
+        AzureAd--Instance                   Identifies which Azure AD instance holds the users that should be authorized
+        AzureAd--SignedOutCallbackPath      The path that Azure AD should redirect to after a successful logout
+        AzureAd--TenantId                   Identifies which Azure AD instance holds the users that should be authorized
 
     This script will create the App Registrations that provide these configurations. Once those
     are created the configuration data will be saved to Azure App Configuration and the secret
@@ -26,363 +32,404 @@
     A required parameter for the name of resource group that contains the environment that was
     created by the azd command. The cmdlet will populate the App Config Svc and Key
     Vault services in this resource group with Azure AD app registration config data.
+    
+.EXAMPLE
+    PS C:\> .\create-app-registrations.ps1 -ResourceGroupName rg-rele231127v4-dev-westus3-application
+
+    This example will create the app registrations for the rele231127v4 environment.
 #>
 
 Param(
     [Alias("g")]
-    [Parameter(Mandatory = $true, HelpMessage = "Name of the resource group that was created by azd")]
+    [Parameter(Mandatory = $true, HelpMessage = "Name of the application resource group that was created by azd")]
     [String]$ResourceGroupName
 )
 
-$canSetSecondAzureLocation = 1
+$MAX_RETRY_ATTEMPTS = 10
+$API_SCOPE_NAME = "relecloud.api"
 
-$Debug = $psboundparameters.debug.ispresent
+# Prompt formatting features
 
-Write-Debug "Inputs"
-Write-Debug "----------------------------------------------"
-Write-Debug "resourceGroupName='$resourceGroupName'"
-Write-Debug ""
+$defaultColor = if ($Host.UI.SupportsVirtualTerminal) { "`e[0m" } else { "" }
+$successColor = if ($Host.UI.SupportsVirtualTerminal) { "`e[32m" } else { "" }
+$highlightColor = if ($Host.UI.SupportsVirtualTerminal) { "`e[36m" } else { "" }
 
-if ($ResourceGroupName -eq "-rg") {
-    Write-Error "FATAL ERROR: $ResourceGroupName could not be found in the current subscription"
-    exit 5
+# End of Prompt formatting features
+
+# Function definitions
+
+function Get-CachedResourceGroup {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ResourceGroupName
+    )
+
+    if ($global:resourceGroups -and $global:resourceGroups.ContainsKey($ResourceGroupName)) {
+        return $global:resourceGroups[$ResourceGroupName]
+    }
+
+    $resourceGroup = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
+
+    if (!$global:resourceGroups) {
+        $global:resourceGroups = @{}
+    }
+
+    $global:resourceGroups[$ResourceGroupName] = $resourceGroup
+
+    return $resourceGroup
 }
-$groupExists = (az group exists -n $ResourceGroupName)
-if ($groupExists -eq 'false') {
-    Write-Error "FATAL ERROR: $ResourceGroupName could not be found in the current subscription"
-    exit 6
+
+function Get-WorkloadName {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ResourceGroupName
+    )
+
+    $resourceGroup = Get-CachedResourceGroup -ResourceGroupName $ResourceGroupName
+    # Something like 'rele231116v1'
+    return $resourceGroup.Tags["WorkloadName"]
+}
+
+function Get-WorkloadResourceToken {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ResourceGroupName
+    )
+    $resourceGroup = Get-CachedResourceGroup -ResourceGroupName $ResourceGroupName
+    # Something like 'c2auhsbjt6h6i'
+    return $resourceGroup.Tags["ResourceToken"]
+}
+
+function Get-WorkloadEnvironment {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ResourceGroupName
+    )
+    $resourceGroup = Get-CachedResourceGroup -ResourceGroupName $ResourceGroupName
+    # Something like 'dev', 'test', 'prod'
+    return $resourceGroup.Tags["Environment"]
+}
+
+function Get-ApiAppRegistration {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$appRegistrationName
+    )
+    
+    # get an existing Relecloud Front-end App Registration
+    $apiAppRegistration = Get-AzADApplication -DisplayName $appRegistrationName -ErrorAction SilentlyContinue
+
+    # if it doesn't exist, then return a new one we created
+    if (!$apiAppRegistration) {
+        Write-Host "`tCreating the API registration $highlightColor'$($appRegistrationName)'$defaultColor" 
+
+        return New-ApiAppRegistration `
+            -appRegistrationName $appRegistrationName
+    }
+
+    Write-Host "`tRetrieved the existing API registration $highlightColor'$($apiAppRegistration.Id)'$defaultColor"
+    return $apiAppRegistration
+}
+
+function New-ApiAppRegistration {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$appRegistrationName
+    )
+
+    # Define the OAuth2 permissions (scopes) for the API
+    # https://learn.microsoft.com/en-us/dotnet/api/microsoft.azure.powershell.cmdlets.resources.msgraph.models.apiv10.imicrosoftgraphpermissionscope?view=az-ps-latest
+    $apiPermissions = @{
+        oauth2PermissionScopes = @(@{
+            id = (New-Guid).ToString()
+            type = "User"
+            adminConsentDescription = "Allow the app to access Relecloud API as a user"
+            adminConsentDisplayName = "Access Relecloud API"
+            isEnabled = $true
+            value = $API_SCOPE_NAME
+            userConsentDescription = "Allow the app to access Relecloud API on your behalf"
+            userConsentDisplayName = "Access Relecloud API"
+        })
+    }
+
+    # create an Azure AD App Registration for the front-end web app
+    $apiAppRegistration = New-AzADApplication `
+        -DisplayName $appRegistrationName `
+        -SignInAudience "AzureADMyOrg" `
+        -Api $apiPermissions `
+        -ErrorAction Stop
+
+    $clientId = ""
+    while ($clientId -eq "" -and $attempts -lt $MAX_RETRY_ATTEMPTS)
+    {
+        $MAX_RETRY_ATTEMPTS = $MAX_RETRY_ATTEMPTS + 1
+        try {
+            $clientId = (Get-AzADApplication -DisplayName $appRegistrationName -ErrorAction Stop).ApplicationId
+        }
+        catch {
+            Write-Host "`t`tFailed to retrieve the client ID for the front-end app registration. Will try again in 3 seconds."
+            Start-Sleep -Seconds 3
+        }
+    }
+
+    return $apiAppRegistration
+}
+
+function Get-FrontendAppRegistration {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$appRegistrationName,
+        [Parameter(Mandatory = $true)]
+        [string]$azureWebsiteRedirectUri,
+        [Parameter(Mandatory = $true)]
+        [string]$azureWebsiteLogoutUri,
+        [Parameter(Mandatory = $true)]
+        [string]$localhostWebsiteRedirectUri
+    )
+    
+    # get an existing Relecloud Front-end App Registration
+    $frontendAppRegistration = Get-AzADApplication -DisplayName $appRegistrationName -ErrorAction SilentlyContinue
+
+    # if it doesn't exist, then return a new one we created
+    if (!$frontendAppRegistration) {
+        Write-Host "`tCreating the front-end app registration $highlightColor'$($appRegistrationName)'$defaultColor"    
+
+        return New-FrontendAppRegistration `
+            -azureWebsiteRedirectUri $azureWebsiteRedirectUri `
+            -azureWebsiteLogoutUri $azureWebsiteLogoutUri `
+            -localhostWebsiteRedirectUri $localhostWebsiteRedirectUri `
+            -appRegistrationName $appRegistrationName
+    }
+
+    Write-Host "`tRetrieved the existing front-end app registration $highlightColor'$($frontendAppRegistration.Id)'$defaultColor"
+    return $frontendAppRegistration
+}
+
+function New-FrontendAppRegistration {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$appRegistrationName,
+        [Parameter(Mandatory = $true)]
+        [string]$azureWebsiteRedirectUri,
+        [Parameter(Mandatory = $true)]
+        [string]$azureWebsiteLogoutUri,
+        [Parameter(Mandatory = $true)]
+        [string]$localhostWebsiteRedirectUri
+    )
+    $websiteApp = @{
+        "LogoutUrl" = $azureWebsiteLogoutUri
+        "RedirectUris" = @($azureWebsiteRedirectUri, $localhostWebsiteRedirectUri)
+        "ImplicitGrantSetting" = @{
+            "EnableAccessTokenIssuance" = $false
+            "EnableIdTokenIssuance" = $true
+        }
+    }
+
+    # create an Azure AD App Registration for the front-end web app
+    $frontendAppRegistration = New-AzADApplication `
+        -DisplayName $appRegistrationName `
+        -SignInAudience "AzureADMyOrg" `
+        -Web $websiteApp `
+        -ErrorAction Stop
+
+    $clientId = ""
+    while ($clientId -eq "" -and $attempts -lt $MAX_RETRY_ATTEMPTS)
+    {
+        $MAX_RETRY_ATTEMPTS = $MAX_RETRY_ATTEMPTS + 1
+        try {
+            $clientId = (Get-AzADApplication -DisplayName $appRegistrationName -ErrorAction Stop).ApplicationId
+        }
+        catch {
+            Write-Host "`t`tFailed to retrieve the client ID for the front-end app registration. Will try again in 3 seconds."
+            Start-Sleep -Seconds 3
+        }
+    }
+
+    return $frontendAppRegistration
+}
+
+# End of function definitions
+
+
+# Check for required features
+
+if ((Get-Module -ListAvailable -Name Az) -and (Get-Module -Name Az -ErrorAction SilentlyContinue)) {
+    Write-Debug "The 'Az' module is installed and imported."
+    if (Get-AzContext -ErrorAction SilentlyContinue) {
+        Write-Debug "The user is authenticated with Azure."
+    }
+    else {
+        Write-Error "You are not authenticated with Azure. Please run 'Connect-AzAccount' to authenticate before running this script."
+        exit 10
+    }
 }
 else {
-    Write-Debug "Found resource group named: $ResourceGroupName"
+    Write-Error "The 'Az' module is not installed or imported. Please install and import the 'Az' module before running this script."
+    exit 11
 }
 
-$keyVaultName = (az keyvault list -g "$ResourceGroupName" --query "[? starts_with(name,'kv-')].name" -o tsv)
-$appConfigSvcName = (az appconfig list -g "$ResourceGroupName" --query "[].name" -o tsv)
+# End of feature checking
 
-$frontEndWebAppName = (az webapp list -g "$ResourceGroupName" --query "[? starts_with(name, 'app-webfrontend')].name" -o tsv)
+# Set defaults
+$defaultFrontEndAppRegistrationName = "$(Get-WorkloadName -ResourceGroupName $ResourceGroupName)-$(Get-WorkloadEnvironment -ResourceGroupName $ResourceGroupName)-front-webapp-$(Get-WorkloadResourceToken -ResourceGroupName $ResourceGroupName)"
+$defaultApiAppRegistrationName = "$(Get-WorkloadName -ResourceGroupName $ResourceGroupName)-$(Get-WorkloadEnvironment -ResourceGroupName $ResourceGroupName)-api-webapp-$(Get-WorkloadResourceToken -ResourceGroupName $ResourceGroupName)"
+$defaultKeyVaultname = "kv-$(Get-WorkloadResourceToken -ResourceGroupName $ResourceGroupName)"
 
-$resourceToken = $frontEndWebAppName.substring(16)
-$environmentName = $ResourceGroupName.substring(0, $ResourceGroupName.Length - 3)
+$frontDoorProfile = (Get-AzFrontDoorCdnProfile -ResourceGroupName $ResourceGroupName)
+$frontDoorEndpoint = (Get-AzFrontDoorCdnEndpoint -ProfileName $frontDoorProfile.Name -ResourceGroupName $ResourceGroupName)
+$defaultAzureWebsiteUri = "https://$($frontDoorEndpoint.HostName)"
 
-$frontDoorProfileName = (az resource list -g $ResourceGroupName --query "[? kind=='frontdoor' ].name | [0]" -o tsv)
-$frontEndWebAppUri = (az afd endpoint list -g $ResourceGroupName --profile-name $frontDoorProfileName --query "[].hostName | [0]" -o tsv --only-show-errors)
-$frontEndWebAppUri = "https://$frontEndWebAppUri"
+# End of Set defaults
 
-$secondaryResourceGroupName = $ResourceGroupName.Substring(0,$ResourceGroupName.Length-2) + "secondary-rg"
-$group2Exists = (az group exists -n $secondaryResourceGroupName)
-if ($group2Exists -eq 'false') {
-    $secondaryResourceGroupName = ''
+# Gather inputs
+
+# The Relecloud web app has two websites so we need to create two app registrations.
+# This app registration is for the back-end API that the front-end website will call.
+$apiAppRegistrationName = Read-Host -Prompt "`nWhat should the name of the API web app registration be? [default: $highlightColor$defaultApiAppRegistrationName$defaultColor]"
+
+if ($apiAppRegistrationName -eq "") {
+    $apiAppRegistrationName = $defaultApiAppRegistrationName
 }
 
-Write-Host "Derived inputs"
-Write-Host "----------------------------------------------"
-Write-Host "keyVaultName='$keyVaultName'"
-Write-Host "appConfigSvcName='$appConfigSvcName'"
-Write-Host "frontDoorProfileName='$frontDoorProfileName'"
-Write-Host "frontEndWebAppUri='$frontEndWebAppUri'"
-Write-Host "resourceToken='$resourceToken'"
-Write-Host "environmentName='$environmentName'"
-Write-Host "secondaryResourceGroupName='$secondaryResourceGroupName'"
-Write-Host ""
+# This app registration is for the front-end website that users will interact with.
+$frontendAppRegistrationName = Read-Host -Prompt "`nWhat should the name of the Front-end web app registration be? [default: $highlightColor$defaultFrontEndAppRegistrationName$defaultColor]"
 
-if ($keyVaultName.Length -eq 0) {
-    Write-Error "FATAL ERROR: Could not find Key Vault resource. Confirm the --ResourceGroupName is the one created by the ``azd provision`` command."
-    exit 7
+if ($frontendAppRegistrationName -eq "") {
+    $frontendAppRegistrationName = $defaultFrontEndAppRegistrationName
 }
 
-Write-Host "Runtime values"
-Write-Host "----------------------------------------------"
-$frontEndWebAppName = "$environmentName-$resourceToken-frontend"
-$apiWebAppName = "$environmentName-$resourceToken-api"
-$maxNumberOfRetries = 20
+# This is where the App Registration details will be stored
+$keyVaultName = Read-Host -Prompt "`nWhat is the name of the Key Vault that should store the App Registration details? [default: $highlightColor$defaultKeyVaultname$defaultColor]"
 
-Write-Host "frontEndWebAppName='$frontEndWebAppName'"
-Write-Host "apiWebAppName='$apiWebAppName'"
-Write-Host "maxNumberOfRetries=$maxNumberOfRetries"
-
-$tenantId = (az account show --query "tenantId" -o tsv)
-
-Write-Host "tenantId='$tenantId'"
-Write-Host ""
-
-if ($Debug) {
-    Read-Host -Prompt "Press enter to continue" > $null
-    Write-Debug "..."
+if ($keyVaultName -eq "") {
+    $keyVaultName = $defaultKeyVaultname
 }
 
-$frontEndWebObjectId = (az ad app list --filter "displayName eq '$frontEndWebAppName'" --query "[].id" -o tsv)
+$azureWebsiteUri = Read-Host -Prompt "`nWhat is the login redirect uri of the website? [default: $highlightColor$defaultAzureWebsiteUri$defaultColor]"
 
-if ($frontEndWebObjectId.Length -eq 0) {
-    '`tFront-end app registration does not exist' | Write-Debug
+if ($azureWebsiteUri -eq "") {
+    $azureWebsiteUri = $defaultAzureWebsiteUri
+}
 
-    #handle shell double parsing https://github.com/Azure/azure-cli/blob/dev/doc/quoting-issues-with-powershell.md
-    $frontEndWebAppClientId = (az ad app create `
-        --display-name $frontEndWebAppName `
-        --sign-in-audience AzureADMyOrg `
-        --app-roles '[{ ''allowedMemberTypes'': [ ''User'' ], ''description'': ''Relecloud Administrator'', ''displayName'': ''Relecloud Administrator'', ''isEnabled'': ''true'', ''value'': ''Administrator'' }]' `
-        --web-redirect-uris $frontEndWebAppUri/signin-oidc https://localhost:7227/signin-oidc `
-        --enable-id-token-issuance `
-        --query appId --output tsv)
+$tenantId = (Get-AzContext).Tenant.Id
 
-    Write-Host "frontEndWebAppClientId='$frontEndWebAppClientId'"
+# hard coded localhost URL comes from startup properties of the web app
+$localhostWebsiteRedirectUri = "https://localhost:7227/signin-oidc"
+$azureWebsiteRedirectUri = "$azureWebsiteUri/signin-oidc"
+$azureWebsiteLogoutUri = "$azureWebsiteUri/signout-oidc"
 
-    if ($frontEndWebAppClientId.Length -eq 0) {
-        Write-Error  "FATAL ERROR: Failed to create front-end app registration"
-        exit 8
+# End of Gather inputs
+
+# Display working state for confirmation
+Write-Host "`nRelecloud Setup for App Registrations" -ForegroundColor Yellow
+Write-Host "`ttenantId='$tenantId'"
+Write-Host "`tresourceGroupName='$resourceGroupName'"
+Write-Host "`tfrontendAppRegistrationName='$frontendAppRegistrationName'"
+Write-Host "`tkeyVaultName='$keyVaultName'"
+Write-Host "`tlocalhostWebsiteRedirectUri='$localhostWebsiteRedirectUri'"
+Write-Host "`tazureWebsiteRedirectUri='$azureWebsiteRedirectUri'"
+Write-Host "`tazureWebsiteLogoutUri='$azureWebsiteLogoutUri'"
+Write-Host "`tapiAppRegistrationName='$apiAppRegistrationName'"
+
+$confirmation = Read-Host -Prompt "`nHit enter proceed with creating app registrations"
+if ($confirmation -ne "") {
+    Write-Host "`nExiting without creating app registrations."
+    exit 12
+}
+
+# End of Display working state for confirmation
+
+# Test the existence of the Key Vault
+$keyVault = Get-AzKeyVault -VaultName $keyVaultName -ErrorAction SilentlyContinue
+
+if (!$keyVault) {
+    Write-Error "The Key Vault '$keyVaultName' does not exist. Please create the Key Vault before running this script."
+    exit 13
+}
+
+# Test to see if the current user has permissions to create secrets in the Key Vault
+try {
+    $secretValue = ConvertTo-SecureString -String 'https://login.microsoftonline.com/' -AsPlainText -Force
+    Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--Instance' -SecretValue $secretValue -ErrorAction Stop > $null
+} catch {
+    Write-Error "Unable to save data to '$keyVaultName'. Please check your permissions and the network restrictions on the Key Vault."
+    exit 14
+}
+
+# Set static values
+$secretValue = ConvertTo-SecureString -String '/signin-oidc' -AsPlainText -Force
+Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--CallbackPath' -SecretValue $secretValue -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'AzureAd--CallbackPath'$defaultColor to Key Vault"
+
+$secretValue = ConvertTo-SecureString -String '/signout-oidc' -AsPlainText -Force
+Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--SignedOutCallbackPath' -SecretValue $secretValue -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'AzureAd--SignedOutCallbackPath'$defaultColor to Key Vault"
+
+# Write TenantId to Key Vault
+$secretValue = ConvertTo-SecureString -String $tenantId -AsPlainText -Force
+Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'Api--AzureAd--TenantId' -SecretValue $secretValue -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'Api--AzureAd--TenantId'$defaultColor to Key Vault"
+
+$secretValue = ConvertTo-SecureString -String $tenantId -AsPlainText -Force
+Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--TenantId' -SecretValue $secretValue -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'AzureAd--TenantId'$defaultColor to Key Vault"
+
+# Get or Create the front-end app registration
+$frontendAppRegistration = Get-FrontendAppRegistration `
+    -azureWebsiteRedirectUri $azureWebsiteRedirectUri `
+    -azureWebsiteLogoutUri $azureWebsiteLogoutUri `
+    -localhostWebsiteRedirectUri $localhostWebsiteRedirectUri `
+    -appRegistrationName $frontendAppRegistrationName
+
+# Write to Key Vault
+$secretValue = ConvertTo-SecureString -String $frontendAppRegistration.AppId -AsPlainText -Force
+Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--ClientId' -SecretValue $secretValue -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'AzureAd--ClientId'$defaultColor to Key Vault"
+
+# List client secrets
+$clientSecrets = Get-AzADAppCredential -ObjectId $frontendAppRegistration.Id -ErrorAction SilentlyContinue
+# If there are secrets, then delete them
+if ($clientSecrets) {
+    # for each client secret
+    foreach ($clientSecret in $clientSecrets) {
+        # delete the client secret
+        Remove-AzADAppCredential -ObjectId $frontendAppRegistration.Id -KeyId $clientSecret.KeyId -ErrorAction Stop > $null
     }
-
-    $isWebAppCreated = 0
-    $currentRetryCount = 0
-    while ( $isWebAppCreated -eq 0) {
-        # assumes that we only need to create client secret if the app registration did not exist
-        $frontEndWebAppClientSecret = (az ad app credential reset --id $frontEndWebAppClientId --query "password" -o tsv --only-show-errors 2> $null) 
-        $isWebAppCreated = $frontEndWebAppClientSecret.Length # treating 0 as $false and positive nums as $true
-  
-        $currentRetryCount++
-
-        if ($currentRetryCount -gt $maxNumberOfRetries) {
-            Write-Error "FATAL ERROR: Tried to create a client secret too many times"
-            exit 14
-        }
-
-        if ($isWebAppCreated -eq 0) {
-            Write-Host "... trying to create clientSecret for front-end attempt #$currentRetryCount"
-        }
-        else {
-            Write-Host "... created clientSecret for front-end"
-            Write-Host ""
-        }
-
-        # sleep until the app registration is created
-        Start-Sleep -Seconds 3
-    }
-
-    # save 'AzureAd:ClientSecret' to Key Vault
-    az keyvault secret set --name 'AzureAd--ClientSecret' --vault-name $keyVaultName --value "$frontEndWebAppClientSecret" --only-show-errors > $null
-    Write-Host "Set keyvault value for: 'AzureAd--ClientSecret'"
-
-    # save 'AzureAd:TenantId' to App Config Svc
-    az appconfig kv set --name $appConfigSvcName --key 'AzureAd:TenantId' --value $tenantId --yes --only-show-errors > $null
-    Write-Host "Set appconfig value for: 'AzureAd:TenantId'"
-
-    #save 'AzureAd:ClientId' to App Config Svc
-    az appconfig kv set --name $appConfigSvcName --key 'AzureAd:ClientId' --value $frontEndWebAppClientId --yes --only-show-errors > $null
-    Write-Host "Set appconfig value for: 'AzureAd:ClientId'"
-}
-else {
-    Write-Host "frontend app registration objectId=$frontEndWebObjectId already exists. Delete the '$frontEndWebAppName' app registration to recreate or reset the settings."
-    $frontEndWebAppClientId = (az ad app show --id $frontEndWebObjectId --query "appId" -o tsv)
-    $canSetSecondAzureLocation = 2
 }
 
-Write-Host ""
-Write-Host "Finished app registration for front-end"
-Write-Host ""
+# Create a new client secret with a 1 year expiration
+$clientSecrets = New-AzADAppCredential -ObjectId $frontendAppRegistration.Id -EndDate (Get-Date).AddYears(1) -ErrorAction Stop
 
-if ($Debug) {
-    Read-Host -Prompt "Press enter to continue" > $null
-    Write-Debug "..."
+# Write to Key Vault
+$secretValue = ConvertTo-SecureString -String $clientSecrets.SecretText -AsPlainText -Force
+Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--ClientSecret' -SecretValue $secretValue -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'AzureAd--ClientSecret'$defaultColor to Key Vault"
+
+# Get or Create the api app registration
+$apiAppRegistration = Get-ApiAppRegistration `
+    -appRegistrationName $apiAppRegistrationName
+
+# Write to Key Vault
+$secretValue = ConvertTo-SecureString -String $apiAppRegistration.AppId -AsPlainText -Force
+Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'Api--AzureAd--ClientId' -SecretValue $secretValue -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'Api--AzureAd--ClientId'$defaultColor to Key Vault"
+
+$scopeDetails = $apiAppRegistration.Api.Oauth2PermissionScope | Where-Object { $_.Value -eq $API_SCOPE_NAME }
+if (!$scopeDetails) {
+    Write-Error "Unable to find the scope '$API_SCOPE_NAME' in the API app registration. Please check the API app registration in Azure AD."
+    exit 15
 }
 
-$apiObjectId = (az ad app list --filter "displayName eq '$apiWebAppName'" --query "[].id" -o tsv)
+Write-Host "`tFound the scope $highlightColor'$($scopeDetails.Value)'$defaultColor with ID $highlightColor'$($scopeDetails.Id)'$defaultColor"
 
-
-if ( $apiObjectId.Length -eq 0 ) {
-    # the api app registration does not exist and must be created
-    
-    $apiWebAppClientId = (az ad app create `
-            --display-name $apiWebAppName `
-            --sign-in-audience AzureADMyOrg `
-            --app-roles '[{ ''allowedMemberTypes'': [ ''User'' ], ''description'': ''Relecloud Administrator'', ''displayName'': ''Relecloud Administrator'', ''isEnabled'': ''true'', ''value'': ''Administrator'' }]' `
-            --query appId --output tsv)
-
-    Write-Debug "apiWebAppClientId='$apiWebAppClientId'"
-
-    # sleep until the app registration is created correctly
-    $isApiCreated = 0
-    $currentRetryCount = 0
-    
-    while ($isApiCreated -eq 0) {
-        $apiObjectId = (az ad app show --id $apiWebAppClientId --query id -o tsv 2> $null)
-        $isApiCreated = $apiObjectId.Length # treating 0 as $false and positive nums as $true
-
-        $currentRetryCount++
-        if ($currentRetryCount -gt $maxNumberOfRetries) {
-            Write-Error 'FATAL ERROR: Tried to create retrieve the apiObjectId too many times'
-            exit 15
-        }
-
-        if ($isApiCreated -eq 0) {
-            Write-Host "... trying to retrieve apiObjectId attempt #$currentRetryCount"
-        }
-        else {
-            Write-Host "... retrieved apiObjectId='$apiObjectId'"
-        }
-        
-        Start-Sleep -Seconds 3
-    }
-
-    # Expose an API by defining a scope
-    # application ID URI will be clientId by default
-
-    $scopeName = 'relecloud.api'
-
-    $isScopeAdded = 0
-    $currentRetryCount = 0
-
-    while ($isScopeAdded -eq 0) {
-    
-        az rest `
-            --method PATCH `
-            --uri "https://graph.microsoft.com/v1.0/applications/$apiObjectId" `
-            --headers 'Content-Type=application/json' `
-            --body "{ identifierUris:[ 'api://$apiWebAppClientId' ], api: { oauth2PermissionScopes: [ { value: '$scopeName', adminConsentDescription: 'Relecloud API access', adminConsentDisplayName: 'Relecloud API access', id: 'c791b666-cc87-4904-bc9f-c5945e08ba8f', isEnabled: true, type: 'Admin' } ] } }" 2> $null
-
-        $createdScope = (az ad app show --id $apiWebAppClientId --query 'api.oauth2PermissionScopes[0].value' -o tsv 2> $null)
-
-        if ($createdScope -eq $scopeName) {
-            $isScopeAdded = 1
-            Write-Host "... added scope $scopeName"
-        }
-        else {
-            $currentRetryCount++
-            Write-Host "... trying to add scope attempt #$currentRetryCount"
-            if ($currentRetryCount -gt $maxNumberOfRetries) {
-                Write-Error 'FATAL ERROR: Tried to set scopes too many times'
-                exit 16
-            }
-        }
-
-        Start-Sleep -Seconds 3
-    }
-
-    Write-Host "... assigned scope to api"
-    
-    $permId = ''
-    $currentRetryCount = 0
-    while ($permId.Length -eq 0 ) {
-        $permId = (az ad app show --id $apiWebAppClientId --query 'api.oauth2PermissionScopes[].id' -o tsv 2> $null)
-
-        if ($permId.Length -eq 0 ) {
-            $currentRetryCount++
-            Write-Host "... trying to retrieve permId attempt #$currentRetryCount"
-
-            if ($currentRetryCount -gt $maxNumberOfRetries) {
-                Write-Error 'FATAL ERROR: Tried to retrieve permissionId too many times'
-                exit 17
-            }
-        }
-        else {
-            Write-Host "... retrieved permId=$permId"
-        }
-  
-        Start-Sleep -Seconds 3
-    }
-
-    $preAuthedAppApplicationId = $frontEndWebAppClientId
-
-    # Preauthorize the front-end as a client to suppress scope requests
-    $authorizedApps = ''
-    $currentRetryCount = 0
-    while ($authorizedApps.Length -eq 0) {
-        az rest  `
-            --method PATCH `
-            --uri "https://graph.microsoft.com/v1.0/applications/$apiObjectId" `
-            --headers 'Content-Type=application/json' `
-            --body "{api:{preAuthorizedApplications:[{appId:'$preAuthedAppApplicationId',delegatedPermissionIds:['$permId']}]}}" 2> $null
-
-        $authorizedApps = (az ad app show --id $apiObjectId --query "api.preAuthorizedApplications" -o tsv 2> $null)
-
-        if ($authorizedApps.Length -eq 0) {
-            $currentRetryCount++
-            Write-Host "... trying to set front-end app as an preAuthorized client attempt #$currentRetryCount"
-
-            if ($currentRetryCount -gt $maxNumberOfRetries) {
-                Write-Error 'FATAL ERROR: Tried to authorize the front-end app too many times'
-                exit 18
-            }
-        }
-        else {
-            Write-Host "front-end web app is now preAuthorized"
-            Write-Host ""
-        }   
-
-        Start-Sleep -Seconds 3
-    }
-
-    # save 'App:RelecloudApi:AttendeeScope' scope for role to App Config Svc
-    az appconfig kv set --name $appConfigSvcName --key 'App:RelecloudApi:AttendeeScope' --value "api://$apiWebAppClientId/$scopeName" --yes --only-show-errors > $null
-    Write-Host "Set appconfig value for: 'App:RelecloudApi:AttendeeScope'"
-
-    # save 'Api:AzureAd:ClientId' to App Config Svc
-    az appconfig kv set --name $appConfigSvcName --key 'Api:AzureAd:ClientId' --value $apiWebAppClientId --yes --only-show-errors > $null
-    Write-Host "Set appconfig value for: 'Api:AzureAd:ClientId'"
-
-    # save 'Api:AzureAd:TenantId' to App Config Svc
-    az appconfig kv set --name $appConfigSvcName --key 'Api:AzureAd:TenantId' --value $tenantId --yes --only-show-errors > $null
-    Write-Host "Set appconfig value for: 'Api:AzureAd:TenantId'"
-} 
-else {
-    Write-Host "API app registration objectId=$apiObjectId already exists. Delete the '$apiWebAppName' app registration to recreate or reset the settings."
-    $canSetSecondAzureLocation = 3
+# Check permission for front-end app registration to verify it has access to the API app registration
+$apiPermission = Get-AzADAppPermission -ObjectId $frontendAppRegistration.Id -ErrorAction SilentlyContinue | Where-Object { $_.ResourceId -eq $apiAppRegistration.Id -and $_.Scope -eq $scopeDetails.Id }
+if (!$apiPermission) {
+    Write-Host "`tCreating the permission for the front-end app registration to access the API app registration"
+    $apiPermission = Add-AzADAppPermission -ObjectId $frontendAppRegistration.Id -ApiId $apiAppRegistration.AppId -PermissionId $scopeDetails.Id -ErrorAction Stop
 }
 
-############## Copy the App Configuration and Key Vault settings to second azure location ##############
-
-if ($secondaryResourceGroupName.Length -gt 0 -and $canSetSecondAzureLocation -eq 1) {
-    
-  # assumes there is only one vault deployed to this resource group that will match this filter
-  $secondaryKeyVaultName = (az keyvault list -g "$secondaryResourceGroupName" --query "[? name.starts_with(@,'rc-') ].name" -o tsv)
-
-  $secondaryAppConfigSvcName = (az appconfig list -g "$secondaryResourceGroupName" --query "[].name" -o tsv)
-
-  Write-Host ""
-  Write-Host "Derived inputs for second azure location"
-  Write-Host "----------------------------------------------"
-  Write-Host "secondaryKeyVaultName=$secondaryKeyVaultName"
-  Write-Host "secondaryAppConfigSvcName=$secondaryAppConfigSvcName"
-
-  if ($secondaryKeyVaultName.Length -eq 0) {
-    Write-Host "No secondary vault to configure"
-    exit 0
-  }
-
-  Write-Host ""
-  Write-Host "Now configuring secondary key vault"
-
-  # save 'AzureAd:ClientSecret' to Key Vault
-  az keyvault secret set --name 'AzureAd--ClientSecret' --vault-name $secondaryKeyVaultName --value $frontEndWebAppClientSecret --only-show-errors > $null
-  Write-Host "... Set keyvault value for: 'AzureAd--ClientSecret'"
-
-  Write-Host ""
-  Write-Host "Now configuring secondary app config svc"
-  # save 'AzureAd:TenantId' to App Config Svc
-  az appconfig kv set --name $secondaryAppConfigSvcName --key 'AzureAd:TenantId' --value $tenantId --yes --only-show-errors > $null
-  Write-Host "... Set appconfig value for: 'AzureAd:TenantId'"
-
-  #save 'AzureAd:ClientId' to App Config Svc
-  az appconfig kv set --name $secondaryAppConfigSvcName --key 'AzureAd:ClientId' --value $frontEndWebAppClientId --yes --only-show-errors > $null
-  Write-Host "... Set appconfig value for: 'AzureAd:ClientId'"
-  
-  # save 'App:RelecloudApi:AttendeeScope' scope for role to App Config Svc
-  az appconfig kv set --name $secondaryAppConfigSvcName --key 'App:RelecloudApi:AttendeeScope' --value "api://$apiWebAppClientId/$scopeName" --yes --only-show-errors > $null
-  Write-Host "... Set appconfig value for: 'App:RelecloudApi:AttendeeScope'"
-
-  # save 'Api:AzureAd:ClientId' to App Config Svc
-  az appconfig kv set --name $secondaryAppConfigSvcName --key 'Api:AzureAd:ClientId' --value $apiWebAppClientId --yes --only-show-errors > $null
-  Write-Host "... Set appconfig value for: 'Api:AzureAd:ClientId'"
-    
-  # save 'Api:AzureAd:TenantId' to App Config Svc
-  az appconfig kv set --name $secondaryAppConfigSvcName --key 'Api:AzureAd:TenantId' --value $tenantId --yes --only-show-errors > $null
-  Write-Host "... Set appconfig value for: 'Api:AzureAd:TenantId'"
-
-} elseif ($canSetSecondAzureLocation -eq 2) {
-    Write-Host ""
-    Write-Host "skipped setup for secondary azure location because frontend app registration objectId=$frontEndWebObjectId already exists."
-} elseif ($canSetSecondAzureLocation -eq 3) {
-    Write-Host ""
-    Write-Host "skipped setup for secondary location because API app registration objectId=$apiObjectId already exists."
-}
+Write-Host "`nFinished $($successColor)successfully$($defaultColor)."
 
 # all done
 exit 0
