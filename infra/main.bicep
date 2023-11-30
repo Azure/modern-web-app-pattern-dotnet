@@ -157,6 +157,7 @@ var defaultDeploymentSettings = {
 
 var primaryDeployment = {
   workloadTags: {
+    IsPrimaryLocation: 'true'
     ResourceToken: naming.outputs.resourceToken
     HubGroupName: naming.outputs.resourceNames.hubResourceGroup
   }
@@ -166,6 +167,7 @@ var primaryDeploymentSettings = union(defaultDeploymentSettings, primaryDeployme
 var secondDeployment = {
   isPrimaryLocation: false
   workloadTags: {
+    IsPrimaryLocation: 'false'
     ResourceToken: naming2.outputs.resourceToken
     HubGroupName: naming.outputs.resourceNames.hubResourceGroup
   }

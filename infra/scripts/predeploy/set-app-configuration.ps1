@@ -79,6 +79,20 @@ function Get-WorkloadKeyVault {
     return Get-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $hubGroup.ResourceGroupName
 }
 
+function Get-RedisCacheKeyName {
+    $group = Get-WorkloadResourceGroup
+
+    # if the group contains a tag 'IsPrimary' then use the primary redis cache
+    if ($group.Tags["IsPrimaryLocation"] -eq "true") {
+        # matches hard coded value in application-post-config.bicep module
+        return "App--RedisCache--ConnectionString-Primary"
+    }
+
+    # matches hard coded value in application-post-config.bicep module
+    return "App--RedisCache--ConnectionString-Secondary"
+
+}
+
 # default settings
 $azureStorageTicketContainerName = "tickets" # matches the default defined in application-resources.bicep file
 
@@ -91,12 +105,15 @@ $azureFrontDoorHostName = "https://$((Get-FrontDoorEndpoint).HostName)" # the ho
 $relecloudBaseUri = "https://$((Get-FrontDoorEndpoint).HostName)/api" # used by the frontend to call the backend through the front door
 $keyVaultUri = (Get-WorkloadKeyVault).VaultUri # the URI of the key vault where secrets are stored
 
+$redisCacheKeyName = Get-RedisCacheKeyName # workloads use independent redis caches and a shared vault to store the connection string
+
 # display the settings so that the user can verify them in the output log
 Write-Host "resourceGroupName: $resourceGroupName"
 Write-Host "SqlConnectionString: $sqlConnectionString"
 Write-Host "AzureStorageTicketUri: $azureStorageTicketUri"
 Write-Host "AzureFrontDoorHostName: $azureFrontDoorHostName"
 Write-Host "RelecloudBaseUri: $relecloudBaseUri"
+Write-Host "RedisCacheKeyName: $redisCacheKeyName"
 Write-Host "KeyVaultUri: $keyVaultUri"
 
 # handles multi-regional app configuration because the app config must be in the same region as the code deployment
@@ -117,7 +134,7 @@ Write-Host 'Set values for key vault reference'
 Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:AzureAd:ClientId -Value "{ `"uri`":`"$($keyVaultUri)secrets/Api--AzureAd--ClientId`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
 Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:AzureAd:Instance -Value "{ `"uri`":`"$($keyVaultUri)secrets/Api--AzureAd--Instance`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
 Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:AzureAd:TenantId -Value "{ `"uri`":`"$($keyVaultUri)secrets/Api--AzureAd--TenantId`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RedisCache:ConnectionString -Value "{ `"uri`":`"$($keyVaultUri)secrets/`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
+Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RedisCache:ConnectionString -Value "{ `"uri`":`"$($keyVaultUri)secrets/$($redisCacheKeyName)`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
 Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:Instance -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--Instance`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
 Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:CallbackPath -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--CallbackPath`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
 Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:ClientId -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--ClientId`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
