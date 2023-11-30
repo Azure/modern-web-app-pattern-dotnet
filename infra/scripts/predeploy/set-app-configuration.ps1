@@ -7,14 +7,59 @@
     This script will be run by the Azure Developer CLI, and will set the required
     app configuration settings for the Relecloud web app as part of the code deployment process.
 
+    Depends on the AZURE_RESOURCE_GROUP environment variable being set. AZD requires this to
+    understand which resource group to deploy to so this script uses it to learn about the
+    environment where the configuration settings should be set.
+
 #>
 
-param (
-    [Parameter(Mandatory=$true)]
-    [string]$ResourceGroupName
-)
+function Get-WorkloadResourceGroup {
+    
+    # the `azd env get-values` command will return a list of stringData with the resource group name stored in the AZURE_RESOURCE_GROUP property
+    $resourceGroupName = ((azd env get-values --output json) | ConvertFrom-Json).AZURE_RESOURCE_GROUP
 
-function Get-RelecloudKeyVault {
+    return Get-AzResourceGroup -Name $resourceGroupName
+}
+
+function Get-WorkloadSqlManagedIdentityConnectionString {
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$ResourceGroupName
+    )
+    
+    # the group contains tags that explain what the default name of the Azure SQL resource should be
+    $sqlServerResourceName = "sql-$($group.Tags["ResourceToken"])"
+
+    # if sql server is not found, then throw an error
+    if (-not $sqlServerResourceName) {
+        throw "SQL server not found in resource group $ResourceGroupName"
+    }
+
+    $sqlServerResource = Get-AzSqlServer -ServerName $sqlServerResourceName -ResourceGroupName $ResourceGroupName
+
+    return "Server=tcp:$($sqlServerResource.FullyQualifiedDomainName),1433;Initial Catalog=$($sqlServerResourceName);Authentication=Active Directory Managed Identity"
+}
+
+function Get-WorkloadStorageAccount {
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$ResourceGroupName
+    )
+
+    $group = Get-AzResourceGroup -Name $ResourceGroupName
+
+    # the group contains tags that explain what the default name of the storage account should be
+    $storageAccountName = "st$($group.Tags["Environment"])$($group.Tags["ResourceToken"])"
+
+    # if storage account is not found, then throw an error
+    if (-not $storageAccountName) {
+        throw "Storage account not found in resource group $ResourceGroupName"
+    }
+
+    return Get-AzStorageAccount -Name $storageAccountName -ResourceGroupName $ResourceGroupName
+}
+
+function Get-WorkloadKeyVault {
     param (
         [Parameter(Mandatory=$true)]
         [string]$ResourceGroupName
@@ -30,23 +75,23 @@ function Get-RelecloudKeyVault {
         throw "Key vault not found in resource group $ResourceGroupName"
     }
 
-    # note that the vault may not be in the same group as the one passed in
-    return Get-AzKeyVault -VaultName $keyVaultName # -ResourceGroupName $ResourceGroupName
-
+    return Get-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $ResourceGroupName
 }
 
 # default settings
 $azureStorageTicketContainerName = "tickets" # matches the default defined in application-resources.bicep file
 
+$resourceGroupName = (Get-WorkloadResourceGroup).ResourceGroupName
+
 # use the resource group name to learn about the remaining required settings
-$sqlConnectionString = "todo" # the connection string to the SQL database set with Managed Identity
-$azureStorageTicketUri = "todo" # the URI of the storage account container where tickets are stored
+$sqlConnectionString = (Get-WorkloadSqlManagedIdentityConnectionString -ResourceGroupName $resourceGroupName) # the connection string to the SQL database set with Managed Identity
+$azureStorageTicketUri = (Get-WorkloadStorageAccount -ResourceGroupName $resourceGroupName).PrimaryEndpoints.Blob # the URI of the storage account container where tickets are stored
 $azureFrontDoorHostName = "todo" # the hostname of the front door
 $relecloudBaseUri = "todo" # used by the frontend to call the backend through the front door
-$keyVaultUri = (Get-RelecloudKeyVault -ResourceGroupName $ResourceGroupName).VaultUri # the URI of the key vault where secrets are stored
+$keyVaultUri = (Get-WorkloadKeyVault -ResourceGroupName $resourceGroupName).VaultUri # the URI of the key vault where secrets are stored
 
 # display the settings so that the user can verify them in the output log
-Write-Host "ResourceGroupName: $ResourceGroupName"
+Write-Host "resourceGroupName: $resourceGroupName"
 Write-Host "SqlConnectionString: $sqlConnectionString"
 Write-Host "AzureStorageTicketUri: $azureStorageTicketUri"
 Write-Host "AzureFrontDoorHostName: $azureFrontDoorHostName"
