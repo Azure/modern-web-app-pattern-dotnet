@@ -88,7 +88,7 @@ $resourceGroupName = (Get-WorkloadResourceGroup).ResourceGroupName
 $sqlConnectionString = (Get-WorkloadSqlManagedIdentityConnectionString) # the connection string to the SQL database set with Managed Identity
 $azureStorageTicketUri = (Get-WorkloadStorageAccount).PrimaryEndpoints.Blob # the URI of the storage account container where tickets are stored
 $azureFrontDoorHostName = "https://$((Get-FrontDoorEndpoint).HostName)" # the hostname of the front door
-$relecloudBaseUri = "todo" # used by the frontend to call the backend through the front door
+$relecloudBaseUri = "https://$((Get-FrontDoorEndpoint).HostName)/api" # used by the frontend to call the backend through the front door
 $keyVaultUri = (Get-WorkloadKeyVault).VaultUri # the URI of the key vault where secrets are stored
 
 # display the settings so that the user can verify them in the output log
