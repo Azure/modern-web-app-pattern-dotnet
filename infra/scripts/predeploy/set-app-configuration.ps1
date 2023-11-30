@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    This script will be run by the Azure Developer CLI, and will have access to the AZD_*
+    This script will be run by the Azure Developer CLI, and will have access to the AZD_* vars
     This ensures the the app configuration service is reachable from the current environment.
 
 .DESCRIPTION
