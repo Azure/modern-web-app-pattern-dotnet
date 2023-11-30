@@ -7,7 +7,7 @@
     <This command should only be run after using the azd command to deploy resources to Azure>
     
 .DESCRIPTION
-    The Relecloud web app uses Azure AD to authenticate and authorize the users that can
+    The web app uses Azure AD to authenticate and authorize the users that can
     make concert ticket purchases. This script configures the required settings and saves them in Key Vault.
     The following settings are configured:
 
@@ -116,7 +116,7 @@ function Get-ApiAppRegistration {
         [string]$appRegistrationName
     )
     
-    # get an existing Relecloud Front-end App Registration
+    # get an existing Front-end App Registration
     $apiAppRegistration = Get-AzADApplication -DisplayName $appRegistrationName -ErrorAction SilentlyContinue
 
     # if it doesn't exist, then return a new one we created
@@ -143,12 +143,12 @@ function New-ApiAppRegistration {
         oauth2PermissionScopes = @(@{
             id = (New-Guid).ToString()
             type = "User"
-            adminConsentDescription = "Allow the app to access Relecloud API as a user"
-            adminConsentDisplayName = "Access Relecloud API"
+            adminConsentDescription = "Allow the app to access the web API as a user"
+            adminConsentDisplayName = "Access the web API"
             isEnabled = $true
             value = $API_SCOPE_NAME
-            userConsentDescription = "Allow the app to access Relecloud API on your behalf"
-            userConsentDisplayName = "Access Relecloud API"
+            userConsentDescription = "Allow the app to access the web API on your behalf"
+            userConsentDisplayName = "Access the web API"
         })
     }
 
@@ -187,7 +187,7 @@ function Get-FrontendAppRegistration {
         [string]$localhostWebsiteRedirectUri
     )
     
-    # get an existing Relecloud Front-end App Registration
+    # get an existing Front-end App Registration
     $frontendAppRegistration = Get-AzADApplication -DisplayName $appRegistrationName -ErrorAction SilentlyContinue
 
     # if it doesn't exist, then return a new one we created
@@ -283,7 +283,7 @@ $defaultAzureWebsiteUri = "https://$($frontDoorEndpoint.HostName)"
 
 # Gather inputs
 
-# The Relecloud web app has two websites so we need to create two app registrations.
+# The web app has two websites so we need to create two app registrations.
 # This app registration is for the back-end API that the front-end website will call.
 $apiAppRegistrationName = Read-Host -Prompt "`nWhat should the name of the API web app registration be? [default: $highlightColor$defaultApiAppRegistrationName$defaultColor]"
 
@@ -321,7 +321,7 @@ $azureWebsiteLogoutUri = "$azureWebsiteUri/signout-oidc"
 # End of Gather inputs
 
 # Display working state for confirmation
-Write-Host "`nRelecloud Setup for App Registrations" -ForegroundColor Yellow
+Write-Host "`nSetup for App Registrations" -ForegroundColor Yellow
 Write-Host "`ttenantId='$tenantId'"
 Write-Host "`tresourceGroupName='$resourceGroupName'"
 Write-Host "`tfrontendAppRegistrationName='$frontendAppRegistrationName'"
