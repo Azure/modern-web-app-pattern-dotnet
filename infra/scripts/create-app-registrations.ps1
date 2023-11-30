@@ -365,6 +365,13 @@ $secretValue = ConvertTo-SecureString -String '/signout-oidc' -AsPlainText -Forc
 Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--SignedOutCallbackPath' -SecretValue $secretValue -ErrorAction Stop > $null
 Write-Host "`tSaved the $highlightColor'AzureAd--SignedOutCallbackPath'$defaultColor to Key Vault"
 
+$secretInstance = ConvertTo-SecureString -String 'https://login.microsoftonline.com/' -AsPlainText -Force
+Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'Api-AzureAd--Instance' -SecretValue $secretInstance -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'Api-AzureAd--Instance'$defaultColor to Key Vault"
+
+Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--Instance' -SecretValue $secretInstance -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'AzureAd--Instance'$defaultColor to Key Vault"
+
 # Write TenantId to Key Vault
 $secretValue = ConvertTo-SecureString -String $tenantId -AsPlainText -Force
 Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'Api--AzureAd--TenantId' -SecretValue $secretValue -ErrorAction Stop > $null
