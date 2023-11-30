@@ -22,60 +22,61 @@ function Get-WorkloadResourceGroup {
 }
 
 function Get-WorkloadSqlManagedIdentityConnectionString {
-    param (
-        [Parameter(Mandatory=$true)]
-        [string]$ResourceGroupName
-    )
-    
+    $group = Get-WorkloadResourceGroup
+
     # the group contains tags that explain what the default name of the Azure SQL resource should be
     $sqlServerResourceName = "sql-$($group.Tags["ResourceToken"])"
 
     # if sql server is not found, then throw an error
-    if (-not $sqlServerResourceName) {
-        throw "SQL server not found in resource group $ResourceGroupName"
+    if ($sqlServerResourceName.Length -lt 4) {
+        throw "SQL server not found in resource group $group.ResourceGroupName"
     }
 
-    $sqlServerResource = Get-AzSqlServer -ServerName $sqlServerResourceName -ResourceGroupName $ResourceGroupName
+    $sqlServerResource = Get-AzSqlServer -ServerName $sqlServerResourceName -ResourceGroupName $group.ResourceGroupName
 
     return "Server=tcp:$($sqlServerResource.FullyQualifiedDomainName),1433;Initial Catalog=$($sqlServerResourceName);Authentication=Active Directory Managed Identity"
 }
 
 function Get-WorkloadStorageAccount {
-    param (
-        [Parameter(Mandatory=$true)]
-        [string]$ResourceGroupName
-    )
-
-    $group = Get-AzResourceGroup -Name $ResourceGroupName
+    $group = Get-WorkloadResourceGroup
 
     # the group contains tags that explain what the default name of the storage account should be
     $storageAccountName = "st$($group.Tags["Environment"])$($group.Tags["ResourceToken"])"
 
     # if storage account is not found, then throw an error
-    if (-not $storageAccountName) {
-        throw "Storage account not found in resource group $ResourceGroupName"
+    if ($storageAccountName.Length -lt 6) {
+        throw "Storage account not found in resource group $group.ResourceGroupName"
     }
 
-    return Get-AzStorageAccount -Name $storageAccountName -ResourceGroupName $ResourceGroupName
+    return Get-AzStorageAccount -Name $storageAccountName -ResourceGroupName $group.ResourceGroupName
+}
+
+function Get-FrontDoor {
+    $group = Get-WorkloadResourceGroup
+
+    return (Get-AzFrontDoorCdnProfile -ResourceGroupName $group.ResourceGroupName)
+}
+
+function Get-FrontDoorEndpoint {
+    $group = Get-WorkloadResourceGroup
+
+    $frontDoorProfile = Get-FrontDoor
+    return (Get-AzFrontDoorCdnEndpoint -ProfileName $frontDoorProfile.Name -ResourceGroupName $group.ResourceGroupName)
 }
 
 function Get-WorkloadKeyVault {
-    param (
-        [Parameter(Mandatory=$true)]
-        [string]$ResourceGroupName
-    )
-
-    $group = Get-AzResourceGroup -Name $ResourceGroupName
+    $group = Get-WorkloadResourceGroup
+    $hubGroup = Get-AzResourceGroup -Name $group.Tags["HubGroupName"]
 
     # the group contains tags that explain what the default name of the kv should be
     $keyVaultName = "kv-$($group.Tags["ResourceToken"])"
 
     # if key vault is not found, then throw an error
-    if (-not $keyVaultName) {
-        throw "Key vault not found in resource group $ResourceGroupName"
+    if ($keyVaultName.Length -lt 4) {
+        throw "Key vault not found in resource group $group.ResourceGroupName"
     }
 
-    return Get-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $ResourceGroupName
+    return Get-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $hubGroup.ResourceGroupName
 }
 
 # default settings
@@ -84,11 +85,11 @@ $azureStorageTicketContainerName = "tickets" # matches the default defined in ap
 $resourceGroupName = (Get-WorkloadResourceGroup).ResourceGroupName
 
 # use the resource group name to learn about the remaining required settings
-$sqlConnectionString = (Get-WorkloadSqlManagedIdentityConnectionString -ResourceGroupName $resourceGroupName) # the connection string to the SQL database set with Managed Identity
-$azureStorageTicketUri = (Get-WorkloadStorageAccount -ResourceGroupName $resourceGroupName).PrimaryEndpoints.Blob # the URI of the storage account container where tickets are stored
-$azureFrontDoorHostName = "todo" # the hostname of the front door
+$sqlConnectionString = (Get-WorkloadSqlManagedIdentityConnectionString) # the connection string to the SQL database set with Managed Identity
+$azureStorageTicketUri = (Get-WorkloadStorageAccount).PrimaryEndpoints.Blob # the URI of the storage account container where tickets are stored
+$azureFrontDoorHostName = "https://$((Get-FrontDoorEndpoint).HostName)" # the hostname of the front door
 $relecloudBaseUri = "todo" # used by the frontend to call the backend through the front door
-$keyVaultUri = (Get-WorkloadKeyVault -ResourceGroupName $resourceGroupName).VaultUri # the URI of the key vault where secrets are stored
+$keyVaultUri = (Get-WorkloadKeyVault).VaultUri # the URI of the key vault where secrets are stored
 
 # display the settings so that the user can verify them in the output log
 Write-Host "resourceGroupName: $resourceGroupName"
@@ -99,7 +100,7 @@ Write-Host "RelecloudBaseUri: $relecloudBaseUri"
 Write-Host "KeyVaultUri: $keyVaultUri"
 
 # handles multi-regional app configuration because the app config must be in the same region as the code deployment
-$configStore = Get-AzAppConfigurationStore -ResourceGroupName $ResourceGroupName
+$configStore = Get-AzAppConfigurationStore -ResourceGroupName $resourceGroupName
 
 # todo - verify the Redis connection strings are local to the region because they have different key names
 
