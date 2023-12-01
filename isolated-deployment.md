@@ -41,7 +41,7 @@ azd provision
 
 > **WARNING**
 >
-> When the network isolated deployment is performed the Key Vault resource will be deployed with public network access enabled. This allows the reader to access the Key Vault to retrieve the username and password for the jump host. Once the username and password have been retrieved. This also allows you to save settings from the create-app-registration script directly to the Key Vault. We recommend reviewing this approach with your security team as you may want to change this approach. One option to consider is disabling public network access for Key Vault, adding the jump host to the domain, and running the create app-registration script from the jump host.
+> When the network isolated deployment is performed the Key Vault resource will be deployed with public network access enabled. This allows the reader to access the Key Vault to retrieve the username and password for the jump host. This also allows you to save data created by the create-app-registration script directly to the Key Vault. We recommend reviewing this approach with your security team as you may want to change this approach. One option to consider is adding the jump host to the domain, disabling public network access for Key Vault, and running the create app-registration script from the jump host.
 
 The default username for the jump host is `azureadmin` and the password was set earlier. If you did not set an ADMIN_PASSWORD, then one is generated for you.  To retrieve the generated password:
 
@@ -71,7 +71,6 @@ Now that you have the username and password:
 > Microsoft employees:
 >
 > - The jump host must be InTune managed.
-> - Turn off the firewall on the rg-HUB Key Vault.
 > - Create the Entra application registrations from the same system that you used to initially provision resources.
 > - Once the application registrations have been created, you can optionally turn on the firewall again.
 >
