@@ -11,10 +11,17 @@ hooks:
     windows:
       interactive: true
       run: ./infra/scripts/preprovision/whats-my-ip.ps1
+  postprovision:
+    posix:
+      interactive: true
+      run: ./infra/scripts/postprovision/call-create-app-registrations.sh
+    windows:
+      interactive: true
+      run: ./infra/scripts/postprovision/call-create-app-registrations.ps1
   predeploy:
     posix:
       interactive: true
-      run: ./infra/scripts/predeploy/set-app-configuration.sh
+      run: ./infra/scripts/predeploy/call-set-app-configuration.sh
     windows:
       interactive: true
       run: ./infra/scripts/predeploy/set-app-configuration.ps1
