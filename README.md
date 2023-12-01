@@ -90,17 +90,23 @@ Once the command palette is open, search for `Dev Containers: Rebuild and Reopen
 
 The environment name should be less than 18 characters and must be comprised of lower-case, numeric, and dash characters (for example, `eapdotnetmwa`).  The environment name is used for resource group naming and specific resource naming. Also, select a password for the admin user of the database.
 
-Run the following commands to set these values and create a new environment:
+Run the following command to start a PowerShell session:
 
 ```shell
+pwsh
+```
+
+Run the following commands to set these values and create a new environment:
+
+```pwsh
 azd env new eapdotnetmwa
 ```
 
-Substitute the environment name and database password for your own values.
+Substitute the environment name for your own values.
 
 By default, Azure resources are sized for a "development" mode. If doing a Production deployment, set the `AZURE_ENV_TYPE` to `prod` using the following code:
 
-```shell
+```pwsh
 azd env set AZURE_ENV_TYPE prod
 ```
 
@@ -108,31 +114,34 @@ azd env set AZURE_ENV_TYPE prod
 
 Before deploying, you must be authenticated to Azure and have the appropriate subscription selected.  To authenticate:
 
-```shell
-az login --scope https://graph.microsoft.com//.default
+```pwsh
 azd auth login
+```
+
+```pwsh
+Connect-AzAccount
 ```
 
 Each command will open a browser allowing you to authenticate.  To list the subscriptions you have access to:
 
-```shell
-az account list
+```pwsh
+Get-AzSubscription
 ```
 
 To set the active subscription:
 
-```shell
-export AZURE_SUBSCRIPTION="<your-subscription-id>"
-az account set --subscription $AZURE_SUBSCRIPTION
+```pwsh
+$AZURE_SUBSCRIPTION="<your-subscription-id>"
 azd env set AZURE_SUBSCRIPTION_ID $AZURE_SUBSCRIPTION
+Set-AzContext -SubscriptionId $AZURE_SUBSCRIPTION
 ```
 
 ### 5. Select a region for deployment
 
 The application can be deployed in either a single region or multi-region manner. You can find a list of available Azure regions by running the following Azure CLI command.
 
-> ```shell
-> az account list-locations --query "[].name" -o tsv
+> ```pwsh
+> (Get-AzLocation).Location
 > ```
 
 Set the `AZURE_LOCATION` to the primary region:
@@ -147,7 +156,7 @@ If doing a multi-region deployment, set the `AZURE_LOCATION2` to the secondary r
 azd env set AZURE_LOCATION2 eastus
 ```
 
-Make sure the secondary region is a paired region with the primary region (`AZURE_LOCATION`). Paired regions are required to support [geo-zone-redundant storage (GZRS) failover](https://learn.microsoft.com/azure/storage/common/storage-disaster-recovery-guidance). For a full list of region pairs, see [Azure region pairs](https://learn.microsoft.com/azure/reliability/cross-region-replication-azure#azure-cross-region-replication-pairings-for-all-geographies). We have validated the following paired regions.
+Make sure the secondary region is a paired region with the primary region (`AZURE_LOCATION`). Paired regions are required to support Azure features like [geo-zone-redundant storage (GZRS) failover](https://learn.microsoft.com/azure/storage/common/storage-disaster-recovery-guidance). For a full list of region pairs, see [Azure region pairs](https://learn.microsoft.com/azure/reliability/cross-region-replication-azure#azure-cross-region-replication-pairings-for-all-geographies). We have validated the following paired regions.
 
 | AZURE_LOCATION | AZURE_LOCATION2 |
 | ----- | ----- |
@@ -159,7 +168,7 @@ Make sure the secondary region is a paired region with the primary region (`AZUR
 
 Run the following command to create the infrastructure (about 15-minutes to provision):
 
-```shell
+```pwsh
 azd provision --no-prompt
 ```
 
