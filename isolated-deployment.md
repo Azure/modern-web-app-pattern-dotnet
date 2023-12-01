@@ -39,15 +39,11 @@ azd provision
 
 ### Login
 
+> **WARNING**
+>
+> When the network isolated deployment is performed the Key Vault resource will be deployed with public network access enabled. This allows the reader to access the Key Vault to retrieve the username and password for the jump host. Once the username and password have been retrieved. This also allows you to save settings from the create-app-registration script directly to the Key Vault. We recommend reviewing this approach with your security team as you may want to change this approach. One option to consider is adding the jump host to the domain and using a domain account to access the Key Vault.
+
 The default username for the jump host is `azureadmin` and the password was set earlier. If you did not set an ADMIN_PASSWORD, then one is generated for you.  To retrieve the generated password:
-
-1. Turn off the firewall for the Azure Key Vault:
-
-    - Open the [Azure Portal](https://portal.azure.com)
-    - Select the HUB resource group, then select the Azure Key Vault resource
-    - In the menu sidebar, select **Networking**.
-    - In the **Firewalls and virtual networks** tab, select **Allow public access from all networks**.
-    - Select **Apply** at the bottom of the screen.
 
 1. Retrieve the username and password for your jump host:
 
