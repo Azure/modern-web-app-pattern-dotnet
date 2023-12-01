@@ -208,22 +208,21 @@ namespace Relecloud.Web
                 var frontDoorHostname = Configuration["App:FrontDoorHostname"];
                 var callbackPath = Configuration["AzureAd:CallbackPath"];
 
-                options.Events = new OpenIdConnectEvents
+                options.Events.OnTokenValidated += async ctx =>
                 {
-                    OnRedirectToIdentityProvider = ctx => {
-                        // not needed when using host name preservation
-                        ctx.ProtocolMessage.RedirectUri = $"https://{frontDoorHostname}{callbackPath}";
-                        return Task.CompletedTask;
-                    },
-                    OnRedirectToIdentityProviderForSignOut = ctx => {
-                        // not needed when using host name preservation
-                        ctx.ProtocolMessage.PostLogoutRedirectUri = $"https://{frontDoorHostname}";
-                        return Task.CompletedTask;
-                    },
-                    OnTokenValidated = async ctx =>
-                    {
-                        await CreateOrUpdateUserInformation(ctx);
-                    }
+                    await CreateOrUpdateUserInformation(ctx);
+                };
+                options.Events.OnRedirectToIdentityProvider += ctx =>
+                {
+                    // not needed when using host name preservation
+                    ctx.ProtocolMessage.RedirectUri = $"https://{frontDoorHostname}{callbackPath}";
+                    return Task.CompletedTask;
+                };
+                options.Events.OnRedirectToIdentityProviderForSignOut += ctx =>
+                {
+                    // not needed when using host name preservation
+                    ctx.ProtocolMessage.PostLogoutRedirectUri = $"https://{frontDoorHostname}";
+                    return Task.CompletedTask;
                 };
             }));
         }
