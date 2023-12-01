@@ -108,7 +108,7 @@ param networkIsolation string = 'auto'
 
 // Secondary Azure location - provides the name of the 2nd Azure region. Blank by default to represent a single region deployment.
 @description('Should specify an Azure region. If not set to empty string then deploy to single region, else trigger multiregional deployment. The second region should be different than the `location`. e.g. `westus3`')
-param secondaryAzureLocation string
+param secondaryAzureLocation string = ''
 
 // Common App Service Plan - determines if a common app service plan should be deployed.
 //  auto = yes in dev, no in prod.
