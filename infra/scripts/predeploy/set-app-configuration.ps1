@@ -19,16 +19,22 @@ Param(
     [String]$ResourceGroupName
 )
 
-function Get-WorkloadResourceGroup {
-    
-    # the `azd env get-values` command will return a list of stringData with the resource group name stored in the AZURE_RESOURCE_GROUP property
-    $resourceGroupName = ((azd env get-values --output json) | ConvertFrom-Json).AZURE_RESOURCE_GROUP
+# Prompt formatting features
 
-    return Get-AzResourceGroup -Name $resourceGroupName
-}
+$defaultColor = if ($Host.UI.SupportsVirtualTerminal) { "`e[0m" } else { "" }
+$successColor = if ($Host.UI.SupportsVirtualTerminal) { "`e[32m" } else { "" }
+$highlightColor = if ($Host.UI.SupportsVirtualTerminal) { "`e[36m" } else { "" }
+
+# End of Prompt formatting features
 
 function Get-WorkloadSqlManagedIdentityConnectionString {
-    $group = Get-WorkloadResourceGroup
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ResourceGroupName
+    )
+    Write-Host "`tGetting sql server connection for $highlightColor'$ResourceGroupName'$defaultColor"
+    
+    $group = Get-AzResourceGroup -Name $ResourceGroupName
 
     # the group contains tags that explain what the default name of the Azure SQL resource should be
     $sqlServerResourceName = "sql-$($group.Tags["ResourceToken"])"
@@ -44,7 +50,13 @@ function Get-WorkloadSqlManagedIdentityConnectionString {
 }
 
 function Get-WorkloadStorageAccount {
-    $group = Get-WorkloadResourceGroup
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ResourceGroupName
+    )
+    Write-Host "`tGetting storage account for $highlightColor'$ResourceGroupName'$defaultColor"
+
+    $group = Get-AzResourceGroup -Name $ResourceGroupName
 
     # the group contains tags that explain what the default name of the storage account should be
     $storageAccountName = "st$($group.Tags["Environment"])$($group.Tags["ResourceToken"])"
@@ -57,21 +69,34 @@ function Get-WorkloadStorageAccount {
     return Get-AzStorageAccount -Name $storageAccountName -ResourceGroupName $group.ResourceGroupName
 }
 
-function Get-FrontDoor {
-    $group = Get-WorkloadResourceGroup
+function Get-MyFrontDoor {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ResourceGroupName
+    )
 
-    return (Get-AzFrontDoorCdnProfile -ResourceGroupName $group.ResourceGroupName)
+    Write-Host "`tGetting front door profile for $highlightColor'$ResourceGroupName'$defaultColor"
+    return (Get-AzFrontDoorCdnProfile -ResourceGroupName $ResourceGroupName)
 }
 
-function Get-FrontDoorEndpoint {
-    $group = Get-WorkloadResourceGroup
+function Get-MyFrontDoorEndpoint {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ResourceGroupName
+    )
 
-    $frontDoorProfile = Get-FrontDoor
-    return (Get-AzFrontDoorCdnEndpoint -ProfileName $frontDoorProfile.Name -ResourceGroupName $group.ResourceGroupName)
+    $frontDoorProfile = (Get-MyFrontDoor -ResourceGroupName $ResourceGroupName)
+    return (Get-AzFrontDoorCdnEndpoint -ProfileName $frontDoorProfile.Name -ResourceGroupName $ResourceGroupName)
 }
 
 function Get-WorkloadKeyVault {
-    $group = Get-WorkloadResourceGroup
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ResourceGroupName
+    )
+    Write-Host "`tGetting key vault for $highlightColor'$ResourceGroupName'$defaultColor"
+
+    $group = Get-AzResourceGroup -Name $ResourceGroupName
     $hubGroup = Get-AzResourceGroup -Name $group.Tags["HubGroupName"]
 
     # the group contains tags that explain what the default name of the kv should be
@@ -86,7 +111,13 @@ function Get-WorkloadKeyVault {
 }
 
 function Get-RedisCacheKeyName {
-    $group = Get-WorkloadResourceGroup
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ResourceGroupName
+    )
+    Write-Host "`tGetting redis cache key name for $highlightColor'$ResourceGroupName'$defaultColor"
+
+    $group = Get-AzResourceGroup -Name $ResourceGroupName
 
     # if the group contains a tag 'IsPrimary' then use the primary redis cache
     if ($group.Tags["IsPrimaryLocation"] -eq "true") {
@@ -99,52 +130,59 @@ function Get-RedisCacheKeyName {
 
 }
 
+Write-Host "Configuring app settings for $highlightColor'$ResourceGroupName'$defaultColor"
+
 # default settings
 $azureStorageTicketContainerName = "tickets" # matches the default defined in application-resources.bicep file
 
-$resourceGroupName = (Get-WorkloadResourceGroup).ResourceGroupName
-
 # use the resource group name to learn about the remaining required settings
-$sqlConnectionString = (Get-WorkloadSqlManagedIdentityConnectionString) # the connection string to the SQL database set with Managed Identity
-$azureStorageTicketUri = (Get-WorkloadStorageAccount).PrimaryEndpoints.Blob # the URI of the storage account container where tickets are stored
-$azureFrontDoorHostName = "https://$((Get-FrontDoorEndpoint).HostName)" # the hostname of the front door
-$relecloudBaseUri = "https://$((Get-FrontDoorEndpoint).HostName)/api" # used by the frontend to call the backend through the front door
-$keyVaultUri = (Get-WorkloadKeyVault).VaultUri # the URI of the key vault where secrets are stored
+$sqlConnectionString = (Get-WorkloadSqlManagedIdentityConnectionString -ResourceGroupName $ResourceGroupName) # the connection string to the SQL database set with Managed Identity
+$azureStorageTicketUri = (Get-WorkloadStorageAccount -ResourceGroupName $ResourceGroupName).PrimaryEndpoints.Blob # the URI of the storage account container where tickets are stored
+$azureFrontDoorHostName = "https://$((Get-MyFrontDoorEndpoint -ResourceGroupName $ResourceGroupName).HostName)" # the hostname of the front door
+$relecloudBaseUri = "https://$((Get-MyFrontDoorEndpoint -ResourceGroupName $ResourceGroupName).HostName)/api" # used by the frontend to call the backend through the front door
+$keyVaultUri = (Get-WorkloadKeyVault -ResourceGroupName $ResourceGroupName).VaultUri # the URI of the key vault where secrets are stored
 
-$redisCacheKeyName = Get-RedisCacheKeyName # workloads use independent redis caches and a shared vault to store the connection string
+$redisCacheKeyName = (Get-RedisCacheKeyName -ResourceGroupName $ResourceGroupName) # workloads use independent redis caches and a shared vault to store the connection string
 
 # display the settings so that the user can verify them in the output log
-Write-Host "resourceGroupName: $resourceGroupName"
-Write-Host "SqlConnectionString: $sqlConnectionString"
-Write-Host "AzureStorageTicketUri: $azureStorageTicketUri"
-Write-Host "AzureFrontDoorHostName: $azureFrontDoorHostName"
-Write-Host "RelecloudBaseUri: $relecloudBaseUri"
-Write-Host "RedisCacheKeyName: $redisCacheKeyName"
-Write-Host "KeyVaultUri: $keyVaultUri"
+Write-Host "`nWorking settings:"
+Write-Host "`tresourceGroupName: $highlightColor'$resourceGroupName'$defaultColor"
+Write-Host "`tSqlConnectionString: $highlightColor'$sqlConnectionString'$defaultColor"
+Write-Host "`tAzureStorageTicketUri: $highlightColor'$azureStorageTicketUri'$defaultColor"
+Write-Host "`tAzureFrontDoorHostName: $highlightColor'$azureFrontDoorHostName'$defaultColor"
+Write-Host "`tRelecloudBaseUri: $highlightColor'$relecloudBaseUri'$defaultColor"
+Write-Host "`tRedisCacheKeyName: $highlightColor'$redisCacheKeyName'$defaultColor"
+Write-Host "`tKeyVaultUri: $highlightColor'$keyVaultUri'$defaultColor"
 
 # handles multi-regional app configuration because the app config must be in the same region as the code deployment
 $configStore = Get-AzAppConfigurationStore -ResourceGroupName $resourceGroupName
 
-# todo - verify the Redis connection strings are local to the region because they have different key names
+try {
+    Write-Host "`nSet values for backend..."
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:SqlDatabase:ConnectionString -Value $sqlConnectionString > $null
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:StorageAccount:Container -Value $azureStorageTicketContainerName > $null
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:StorageAccount:Uri -Value $azureStorageTicketUri > $null
+    
+    Write-Host "Set values for frontend..."
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:FrontDoorHostname -Value $azureFrontDoorHostName > $null
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RelecloudApi:BaseUri -Value $relecloudBaseUri > $null
+    
+    Write-Host "Set values for key vault references..."
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:AzureAd:ClientId -Value "{ `"uri`":`"$($keyVaultUri)secrets/Api--AzureAd--ClientId`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:AzureAd:Instance -Value "{ `"uri`":`"$($keyVaultUri)secrets/Api--AzureAd--Instance`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:AzureAd:TenantId -Value "{ `"uri`":`"$($keyVaultUri)secrets/Api--AzureAd--TenantId`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RedisCache:ConnectionString -Value "{ `"uri`":`"$($keyVaultUri)secrets/$($redisCacheKeyName)`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:Instance -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--Instance`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:CallbackPath -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--CallbackPath`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:ClientId -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--ClientId`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:ClientSecret -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--ClientSecret`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:Instance -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--Instance`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:SignedOutCallbackPath -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--SignedOutCallbackPath`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:TenantId -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--TenantId`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
 
-Write-Host 'Set values for backend'
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:SqlDatabase:ConnectionString -Value $sqlConnectionString
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:StorageAccount:Container -Value $azureStorageTicketContainerName
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:StorageAccount:Uri -Value $azureStorageTicketUri
-
-Write-Host 'Set values for frontend'
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:FrontDoorHostname -Value $azureFrontDoorHostName
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RelecloudApi:BaseUri -Value $relecloudBaseUri
-
-Write-Host 'Set values for key vault reference'
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:AzureAd:ClientId -Value "{ `"uri`":`"$($keyVaultUri)secrets/Api--AzureAd--ClientId`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:AzureAd:Instance -Value "{ `"uri`":`"$($keyVaultUri)secrets/Api--AzureAd--Instance`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:AzureAd:TenantId -Value "{ `"uri`":`"$($keyVaultUri)secrets/Api--AzureAd--TenantId`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RedisCache:ConnectionString -Value "{ `"uri`":`"$($keyVaultUri)secrets/$($redisCacheKeyName)`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:Instance -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--Instance`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:CallbackPath -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--CallbackPath`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:ClientId -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--ClientId`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:ClientSecret -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--ClientSecret`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:Instance -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--Instance`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:SignedOutCallbackPath -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--SignedOutCallbackPath`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:TenantId -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--TenantId`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
+    Write-Host "`nFinished $($successColor)successfully$($defaultColor).`n"
+}
+catch {
+    "Failed to set app configuration values" | Write-Error
+    throw $_
+}
