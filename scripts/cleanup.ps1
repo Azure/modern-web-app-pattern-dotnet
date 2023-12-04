@@ -168,14 +168,20 @@ function Remove-ResourceGroupFromAzure($resourceGroupName, $asJob) {
     }
 }
 
-"`nCleaning up environment for application $rgApplication" | Write-Output
+"`nCleaning up environment for application '$rgApplication'" | Write-Output
 
 # Get the list of resource groups to deal with
 $resourceGroups = [System.Collections.ArrayList]@()
 if (Test-ResourceGroupExists -ResourceGroupName $rgApplication) {
     "`tFound application resource group: $rgApplication" | Write-Output
     $resourceGroups.Add($rgApplication) | Out-Null
+} else {
+    "`tConfirm the correct subscription was selected and check the spelling of the group to be deleted" | Write-Warning
+    "`tCould not find resource group: $rgApplication" | Write-Error
+    exit 1
 }
+
+
 if (Test-ResourceGroupExists -ResourceGroupName $rgSpoke) {
     "`tFound spoke resource group: $rgSpoke" | Write-Output
     $resourceGroups.Add($rgSpoke) | Out-Null
