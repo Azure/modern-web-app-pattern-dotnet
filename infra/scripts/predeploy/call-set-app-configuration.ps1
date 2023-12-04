@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     This script will be run by the Azure Developer CLI, and will have access to the AZD_* vars
-    This calls the create app registration.ps1 with the correct AZD provisioned resource group.
+    This ensures the the app configuration service is reachable from the current environment.
 
 .DESCRIPTION
     This script will be run by the Azure Developer CLI, and will set the required
@@ -13,6 +13,6 @@
 
 #>
 
-$resourceGroupName=(azd env get-values --output json | ConvertFrom-Json).AZURE_RESOURCE_GROUP
+$resourceGroupName = ((azd env get-values --output json) | ConvertFrom-Json).AZURE_RESOURCE_GROUP
 
-./infra/scripts/predeploy/create-app-registrations.ps1 -ResourceGroupName $resourceGroupName
+./infra/scripts/predeploy/set-app-configuration.ps1 -ResourceGroupName $resourceGroupName

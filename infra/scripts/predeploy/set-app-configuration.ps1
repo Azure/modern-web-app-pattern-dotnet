@@ -13,6 +13,12 @@
 
 #>
 
+Param(
+    [Alias("g")]
+    [Parameter(Mandatory = $true, HelpMessage = "Name of the application resource group that was created by azd")]
+    [String]$ResourceGroupName
+)
+
 function Get-WorkloadResourceGroup {
     
     # the `azd env get-values` command will return a list of stringData with the resource group name stored in the AZURE_RESOURCE_GROUP property

@@ -24,7 +24,7 @@ hooks:
       run: ./infra/scripts/predeploy/call-set-app-configuration.sh
     windows:
       interactive: true
-      run: ./infra/scripts/predeploy/set-app-configuration.ps1
+      run: ./infra/scripts/predeploy/call-set-app-configuration.ps1
 services:
   web-callcenter-service:
     project: src/Relecloud.Web.CallCenter.Api
