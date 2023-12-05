@@ -17,4 +17,4 @@ $resourceGroupName=(azd env get-values --output json | ConvertFrom-Json).AZURE_R
 
 Write-Host "Calling create-app-registrations.ps1 for group:'resourceGroupName'..."
 
-./infra/scripts/postprovision/create-app-registrations.ps1 -ResourceGroupName $resourceGroupName
+./infra/scripts/postprovision/create-app-registrations.ps1 -ResourceGroupName $resourceGroupName -NoPrompt

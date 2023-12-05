@@ -5,4 +5,4 @@ resourceGroupName=$((azd env get-values --output json) | jq -r .AZURE_RESOURCE_G
 
 echo "Calling create-app-registrations.ps1 for group:'resourceGroupName'..."
 
-pwsh ./infra/scripts/postprovision/create-app-registrations.ps1 -ResourceGroupName $resourceGroupName
+pwsh ./infra/scripts/postprovision/create-app-registrations.ps1 -ResourceGroupName $resourceGroupName -NoPrompt

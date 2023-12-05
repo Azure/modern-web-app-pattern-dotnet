@@ -42,7 +42,9 @@
 Param(
     [Alias("g")]
     [Parameter(Mandatory = $true, HelpMessage = "Name of the application resource group that was created by azd")]
-    [String]$ResourceGroupName
+    [String]$ResourceGroupName,
+    [Parameter(Mandatory = $false, HelpMessage = "Use default values for all prompts")]
+    [Switch]$NoPrompt
 )
 
 $MAX_RETRY_ATTEMPTS = 10
@@ -253,8 +255,8 @@ function New-FrontendAppRegistration {
 
 # Check for required features
 
-if ((Get-Module -ListAvailable -Name Az) -and (Get-Module -Name Az -ErrorAction SilentlyContinue)) {
-    Write-Debug "The 'Az' module is installed and imported."
+if ((Get-Module -ListAvailable -Name Az.Resources) -and (Get-Module -Name Az.Resources -ErrorAction SilentlyContinue)) {
+    Write-Debug "The 'Az.Resources' module is installed and imported."
     if (Get-AzContext -ErrorAction SilentlyContinue) {
         Write-Debug "The user is authenticated with Azure."
     }
@@ -264,8 +266,22 @@ if ((Get-Module -ListAvailable -Name Az) -and (Get-Module -Name Az -ErrorAction 
     }
 }
 else {
-    Write-Error "The 'Az' module is not installed or imported. Please install and import the 'Az' module before running this script."
-    exit 11
+    try {
+        Write-Host "Importing 'Az.Resources' module"
+        Import-Module -Name Az.Resources -ErrorAction Stop
+        Write-Debug "The 'Az.Resources' module is imported successfully."
+        if (Get-AzContext -ErrorAction SilentlyContinue) {
+            Write-Debug "The user is authenticated with Azure."
+        }
+        else {
+            Write-Error "You are not authenticated with Azure. Please run 'Connect-AzAccount' to authenticate before running this script."
+            exit 11
+        }
+    }
+    catch {
+        Write-Error "Failed to import the 'Az.Resources' module. Please install and import the 'Az' module before running this script."
+        exit 12
+    }
 }
 
 # End of feature checking
@@ -285,27 +301,39 @@ $defaultAzureWebsiteUri = "https://$($frontDoorEndpoint.HostName)"
 
 # The web app has two websites so we need to create two app registrations.
 # This app registration is for the back-end API that the front-end website will call.
-$apiAppRegistrationName = Read-Host -Prompt "`nWhat should the name of the API web app registration be? [default: $highlightColor$defaultApiAppRegistrationName$defaultColor]"
+$apiAppRegistrationName = ""
+if (-not $NoPrompt) {
+    $apiAppRegistrationName = Read-Host -Prompt "`nWhat should the name of the API web app registration be? [default: $highlightColor$defaultApiAppRegistrationName$defaultColor]"
+}
 
 if ($apiAppRegistrationName -eq "") {
     $apiAppRegistrationName = $defaultApiAppRegistrationName
 }
 
 # This app registration is for the front-end website that users will interact with.
-$frontendAppRegistrationName = Read-Host -Prompt "`nWhat should the name of the Front-end web app registration be? [default: $highlightColor$defaultFrontEndAppRegistrationName$defaultColor]"
+$frontendAppRegistrationName = ""
+if (-not $NoPrompt) {
+    $frontendAppRegistrationName = Read-Host -Prompt "`nWhat should the name of the Front-end web app registration be? [default: $highlightColor$defaultFrontEndAppRegistrationName$defaultColor]"
+}
 
 if ($frontendAppRegistrationName -eq "") {
     $frontendAppRegistrationName = $defaultFrontEndAppRegistrationName
 }
 
 # This is where the App Registration details will be stored
-$keyVaultName = Read-Host -Prompt "`nWhat is the name of the Key Vault that should store the App Registration details? [default: $highlightColor$defaultKeyVaultname$defaultColor]"
+$keyVaultName = ""
+if (-not $NoPrompt) {
+    $keyVaultName = Read-Host -Prompt "`nWhat is the name of the Key Vault that should store the App Registration details? [default: $highlightColor$defaultKeyVaultname$defaultColor]"
+}
 
 if ($keyVaultName -eq "") {
     $keyVaultName = $defaultKeyVaultname
 }
 
-$azureWebsiteUri = Read-Host -Prompt "`nWhat is the login redirect uri of the website? [default: $highlightColor$defaultAzureWebsiteUri$defaultColor]"
+$azureWebsiteUri = ""
+if (-not $NoPrompt) {
+    $azureWebsiteUri = Read-Host -Prompt "`nWhat is the login redirect uri of the website? [default: $highlightColor$defaultAzureWebsiteUri$defaultColor]"
+}
 
 if ($azureWebsiteUri -eq "") {
     $azureWebsiteUri = $defaultAzureWebsiteUri
@@ -331,10 +359,14 @@ Write-Host "`tazureWebsiteRedirectUri='$azureWebsiteRedirectUri'"
 Write-Host "`tazureWebsiteLogoutUri='$azureWebsiteLogoutUri'"
 Write-Host "`tapiAppRegistrationName='$apiAppRegistrationName'"
 
-$confirmation = Read-Host -Prompt "`nHit enter proceed with creating app registrations"
+$confirmation = ""
+if (-not $NoPrompt) {
+    $confirmation = Read-Host -Prompt "`nHit enter proceed with creating app registrations"
+}
+
 if ($confirmation -ne "") {
     Write-Host "`nExiting without creating app registrations."
-    exit 12
+    exit 13
 }
 
 # End of Display working state for confirmation
@@ -344,7 +376,7 @@ $keyVault = Get-AzKeyVault -VaultName $keyVaultName -ErrorAction SilentlyContinu
 
 if (!$keyVault) {
     Write-Error "The Key Vault '$keyVaultName' does not exist. Please create the Key Vault before running this script."
-    exit 13
+    exit 14
 }
 
 # Test to see if the current user has permissions to create secrets in the Key Vault
@@ -353,7 +385,7 @@ try {
     Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'AzureAd--Instance' -SecretValue $secretValue -ErrorAction Stop > $null
 } catch {
     Write-Error "Unable to save data to '$keyVaultName'. Please check your permissions and the network restrictions on the Key Vault."
-    exit 14
+    exit 15
 }
 
 # Set static values
@@ -424,13 +456,13 @@ Write-Host "`tSaved the $highlightColor'Api--AzureAd--ClientId'$defaultColor to 
 $scopeDetails = $apiAppRegistration.Api.Oauth2PermissionScope | Where-Object { $_.Value -eq $API_SCOPE_NAME }
 if (!$scopeDetails) {
     Write-Error "Unable to find the scope '$API_SCOPE_NAME' in the API app registration. Please check the API app registration in Azure AD."
-    exit 15
+    exit 16
 }
 
 Write-Host "`tFound the scope $highlightColor'$($scopeDetails.Value)'$defaultColor with ID $highlightColor'$($scopeDetails.Id)'$defaultColor"
 
 # Check permission for front-end app registration to verify it has access to the API app registration
-$apiPermission = Get-AzADAppPermission -ObjectId $frontendAppRegistration.Id -ErrorAction SilentlyContinue | Where-Object { $_.ResourceId -eq $apiAppRegistration.Id -and $_.Scope -eq $scopeDetails.Id }
+$apiPermission = Get-AzADAppPermission -ObjectId $frontendAppRegistration.Id -ErrorAction SilentlyContinue | Where-Object { $_.ApiId -eq $apiAppRegistration.AppId -and $_.Type -eq 'Scope' }
 if (!$apiPermission) {
     Write-Host "`tCreating the permission for the front-end app registration to access the API app registration"
     $apiPermission = Add-AzADAppPermission -ObjectId $frontendAppRegistration.Id -ApiId $apiAppRegistration.AppId -PermissionId $scopeDetails.Id -ErrorAction Stop
