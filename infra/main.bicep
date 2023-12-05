@@ -482,7 +482,7 @@ module applicationPostConfiguration './modules/application-post-config.bicep' = 
     administratorPassword: jumphostAdministratorPassword
     administratorUsername: administratorUsername
     databasePassword: databasePassword
-    hubResourceGroupName: resourceGroups.outputs.hub_resource_group_name
+    hubResourceGroupName: isNetworkIsolated? resourceGroups.outputs.hub_resource_group_name : resourceGroups.outputs.application_resource_group_name
     keyVaultName: isNetworkIsolated? hubNetwork.outputs.key_vault_name : application.outputs.key_vault_name
     readerIdentities: union(application.outputs.service_managed_identities, defaultDeploymentSettings.isMultiLocationDeployment ? application2.outputs.service_managed_identities : [])
     redisCacheNamePrimary: application.outputs.redis_cache_name
