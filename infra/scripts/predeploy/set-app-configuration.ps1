@@ -170,7 +170,7 @@ $defaultAzureStorageTicketUri = (Get-WorkloadStorageAccount -ResourceGroupName $
 $defaultAzureFrontDoorHostName = "https://$((Get-MyFrontDoorEndpoint -ResourceGroupName $ResourceGroupName).HostName)" # the hostname of the front door
 $defaultRelecloudBaseUri = "https://$((Get-MyFrontDoorEndpoint -ResourceGroupName $ResourceGroupName).HostName)/api" # used by the frontend to call the backend through the front door
 $defaultKeyVaultUri = (Get-WorkloadKeyVault -ResourceGroupName $ResourceGroupName).VaultUri # the URI of the key vault where secrets are stored
-$redisCacheKeyName = (Get-RedisCacheKeyName -ResourceGroupName $ResourceGroupName) # workloads use independent redis caches and a shared vault to store the connection string
+$defaultRedisCacheKeyName = (Get-RedisCacheKeyName -ResourceGroupName $ResourceGroupName) # workloads use independent redis caches and a shared vault to store the connection string
 
 # prompt to confirm settings
 $azureStorageTicketContainerName = ""
@@ -235,7 +235,6 @@ if (-not $NoPrompt) {
 if ($redisCacheKeyName -eq "") {
     $redisCacheKeyName = $defaultRedisCacheKeyName
 }
-
 
 # display the settings so that the user can verify them in the output log
 Write-Host "`nWorking settings:"
