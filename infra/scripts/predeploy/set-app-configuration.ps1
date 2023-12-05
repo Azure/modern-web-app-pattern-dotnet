@@ -16,7 +16,9 @@
 Param(
     [Alias("g")]
     [Parameter(Mandatory = $true, HelpMessage = "Name of the application resource group that was created by azd")]
-    [String]$ResourceGroupName
+    [String]$ResourceGroupName,
+    [Parameter(Mandatory = $false, HelpMessage = "Use default values for all prompts")]
+    [Switch]$NoPrompt
 )
 
 if ((Get-Module -ListAvailable -Name Az.Resources) -and (Get-Module -Name Az.Resources -ErrorAction SilentlyContinue)) {
@@ -32,7 +34,7 @@ if ((Get-Module -ListAvailable -Name Az.Resources) -and (Get-Module -Name Az.Res
 else {
     try {
         Write-Host "Importing 'Az.Resources' module"
-        Import-Module -Name Az -ErrorAction Stop
+        Import-Module -Name Az.Resources -ErrorAction Stop
         Write-Debug "The 'Az.Resources' module is imported successfully."
         if (Get-AzContext -ErrorAction SilentlyContinue) {
             Write-Debug "The user is authenticated with Azure."
@@ -162,16 +164,78 @@ function Get-RedisCacheKeyName {
 Write-Host "Configuring app settings for $highlightColor'$ResourceGroupName'$defaultColor"
 
 # default settings
-$azureStorageTicketContainerName = "tickets" # matches the default defined in application-resources.bicep file
-
-# use the resource group name to learn about the remaining required settings
-$sqlConnectionString = (Get-WorkloadSqlManagedIdentityConnectionString -ResourceGroupName $ResourceGroupName) # the connection string to the SQL database set with Managed Identity
-$azureStorageTicketUri = (Get-WorkloadStorageAccount -ResourceGroupName $ResourceGroupName).PrimaryEndpoints.Blob # the URI of the storage account container where tickets are stored
-$azureFrontDoorHostName = "https://$((Get-MyFrontDoorEndpoint -ResourceGroupName $ResourceGroupName).HostName)" # the hostname of the front door
-$relecloudBaseUri = "https://$((Get-MyFrontDoorEndpoint -ResourceGroupName $ResourceGroupName).HostName)/api" # used by the frontend to call the backend through the front door
-$keyVaultUri = (Get-WorkloadKeyVault -ResourceGroupName $ResourceGroupName).VaultUri # the URI of the key vault where secrets are stored
-
+$defaultAzureStorageTicketContainerName = "tickets" # matches the default defined in application-resources.bicep file
+$defaultSqlConnectionString = (Get-WorkloadSqlManagedIdentityConnectionString -ResourceGroupName $ResourceGroupName) # the connection string to the SQL database set with Managed Identity
+$defaultAzureStorageTicketUri = (Get-WorkloadStorageAccount -ResourceGroupName $ResourceGroupName).PrimaryEndpoints.Blob # the URI of the storage account container where tickets are stored
+$defaultAzureFrontDoorHostName = "https://$((Get-MyFrontDoorEndpoint -ResourceGroupName $ResourceGroupName).HostName)" # the hostname of the front door
+$defaultRelecloudBaseUri = "https://$((Get-MyFrontDoorEndpoint -ResourceGroupName $ResourceGroupName).HostName)/api" # used by the frontend to call the backend through the front door
+$defaultKeyVaultUri = (Get-WorkloadKeyVault -ResourceGroupName $ResourceGroupName).VaultUri # the URI of the key vault where secrets are stored
 $redisCacheKeyName = (Get-RedisCacheKeyName -ResourceGroupName $ResourceGroupName) # workloads use independent redis caches and a shared vault to store the connection string
+
+# prompt to confirm settings
+$azureStorageTicketContainerName = ""
+if (-not $NoPrompt) {
+    $azureStorageTicketContainerName = Read-Host -Prompt "`nWhat value should be used for the Azure storage container name? [default: $highlightColor$defaultAzureStorageTicketContainerName$defaultColor]"
+}
+
+if ($azureStorageTicketContainerName -eq "") {
+    $azureStorageTicketContainerName = $defaultAzureStorageTicketContainerName
+}
+
+$sqlConnectionString = ""
+if (-not $NoPrompt) {
+    $sqlConnectionString = Read-Host -Prompt "`nWhat value should be used for the SQL connection string? [default: $highlightColor$defaultSqlConnectionString$defaultColor]"
+}
+
+if ($sqlConnectionString -eq "") {
+    $sqlConnectionString = $defaultSqlConnectionString
+}
+
+$azureStorageTicketUri = ""
+if (-not $NoPrompt) {
+    $azureStorageTicketUri = Read-Host -Prompt "`nWhat value should be used for the Azure storage URI? [default: $highlightColor$defaultAzureStorageTicketUri$defaultColor]"
+}
+
+if ($azureStorageTicketUri -eq "") {
+    $azureStorageTicketUri = $defaultAzureStorageTicketUri
+}
+
+$azureFrontDoorHostName = ""
+if (-not $NoPrompt) {
+    $azureFrontDoorHostName = Read-Host -Prompt "`nWhat value should be used for the Azure Front Door Host? [default: $highlightColor$defaultAzureFrontDoorHostName$defaultColor]"
+}
+
+if ($azureFrontDoorHostName -eq "") {
+    $azureFrontDoorHostName = $defaultAzureFrontDoorHostName
+}
+
+$relecloudBaseUri = ""
+if (-not $NoPrompt) {
+    $relecloudBaseUri = Read-Host -Prompt "`nWhat value should be used for the Relecloud Base URI? [default: $highlightColor$defaultRelecloudBaseUri$defaultColor]"
+}
+
+if ($relecloudBaseUri -eq "") {
+    $relecloudBaseUri = $defaultRelecloudBaseUri
+}
+
+$keyVaultUri = ""
+if (-not $NoPrompt) {
+    $keyVaultUri = Read-Host -Prompt "`nWhat value should be used for the Key Vault URI? [default: $highlightColor$defaultKeyVaultUri$defaultColor]"
+}
+
+if ($keyVaultUri -eq "") {
+    $keyVaultUri = $defaultKeyVaultUri
+}
+
+$redisCacheKeyName = ""
+if (-not $NoPrompt) {
+    $redisCacheKeyName = Read-Host -Prompt "`nWhat value should be used for the RedisCacheKeyName? [default: $highlightColor$defaultRedisCacheKeyName$defaultColor]"
+}
+
+if ($redisCacheKeyName -eq "") {
+    $redisCacheKeyName = $defaultRedisCacheKeyName
+}
+
 
 # display the settings so that the user can verify them in the output log
 Write-Host "`nWorking settings:"

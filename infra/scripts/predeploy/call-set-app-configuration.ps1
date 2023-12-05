@@ -17,4 +17,4 @@ $resourceGroupName = ((azd env get-values --output json) | ConvertFrom-Json).AZU
 
 Write-Host "Calling set-app-configuration.ps1 for group:'$resourceGroupName'..."
 
-./infra/scripts/predeploy/set-app-configuration.ps1 -ResourceGroupName $resourceGroupName
+./infra/scripts/predeploy/set-app-configuration.ps1 -ResourceGroupName $resourceGroupName -NoPrompt
