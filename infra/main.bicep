@@ -472,7 +472,10 @@ module application2 './modules/application-resources.bicep' =  if (isMultiLocati
   ]
 }
 
-module applicationPostConfiguration './modules/application-post-config.bicep' = if (defaultDeploymentSettings.isNetworkIsolated) {
+/*
+** Runs for all configurations (NotIsolated, Isolated, and MultiLocation)
+*/
+module applicationPostConfiguration './modules/application-post-config.bicep' = {
   name: '${prefix}-application-postconfig'
   params: {
     deploymentSettings: primaryDeploymentSettings
