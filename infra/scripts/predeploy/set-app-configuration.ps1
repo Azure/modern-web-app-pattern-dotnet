@@ -239,6 +239,7 @@ if ($redisCacheKeyName -eq "") {
 
 # display the settings so that the user can verify them in the output log
 Write-Host "`nWorking settings:"
+Write-Host "`tazureStorageTicketContainerName: $highlightColor'$azureStorageTicketContainerName'$defaultColor"
 Write-Host "`tresourceGroupName: $highlightColor'$resourceGroupName'$defaultColor"
 Write-Host "`tSqlConnectionString: $highlightColor'$sqlConnectionString'$defaultColor"
 Write-Host "`tAzureStorageTicketUri: $highlightColor'$azureStorageTicketUri'$defaultColor"
