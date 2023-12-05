@@ -69,6 +69,7 @@ function Get-WorkloadSqlManagedIdentityConnectionString {
 
     # the group contains tags that explain what the default name of the Azure SQL resource should be
     $sqlServerResourceName = "sql-$($group.Tags["ResourceToken"])"
+    $sqlDatabaseCatalogName = "relecloud-$($group.Tags["ResourceToken"])"
 
     # if sql server is not found, then throw an error
     if ($sqlServerResourceName.Length -lt 4) {
@@ -77,7 +78,7 @@ function Get-WorkloadSqlManagedIdentityConnectionString {
 
     $sqlServerResource = Get-AzSqlServer -ServerName $sqlServerResourceName -ResourceGroupName $group.ResourceGroupName
 
-    return "Server=tcp:$($sqlServerResource.FullyQualifiedDomainName),1433;Initial Catalog=$($sqlServerResourceName);Authentication=Active Directory Default"
+    return "Server=tcp:$($sqlServerResource.FullyQualifiedDomainName),1433;Initial Catalog=$($sqlDatabaseCatalogName);Authentication=Active Directory Default"
 }
 
 function Get-WorkloadStorageAccount {
