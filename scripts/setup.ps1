@@ -54,6 +54,8 @@ Param(
     [string]$SecondAzureLocation = ""
 )
 
+Import-Module Az
+
 function FormatMenu {
     param([array]$items, [int]$position)
 

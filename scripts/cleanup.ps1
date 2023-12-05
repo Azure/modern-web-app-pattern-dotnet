@@ -39,6 +39,8 @@ Param(
     [switch]$AsJob = $false
 )
 
+Import-Module Az
+
 if ((Get-Module -ListAvailable -Name Az) -and (Get-Module -Name Az -ErrorAction SilentlyContinue)) {
     Write-Debug "The 'Az' module is installed and imported."
     if (Get-AzContext -ErrorAction SilentlyContinue) {
