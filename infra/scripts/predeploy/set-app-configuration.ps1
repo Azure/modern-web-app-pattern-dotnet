@@ -19,6 +19,35 @@ Param(
     [String]$ResourceGroupName
 )
 
+if ((Get-Module -ListAvailable -Name Az.Resources) -and (Get-Module -Name Az.Resources -ErrorAction SilentlyContinue)) {
+    Write-Debug "The 'Az.Resources' module is installed and imported."
+    if (Get-AzContext -ErrorAction SilentlyContinue) {
+        Write-Debug "The user is authenticated with Azure."
+    }
+    else {
+        Write-Error "You are not authenticated with Azure. Please run 'Connect-AzAccount' to authenticate before running this script."
+        exit 10
+    }
+}
+else {
+    try {
+        Write-Host "Importing 'Az.Resources' module"
+        Import-Module -Name Az -ErrorAction Stop
+        Write-Debug "The 'Az.Resources' module is imported successfully."
+        if (Get-AzContext -ErrorAction SilentlyContinue) {
+            Write-Debug "The user is authenticated with Azure."
+        }
+        else {
+            Write-Error "You are not authenticated with Azure. Please run 'Connect-AzAccount' to authenticate before running this script."
+            exit 11
+        }
+    }
+    catch {
+        Write-Error "Failed to import the 'Az' module. Please install and import the 'Az' module before running this script."
+        exit 12
+    }
+}
+
 # Prompt formatting features
 
 $defaultColor = if ($Host.UI.SupportsVirtualTerminal) { "`e[0m" } else { "" }

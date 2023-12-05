@@ -39,7 +39,6 @@ Param(
     [switch]$AsJob = $false
 )
 
-Import-Module Az
 
 if ((Get-Module -ListAvailable -Name Az) -and (Get-Module -Name Az -ErrorAction SilentlyContinue)) {
     Write-Debug "The 'Az' module is installed and imported."
@@ -48,12 +47,26 @@ if ((Get-Module -ListAvailable -Name Az) -and (Get-Module -Name Az -ErrorAction 
     }
     else {
         Write-Error "You are not authenticated with Azure. Please run 'Connect-AzAccount' to authenticate before running this script."
-        exit 1
+        exit 10
     }
 }
 else {
-    Write-Error "The 'Az' module is not installed or imported. Please install and import the 'Az' module before running this script."
-    exit 1
+    try {
+        Write-Host "Importing 'Az' module"
+        Import-Module -Name Az -ErrorAction Stop
+        Write-Debug "The 'Az' module is imported successfully."
+        if (Get-AzContext -ErrorAction SilentlyContinue) {
+            Write-Debug "The user is authenticated with Azure."
+        }
+        else {
+            Write-Error "You are not authenticated with Azure. Please run 'Connect-AzAccount' to authenticate before running this script."
+            exit 11
+        }
+    }
+    catch {
+        Write-Error "Failed to import the 'Az' module. Please install and import the 'Az' module before running this script."
+        exit 12
+    }
 }
 
 # Default Settings
@@ -71,7 +84,7 @@ if ($Prefix) {
     if (!$ResourceGroup) {
         if (!(Test-Path -Path ./.azure -PathType Container)) {
             "No .azure directory found and no resource group information provided - cannot clean up"
-            exit 1
+            exit 8
         }
         $azdConfig = azd env get-values -o json | ConvertFrom-Json -Depth 9 -AsHashtable
         $environmentName = $azdConfig['AZURE_ENV_NAME']
@@ -180,7 +193,7 @@ if (Test-ResourceGroupExists -ResourceGroupName $rgApplication) {
 } else {
     "`tConfirm the correct subscription was selected and check the spelling of the group to be deleted" | Write-Warning
     "`tCould not find resource group: $rgApplication" | Write-Error
-    exit 1
+    exit 9
 }
 
 

@@ -54,8 +54,6 @@ Param(
     [string]$SecondAzureLocation = ""
 )
 
-Import-Module Az
-
 function FormatMenu {
     param([array]$items, [int]$position)
 
@@ -134,11 +132,6 @@ function ShowMenu {
 
 # Check for required features
 
-if (!(Get-Command "azd" -ErrorAction SilentlyContinue)) {
-    "You must install the Azure Deployment CLI (azd) before running this script."
-    exit 1
-}
-
 if ((Get-Module -ListAvailable -Name Az) -and (Get-Module -Name Az -ErrorAction SilentlyContinue)) {
     Write-Debug "The 'Az' module is installed and imported."
     if (Get-AzContext -ErrorAction SilentlyContinue) {
@@ -146,12 +139,26 @@ if ((Get-Module -ListAvailable -Name Az) -and (Get-Module -Name Az -ErrorAction 
     }
     else {
         Write-Error "You are not authenticated with Azure. Please run 'Connect-AzAccount' to authenticate before running this script."
-        exit 1
+        exit 10
     }
 }
 else {
-    Write-Error "The 'Az' module is not installed or imported. Please install and import the 'Az' module before running this script."
-    exit 1
+    try {
+        Write-Host "Importing 'Az' module"
+        Import-Module -Name Az -ErrorAction Stop
+        Write-Debug "The 'Az' module is imported successfully."
+        if (Get-AzContext -ErrorAction SilentlyContinue) {
+            Write-Debug "The user is authenticated with Azure."
+        }
+        else {
+            Write-Error "You are not authenticated with Azure. Please run 'Connect-AzAccount' to authenticate before running this script."
+            exit 11
+        }
+    }
+    catch {
+        Write-Error "Failed to import the 'Az' module. Please install and import the 'Az' module before running this script."
+        exit 12
+    }
 }
 
 # End of feature checking
