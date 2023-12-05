@@ -159,7 +159,7 @@ var primaryDeployment = {
   workloadTags: {
     IsPrimaryLocation: 'true'
     ResourceToken: naming.outputs.resourceToken
-    HubGroupName: isNetworkIsolated == 'true' ? naming.outputs.resourceNames.hubResourceGroup : naming.outputs.resourceNames.applicationResourceGroup
+    HubGroupName: isNetworkIsolated == 'true' ? naming.outputs.resourceNames.hubResourceGroup : naming.outputs.resourceNames.application_resource_group_name
   }
 }
 
