@@ -168,7 +168,7 @@ Write-Host "Configuring app settings for $highlightColor'$ResourceGroupName'$def
 $defaultAzureStorageTicketContainerName = "tickets" # matches the default defined in application-resources.bicep file
 $defaultSqlConnectionString = (Get-WorkloadSqlManagedIdentityConnectionString -ResourceGroupName $ResourceGroupName) # the connection string to the SQL database set with Managed Identity
 $defaultAzureStorageTicketUri = (Get-WorkloadStorageAccount -ResourceGroupName $ResourceGroupName).PrimaryEndpoints.Blob # the URI of the storage account container where tickets are stored
-$defaultAzureFrontDoorHostName = "https://$((Get-MyFrontDoorEndpoint -ResourceGroupName $ResourceGroupName).HostName)" # the hostname of the front door
+$defaultAzureFrontDoorHostName = "$((Get-MyFrontDoorEndpoint -ResourceGroupName $ResourceGroupName).HostName)" # the hostname of the front door
 $defaultRelecloudBaseUri = "https://$((Get-MyFrontDoorEndpoint -ResourceGroupName $ResourceGroupName).HostName)/api" # used by the frontend to call the backend through the front door
 $defaultKeyVaultUri = (Get-WorkloadKeyVault -ResourceGroupName $ResourceGroupName).VaultUri # the URI of the key vault where secrets are stored
 $defaultRedisCacheKeyName = (Get-RedisCacheKeyName -ResourceGroupName $ResourceGroupName) # workloads use independent redis caches and a shared vault to store the connection string
