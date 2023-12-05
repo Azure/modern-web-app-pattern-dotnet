@@ -77,7 +77,7 @@ function Get-WorkloadSqlManagedIdentityConnectionString {
 
     $sqlServerResource = Get-AzSqlServer -ServerName $sqlServerResourceName -ResourceGroupName $group.ResourceGroupName
 
-    return "Server=tcp:$($sqlServerResource.FullyQualifiedDomainName),1433;Initial Catalog=$($sqlServerResourceName);Authentication=Active Directory Managed Identity"
+    return "Server=tcp:$($sqlServerResource.FullyQualifiedDomainName),1433;Initial Catalog=$($sqlServerResourceName);Authentication=Active Directory Default"
 }
 
 function Get-WorkloadStorageAccount {
