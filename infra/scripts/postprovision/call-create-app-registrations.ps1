@@ -15,4 +15,6 @@
 
 $resourceGroupName=(azd env get-values --output json | ConvertFrom-Json).AZURE_RESOURCE_GROUP
 
-./infra/scripts/predeploy/create-app-registrations.ps1 -ResourceGroupName $resourceGroupName
+Write-Host "Calling create-app-registrations.ps1 for group:'resourceGroupName'..."
+
+./infra/scripts/postprovision/create-app-registrations.ps1 -ResourceGroupName $resourceGroupName
