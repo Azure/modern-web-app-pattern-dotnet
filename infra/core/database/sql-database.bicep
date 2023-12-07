@@ -174,7 +174,7 @@ resource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' 
 
 output id string = sqlDatabase.id
 output name string = sqlDatabase.name
-output connection_string string = 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${sqlDatabase.name};Authentication=Active Directory Default'
+output connection_string string = 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${sqlDatabase.name};Authentication=Active Directory Default; Connect Timeout=180'
 
 output sql_server_id string = sqlServer.id
 output sql_server_name string = sqlServer.name
