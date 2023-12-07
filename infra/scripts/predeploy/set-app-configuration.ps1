@@ -275,7 +275,7 @@ try {
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:SignedOutCallbackPath -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--SignedOutCallbackPath`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key AzureAd:TenantId -Value "{ `"uri`":`"$($keyVaultUri)secrets/AzureAd--TenantId`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
 
-    Write-Host "`nFinished $($successColor)successfully$($defaultColor).`n"
+    Write-Host "`nFinished set-app-configuration $($successColor)successfully$($defaultColor).`n"
 }
 catch {
     "Failed to set app configuration values" | Write-Error
