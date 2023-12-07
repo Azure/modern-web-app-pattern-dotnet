@@ -37,6 +37,27 @@ Provision the Azure resources (about 55-minutes to provision):
 azd provision
 ```
 
+> **WARNING**
+>
+> Your organization may not allow the creation of Entra ID application registrations unless the host is joined
+> to a domain, InTune managed, or meets other security requirements.  If your organization has such security
+> requirements, be sure to run the create-app-registrations from your dev workstation.
+>
+> Microsoft employees:
+>
+> - The jump host must be InTune managed.
+> - Create the Entra application registrations from the same system that you used to initially provision resources.
+> - Once the application registrations have been created, you can optionally turn on the firewall again.
+>
+> The other actions (such as azd deploy) should still be run from the jump host.
+
+Create the app registration in Microsoft Entra ID:
+
+```shell
+./infra/scripts/postprovision/call-create-app-registrations.sh
+```
+- Wait approximately 5 minutes for the registration to propagate.
+
 ### Login
 
 > **WARNING**
@@ -62,19 +83,6 @@ Now that you have the username and password:
 - Enter the username and password in the fields provided.
 - Press **Connect** to connect to the jump host.
 
-> **WARNING**
->
-> Your organization may not allow the creation of Entra ID application registrations unless the host is joined
-> to a domain, InTune managed, or meets other security requirements.  If your organization has such security
-> requirements, set those up before continuing.
->
-> Microsoft employees:
->
-> - The jump host must be InTune managed.
-> - Create the Entra application registrations from the same system that you used to initially provision resources.
-> - Once the application registrations have been created, you can optionally turn on the firewall again.
->
-> The other actions (such as azd deploy) should still be run from the jump host.
 
 ### First time setup
 
@@ -141,25 +149,6 @@ az account set --subscription "<Azure Subscription ID>"
 ```
 
 Ensure you use the same configuration you used when provisioning the services.
-
-### Register the application in Microsoft Entra
-
-Give yourself permission to access the rg-HUB key vault and app config resources.
-
-- If running from your local system instead of the jump host, turn off the firewall in the key vault and app config resources.
-- In the rg-HUB key vault, add yourself to the _Key Vault Secrets Officer_ role in **Access Control (IAM)**.
-- In the rg-APPLICATION app config, add yourself to the _App Configuration Data Owner_ role in **Access Control (IAM)**.
-
-> **WARNING**
->
-> It takes approximately 5 minutes to propagate RBAC and firewall changes.
-
-Create the Entra application registrations:
-
-- Open a new PowerShell terminal.
-- Change directory to the `modern-web-app-pattern-dotnet` directory.
-- Run `.\infra\scripts\create-app-registrations.ps1` -g `<name of your application resource group>`
-- Wait approximately 5 minutes for the registration to propagate.
 
 ### Deploy the code from the jump host
 
