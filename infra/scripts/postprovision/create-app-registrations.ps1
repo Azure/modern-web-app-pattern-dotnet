@@ -493,6 +493,11 @@ if (!$apiPermission) {
     $apiPermission = Add-AzADAppPermission -ObjectId $frontendAppRegistration.Id -ApiId $apiAppRegistration.AppId -PermissionId $scopeDetails.Id -ErrorAction Stop
 }
 
+$formattedScope = "api://$($apiAppRegistration.IdentifierUri)/$($scopeDetails.Value)"
+$secretValue = ConvertTo-SecureString -String $formattedScope -AsPlainText -Force
+Set-AzKeyVaultSecret -VaultName $keyVault.VaultName -Name 'App--RelecloudApi--AttendeeScope' -SecretValue $secretValue -ErrorAction Stop > $null
+Write-Host "`tSaved the $highlightColor'App--RelecloudApi--AttendeeScope'$defaultColor to Key Vault"
+
 Write-Host "`nFinished $($successColor)successfully$($defaultColor)."
 
 # all done
