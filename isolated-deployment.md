@@ -45,11 +45,9 @@ azd provision
 >
 > Microsoft employees:
 >
-> - The jump host must be InTune managed.
 > - Create the Entra application registrations from the same system that you used to initially provision resources.
-> - Once the application registrations have been created, you can optionally turn on the firewall again.
 >
-> The other actions (such as azd deploy) should still be run from the jump host.
+> The other actions (such as azd deploy) should be run from the jump host.
 
 Create the app registration in Microsoft Entra ID:
 
