@@ -183,7 +183,7 @@ App Configuration so that the web app can read this data
 (about 3-minutes to register).
 
 ```sh
-./infra/scripts/create-app-registrations.sh -g '<name from Azure portal for application resource group>'
+./infra/scripts/postprovision/call-create-app-registrations.sh
 ```
 
 ### 7. Deploy the application
