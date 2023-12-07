@@ -17,7 +17,7 @@ If you do not wish to use a Dev Container, please refer to the [prerequisites](p
 
 ## Steps to deploy the reference implementation
 
-For users familiar with the deployment process, you can use the following list of the deployments commands as a quick reference. The commands assume you have logged into Azure through the Azure CLI and Azure Developer CLI and have selected a suitable subscription:
+For users familiar with the deployment process, you can use the following list of the deployments commands as a quick reference. The commands assume you have selected a suitable subscription and have logged into both the Azure Developer CLI and a pwsh AzContext:
 
 ```shell
 git clone https://github.com/Azure/modern-web-app-pattern-dotnet.git
@@ -46,8 +46,7 @@ azd provision
 > Microsoft employees:
 >
 > - Create the Entra application registrations from the same system that you used to initially provision resources.
->
-> The other actions (such as azd deploy) should be run from the jump host.
+> - The other actions (such as azd deploy) should be run from the jump host.
 
 Create the app registration in Microsoft Entra ID:
 
