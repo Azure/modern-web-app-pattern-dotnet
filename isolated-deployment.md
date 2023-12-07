@@ -122,8 +122,9 @@ cd .\modern-web-app-pattern-dotnet
 
 1. [Sign in to the Azure CLI](https://learn.microsoft.com/cli/azure/authenticate-azure-cli):
 
-    ```shell
-    az login
+    ```pwsh
+    Install-Module Az
+    Connect-AzAccount
     ```
 
     This will open a browser to complete the authentication process.  See [the documentation](https://learn.microsoft.com/cli/azure/authenticate-azure-cli) for instructions on other mechanisms to sign in to the Azure CLI.
