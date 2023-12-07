@@ -95,6 +95,9 @@ From the jump host, launch Windows Terminal to setup required tools:
 
     ```shell
     powershell -ex AllSigned -c "Invoke-RestMethod 'https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.ps1' -OutFile dotnet-install.ps1"
+    ```
+
+    ```shell
     .\dotnet-install.ps1 -Channel 6.0
     ```
 
