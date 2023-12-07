@@ -115,18 +115,20 @@ function Get-WorkloadEnvironment {
 function Get-ApiAppRegistration {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$appRegistrationName
+        [string]$AppRegistrationName,
+        [Parameter(Mandatory = $true)]
+        [string]$ExistingAppRegistrationId
     )
     
     # get an existing Front-end App Registration
-    $apiAppRegistration = Get-AzADApplication -DisplayName $appRegistrationName -ErrorAction SilentlyContinue
+    $apiAppRegistration = Get-AzADApplication -DisplayName $AppRegistrationName -ErrorAction SilentlyContinue
 
     # if it doesn't exist, then return a new one we created
     if (!$apiAppRegistration) {
-        Write-Host "`tCreating the API registration $highlightColor'$($appRegistrationName)'$defaultColor" 
+        Write-Host "`tCreating the API registration $highlightColor'$($AppRegistrationName)'$defaultColor" 
 
         return New-ApiAppRegistration `
-            -appRegistrationName $appRegistrationName
+            -AppRegistrationName $AppRegistrationName -ExistingAppRegistrationId $ExistingAppRegistrationId
     }
 
     Write-Host "`tRetrieved the existing API registration $highlightColor'$($apiAppRegistration.Id)'$defaultColor"
@@ -136,43 +138,65 @@ function Get-ApiAppRegistration {
 function New-ApiAppRegistration {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$appRegistrationName
+        [string]$AppRegistrationName,
+        [Parameter(Mandatory = $true)]
+        [string]$ExistingAppRegistrationId
     )
 
+    $delegatedPermissionId = (New-Guid).ToString()
+
     # Define the OAuth2 permissions (scopes) for the API
-    # https://learn.microsoft.com/en-us/dotnet/api/microsoft.azure.powershell.cmdlets.resources.msgraph.models.apiv10.imicrosoftgraphpermissionscope?view=az-ps-latest
-    $apiPermissions = @{
-        oauth2PermissionScopes = @(@{
-            id = (New-Guid).ToString()
-            type = "User"
-            adminConsentDescription = "Allow the app to access the web API as a user"
-            adminConsentDisplayName = "Access the web API"
-            isEnabled = $true
-            value = $API_SCOPE_NAME
-            userConsentDescription = "Allow the app to access the web API on your behalf"
-            userConsentDisplayName = "Access the web API"
-        })
+    # https://learn.microsoft.com/en-us/dotnet/api/microsoft.azure.powershell.cmdlets.resources.msgraph.models.apiv10.imicrosoftgraphapiapplication?view=az-ps-latest
+    # typing is case sensitive on the following objects and properites
+    $apiPermissions = [Microsoft.Azure.PowerShell.Cmdlets.Resources.MSGraph.Models.ApiV10.IMicrosoftGraphApiApplication]@{
+        Oauth2PermissionScope = [Microsoft.Azure.PowerShell.Cmdlets.Resources.MSGraph.Models.ApiV10.IMicrosoftGraphPermissionScope[]]@(
+            [Microsoft.Azure.PowerShell.Cmdlets.Resources.MSGraph.Models.ApiV10.IMicrosoftGraphPermissionScope ]@{
+                Id = $delegatedPermissionId
+                Type = "User"
+                AdminConsentDescription = "Allow the app to access the web API as a user"
+                AdminConsentDisplayName = "Access the web API"
+                IsEnabled = $true
+                Value = $API_SCOPE_NAME
+                UserConsentDescription = "Allow the app to access the web API on your behalf"
+                UserConsentDisplayName = "Access the web API"
+            })
+        PreAuthorizedApplication = [Microsoft.Azure.PowerShell.Cmdlets.Resources.MSGraph.Models.ApiV10.IMicrosoftGraphPreAuthorizedApplication[]]@(
+            [Microsoft.Azure.PowerShell.Cmdlets.Resources.MSGraph.Models.ApiV10.IMicrosoftGraphPreAuthorizedApplication]@{
+                AppId = $ExistingAppRegistrationId
+                DelegatedPermissionId = @($delegatedPermissionId)
+            }
+        )
     }
+    
+    # log the API permissions to console for debugging
+    #Write-Host "`t`tAPI Permissions:"
+    #Write-Host "`t`t`t$($apiPermissions | ConvertTo-Json -Depth 100)"
 
     # create an Azure AD App Registration for the front-end web app
     $apiAppRegistration = New-AzADApplication `
-        -DisplayName $appRegistrationName `
+        -DisplayName $AppRegistrationName `
         -SignInAudience "AzureADMyOrg" `
         -Api $apiPermissions `
         -ErrorAction Stop
 
-    $clientId = ""
-    while ($clientId -eq "" -and $attempts -lt $MAX_RETRY_ATTEMPTS)
-    {
-        $MAX_RETRY_ATTEMPTS = $MAX_RETRY_ATTEMPTS + 1
-        try {
-            $clientId = (Get-AzADApplication -DisplayName $appRegistrationName -ErrorAction Stop).ApplicationId
-        }
-        catch {
-            Write-Host "`t`tFailed to retrieve the client ID for the front-end app registration. Will try again in 3 seconds."
-            Start-Sleep -Seconds 3
-        }
-    }
+    # set the identifier URI to the app ID (this is the default behavior)
+    $apiAppRegistration.IdentifierUri = @("api://$($apiAppRegistration.AppId)")
+
+    # save the change
+    Update-AzADApplication -ObjectId $apiAppRegistration.Id -IdentifierUris $apiAppRegistration.IdentifierUri
+
+    # $clientId = ""
+    # while ($clientId -eq "" -and $attempts -lt $MAX_RETRY_ATTEMPTS)
+    # {
+    #     $MAX_RETRY_ATTEMPTS = $MAX_RETRY_ATTEMPTS + 1
+    #     try {
+    #         $clientId = (Get-AzADApplication -DisplayName $AppRegistrationName -ErrorAction Stop).ApplicationId
+    #     }
+    #     catch {
+    #         Write-Host "`t`tFailed to retrieve the client ID for the front-end app registration. Will try again in 3 seconds."
+    #         Start-Sleep -Seconds 3
+    #     }
+    # }
 
     return $apiAppRegistration
 }
@@ -180,27 +204,27 @@ function New-ApiAppRegistration {
 function Get-FrontendAppRegistration {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$appRegistrationName,
+        [string]$AppRegistrationName,
         [Parameter(Mandatory = $true)]
-        [string]$azureWebsiteRedirectUri,
+        [string]$AzureWebsiteRedirectUri,
         [Parameter(Mandatory = $true)]
-        [string]$azureWebsiteLogoutUri,
+        [string]$AzureWebsiteLogoutUri,
         [Parameter(Mandatory = $true)]
-        [string]$localhostWebsiteRedirectUri
+        [string]$LocalhostWebsiteRedirectUri
     )
     
     # get an existing Front-end App Registration
-    $frontendAppRegistration = Get-AzADApplication -DisplayName $appRegistrationName -ErrorAction SilentlyContinue
+    $frontendAppRegistration = Get-AzADApplication -DisplayName $AppRegistrationName -ErrorAction SilentlyContinue
 
     # if it doesn't exist, then return a new one we created
     if (!$frontendAppRegistration) {
-        Write-Host "`tCreating the front-end app registration $highlightColor'$($appRegistrationName)'$defaultColor"    
+        Write-Host "`tCreating the front-end app registration $highlightColor'$($AppRegistrationName)'$defaultColor"    
 
         return New-FrontendAppRegistration `
-            -azureWebsiteRedirectUri $azureWebsiteRedirectUri `
-            -azureWebsiteLogoutUri $azureWebsiteLogoutUri `
-            -localhostWebsiteRedirectUri $localhostWebsiteRedirectUri `
-            -appRegistrationName $appRegistrationName
+            -AzureWebsiteRedirectUri $AzureWebsiteRedirectUri `
+            -AzureWebsiteLogoutUri $AzureWebsiteLogoutUri `
+            -LocalhostWebsiteRedirectUri $LocalhostWebsiteRedirectUri `
+            -AppRegistrationName $AppRegistrationName
     }
 
     Write-Host "`tRetrieved the existing front-end app registration $highlightColor'$($frontendAppRegistration.Id)'$defaultColor"
@@ -210,17 +234,17 @@ function Get-FrontendAppRegistration {
 function New-FrontendAppRegistration {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$appRegistrationName,
+        [string]$AppRegistrationName,
         [Parameter(Mandatory = $true)]
-        [string]$azureWebsiteRedirectUri,
+        [string]$AzureWebsiteRedirectUri,
         [Parameter(Mandatory = $true)]
-        [string]$azureWebsiteLogoutUri,
+        [string]$AzureWebsiteLogoutUri,
         [Parameter(Mandatory = $true)]
-        [string]$localhostWebsiteRedirectUri
+        [string]$LocalhostWebsiteRedirectUri
     )
     $websiteApp = @{
-        "LogoutUrl" = $azureWebsiteLogoutUri
-        "RedirectUris" = @($azureWebsiteRedirectUri, $localhostWebsiteRedirectUri)
+        "LogoutUrl" = $AzureWebsiteLogoutUri
+        "RedirectUris" = @($AzureWebsiteRedirectUri, $LocalhostWebsiteRedirectUri)
         "ImplicitGrantSetting" = @{
             "EnableAccessTokenIssuance" = $false
             "EnableIdTokenIssuance" = $true
@@ -229,23 +253,23 @@ function New-FrontendAppRegistration {
 
     # create an Azure AD App Registration for the front-end web app
     $frontendAppRegistration = New-AzADApplication `
-        -DisplayName $appRegistrationName `
+        -DisplayName $AppRegistrationName `
         -SignInAudience "AzureADMyOrg" `
         -Web $websiteApp `
         -ErrorAction Stop
 
-    $clientId = ""
-    while ($clientId -eq "" -and $attempts -lt $MAX_RETRY_ATTEMPTS)
-    {
-        $MAX_RETRY_ATTEMPTS = $MAX_RETRY_ATTEMPTS + 1
-        try {
-            $clientId = (Get-AzADApplication -DisplayName $appRegistrationName -ErrorAction Stop).ApplicationId
-        }
-        catch {
-            Write-Host "`t`tFailed to retrieve the client ID for the front-end app registration. Will try again in 3 seconds."
-            Start-Sleep -Seconds 3
-        }
-    }
+    # $clientId = ""
+    # while ($clientId -eq "" -and $attempts -lt $MAX_RETRY_ATTEMPTS)
+    # {
+    #     $MAX_RETRY_ATTEMPTS = $MAX_RETRY_ATTEMPTS + 1
+    #     try {
+    #         $clientId = (Get-AzADApplication -DisplayName $AppRegistrationName -ErrorAction Stop).ApplicationId
+    #     }
+    #     catch {
+    #         Write-Host "`t`tFailed to retrieve the client ID for the front-end app registration. Will try again in 3 seconds."
+    #         Start-Sleep -Seconds 3
+    #     }
+    # }
 
     return $frontendAppRegistration
 }
@@ -415,10 +439,10 @@ Write-Host "`tSaved the $highlightColor'AzureAd--TenantId'$defaultColor to Key V
 
 # Get or Create the front-end app registration
 $frontendAppRegistration = Get-FrontendAppRegistration `
-    -azureWebsiteRedirectUri $azureWebsiteRedirectUri `
-    -azureWebsiteLogoutUri $azureWebsiteLogoutUri `
-    -localhostWebsiteRedirectUri $localhostWebsiteRedirectUri `
-    -appRegistrationName $frontendAppRegistrationName
+    -AzureWebsiteRedirectUri $azureWebsiteRedirectUri `
+    -AzureWebsiteLogoutUri $azureWebsiteLogoutUri `
+    -LocalhostWebsiteRedirectUri $localhostWebsiteRedirectUri `
+    -AppRegistrationName $frontendAppRegistrationName
 
 # Write to Key Vault
 $secretValue = ConvertTo-SecureString -String $frontendAppRegistration.AppId -AsPlainText -Force
@@ -446,7 +470,8 @@ Write-Host "`tSaved the $highlightColor'AzureAd--ClientSecret'$defaultColor to K
 
 # Get or Create the api app registration
 $apiAppRegistration = Get-ApiAppRegistration `
-    -appRegistrationName $apiAppRegistrationName
+    -AppRegistrationName $apiAppRegistrationName `
+    -ExistingAppRegistrationId $frontendAppRegistration.AppId
 
 # Write to Key Vault
 $secretValue = ConvertTo-SecureString -String $apiAppRegistration.AppId -AsPlainText -Force
