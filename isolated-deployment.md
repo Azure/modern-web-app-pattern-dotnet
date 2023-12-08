@@ -85,6 +85,12 @@ Now that you have the username and password:
 
 From the jump host, launch Windows Terminal to setup required tools:
 
+1. Install PowerShell 7
+
+    ```shell
+    winget install --id Microsoft.Powershell --source winget
+    ```
+
 1. Install the [Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd):
 
     ```shell
