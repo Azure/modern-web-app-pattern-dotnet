@@ -157,7 +157,11 @@ Ensure you use the same configuration you used when provisioning the services.
 Deploy the configuration from the jump host:
 
 ```shell
-./infra/scripts/predeploy/call-set-app-configuration.ps1
+$resourceGroupName = ((azd env get-values --output json) | ConvertFrom-Json).AZURE_RESOURCE_GROUP
+```
+
+```shell
+./infra/scripts/predeploy/set-app-configuration.ps1 -ResourceGroupName $resourceGroupName -NoPrompt
 ```
 
 Deploy the code from the jump host:
