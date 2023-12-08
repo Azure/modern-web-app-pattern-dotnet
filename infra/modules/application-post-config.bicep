@@ -109,25 +109,33 @@ param readerIdentities object[]
 // VARIABLES
 // ========================================================================
 
-var redisCacheSecretNamePrimary = 'App--RedisCache--ConnectionString-Primary'
-var redisCacheSecretNameSecondary = 'App--RedisCache--ConnectionString-Secondary'
-var azureAdClientSecret = 'AzureAd--ClientSecret'
-var azureAdTenantId = 'AzureAd--TenantId'
-var azureAdClientId = 'AzureAd--ClientId'
+var azureAdApiClientId = 'Api--AzureAd--ClientId'
+var azureAdApiInstance = 'Api--AzureAd--Instance'
 var azureAdApiScope = 'App--RelecloudApi--AttendeeScope'
 var azureAdApiTenantId = 'Api--AzureAd--TenantId'
-var azureAdApiClientId = 'Api--AzureAd--ClientId'
+var azureAdCallbackPath = 'AzureAd--CallbackPath'
+var azureAdClientId = 'AzureAd--ClientId'
+var azureAdClientSecret = 'AzureAd--ClientSecret'
+var azureAdInstance = 'AzureAd--Instance'
+var azureAdSignedOutCallbackPath = 'AzureAd--SignedOutCallbackPath'
+var azureAdTenantId = 'AzureAd--TenantId'
+var redisCacheSecretNamePrimary = 'App--RedisCache--ConnectionString-Primary'
+var redisCacheSecretNameSecondary = 'App--RedisCache--ConnectionString-Secondary'
 
 var multiRegionalSecrets = deploymentSettings.isMultiLocationDeployment ? [redisCacheSecretNameSecondary] : []
 
 var listOfSecretNames = union([
-    redisCacheSecretNamePrimary
-    azureAdClientSecret
-    azureAdTenantId
-    azureAdClientId
+    azureAdApiClientId
+    azureAdApiInstance
     azureAdApiScope
     azureAdApiTenantId
-    azureAdApiClientId
+    azureAdCallbackPath
+    azureAdClientId
+    azureAdClientSecret
+    azureAdInstance
+    azureAdSignedOutCallbackPath
+    azureAdTenantId
+    redisCacheSecretNamePrimary
   ], multiRegionalSecrets)
 
 // ========================================================================
