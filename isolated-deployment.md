@@ -85,12 +85,6 @@ Now that you have the username and password:
 
 From the jump host, launch Windows Terminal to setup required tools:
 
-1. Install PowerShell 7
-
-    ```shell
-    winget install --id Microsoft.Powershell --source winget
-    ```
-
 1. Install the [Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd):
 
     ```shell
@@ -152,12 +146,19 @@ azd env new <Name of created environment>
 azd env set AZURE_LOCATION <Location>
 azd env set AZURE_RESOURCE_GROUP <name of application resource group from Azure Portal>
 azd env set AZURE_SUBSCRIPTION_ID "<Azure subscription ID>"
+azd env set NETWORK_ISOLATION "true"
 Set-AzContext -Subscription "<Azure Subscription ID>"
 ```
 
 Ensure you use the same configuration you used when provisioning the services.
 
-### Deploy the code from the jump host
+### Deploy from the jump host
+
+Deploy the configuration from the jump host:
+
+```shell
+./infra/scripts/predeploy/call-set-app-configuration.ps1
+```
 
 Deploy the code from the jump host:
 
