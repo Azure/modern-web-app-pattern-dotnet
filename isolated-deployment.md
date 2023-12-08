@@ -51,7 +51,7 @@ azd provision
 Create the app registration in Microsoft Entra ID:
 
 ```shell
-./infra/scripts/postprovision/call-create-app-registrations.sh
+./infra/scripts/postprovision/call-create-app-registrations.ps1
 ```
 - Wait approximately 5 minutes for the registration to propagate.
 
