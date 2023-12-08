@@ -107,6 +107,12 @@ From the jump host, launch Windows Terminal to setup required tools:
 
     Add the path: `%USERPROFILE%\AppData\Local\Microsoft\dotnet`.
 
+1. Add Nuget source
+
+    ```shell
+    dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org
+    ```
+
 ### Download the code
 
 Use the Windows Terminal to get the code:
