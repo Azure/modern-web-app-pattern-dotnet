@@ -186,6 +186,14 @@ App Configuration so that the web app can read this data
 ./infra/scripts/postprovision/call-create-app-registrations.sh
 ```
 
+**Set Configuration**
+
+Relecloud devs have automated the process of configuring the environment.
+
+```sh
+./infra/scripts/predeploy/call-set-app-configuration.sh
+```
+
 ### 7. Deploy the application
 
 Run the following command to deploy the code to the created infrastructure (about 4-minutes to deploy):
