@@ -98,7 +98,7 @@ From the jump host, launch Windows Terminal to setup required tools:
     ```
 
     ```shell
-    .\dotnet-install.ps1 -Channel 6.0
+    .\dotnet-install.ps1 -Version 7.0.100
     ```
 
 1. Add dotnet to the path environment variable
