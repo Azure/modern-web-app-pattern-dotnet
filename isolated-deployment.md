@@ -105,7 +105,7 @@ From the jump host, launch Windows Terminal to setup required tools:
 
     ![#Add dotnet to the path variable](./docs/images/jumphost-path-setup.png)
 
-    Add the path: `C:\Users\{username}\AppData\Local\Microsoft\dotnet`.
+    Add the path: `%USERPROFILE%\AppData\Local\Microsoft\dotnet`.
 
 ### Download the code
 
