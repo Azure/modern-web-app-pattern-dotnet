@@ -120,7 +120,7 @@ cd .\modern-web-app-pattern-dotnet
 
 ### Authenticate to Azure
 
-1. [Sign in to the Azure CLI](https://learn.microsoft.com/cli/azure/authenticate-azure-cli):
+1. [Sign in to Azure PowerShell interactively](https://learn.microsoft.com/powershell/azure/authenticate-interactive):
 
     ```pwsh
     Install-Module Az
