@@ -8,9 +8,10 @@ hooks:
     posix:
       interactive: true
       run: ./infra/scripts/preprovision/whats-my-ip.sh
-    windows:
-      interactive: true
-      run: ./infra/scripts/preprovision/whats-my-ip.ps1
+  # skipping while pwsh7 is required
+  #   windows:
+  #     interactive: true
+  #     run: ./infra/scripts/preprovision/whats-my-ip.ps1
   # postprovision:
   #   posix:
   #     interactive: true

@@ -15,12 +15,6 @@
 
 $resourceGroupName = ((azd env get-values --output json) | ConvertFrom-Json).AZURE_RESOURCE_GROUP
 
-$networkIsolation = ((azd env get-values --output json) | ConvertFrom-Json).NETWORK_ISOLATION
-if ($networkIsolation -eq "true") {
-    Write-Host "Network isolation is enabled, skipping set-app-configuration.ps1"
-    exit 0
-}
-
 Write-Host "Calling set-app-configuration.ps1 for group:'$resourceGroupName'..."
 
 ./infra/scripts/predeploy/set-app-configuration.ps1 -ResourceGroupName $resourceGroupName -NoPrompt
