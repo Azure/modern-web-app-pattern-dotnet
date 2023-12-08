@@ -176,7 +176,7 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-03-01' = {
       imageReference: {
         publisher: 'MicrosoftWindowsDesktop'
         offer: 'Windows-11'
-        sku: 'win11-22h2-pro'
+        sku: 'win11-23h2-pro'
         version: 'latest'
       }
       osDisk: {
