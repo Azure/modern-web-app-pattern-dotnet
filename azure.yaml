@@ -22,10 +22,11 @@ hooks:
     posix:
       interactive: true
       run: ./infra/scripts/predeploy/call-set-app-configuration.sh
-  # skipping while pwsh7 is required
-    # windows:
-    #   interactive: true
-    #   run: ./infra/scripts/predeploy/call-set-app-configuration.ps1
+    windows:
+      interactive: true
+      run: Write-Host 'Running predeploy'
+    # skipping while pwsh7 is required
+    # run: ./infra/scripts/predeploy/call-set-app-configuration.ps1
 services:
   web-callcenter-service:
     project: src/Relecloud.Web.CallCenter.Api
