@@ -146,7 +146,7 @@ azd env new <Name of created environment>
 azd env set AZURE_LOCATION <Location>
 azd env set AZURE_RESOURCE_GROUP <name of application resource group from Azure Portal>
 azd env set AZURE_SUBSCRIPTION_ID "<Azure subscription ID>"
-az account set --subscription "<Azure Subscription ID>"
+Set-AzContext -Subscription "<Azure Subscription ID>"
 ```
 
 Ensure you use the same configuration you used when provisioning the services.
