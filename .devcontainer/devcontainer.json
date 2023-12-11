@@ -1,5 +1,5 @@
 {
-	"name": "modern-web-app-pattern-dotnet",
+	"name": "web-app-pattern-dotnet",
 	"build": {
 		"dockerfile": "Dockerfile",
 		"args": { 
