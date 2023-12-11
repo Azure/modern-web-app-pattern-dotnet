@@ -3,15 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32104.313
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.Public", "Relecloud.Web.Public\Relecloud.Web.Public.csproj", "{D3ED2559-22B8-4C53-95DC-42763732D16B}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.CallCenter", "Relecloud.Web.CallCenter\Relecloud.Web.CallCenter.csproj", "{2A48F2D7-51D1-4C69-8E7E-3F7A6E4F7BED}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.Models", "Relecloud.Web.Models\Relecloud.Web.Models.csproj", "{257EA44D-0632-4029-ADD9-92EDD4B70931}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.CallCenter.Api", "Relecloud.Web.CallCenter.Api\Relecloud.Web.CallCenter.Api.csproj", "{0B28CA97-C813-41B7-A415-EFDCA4FB372E}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.Public.Api", "Relecloud.Web.Public.Api\Relecloud.Web.Public.Api.csproj", "{748AF99C-709A-4FAA-AD31-7876CD5469FB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FDD97D72-A655-45EB-8709-0E5265C12BE0}"
 	ProjectSection(SolutionItems) = preProject
@@ -24,10 +20,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D3ED2559-22B8-4C53-95DC-42763732D16B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D3ED2559-22B8-4C53-95DC-42763732D16B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D3ED2559-22B8-4C53-95DC-42763732D16B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D3ED2559-22B8-4C53-95DC-42763732D16B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2A48F2D7-51D1-4C69-8E7E-3F7A6E4F7BED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2A48F2D7-51D1-4C69-8E7E-3F7A6E4F7BED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A48F2D7-51D1-4C69-8E7E-3F7A6E4F7BED}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -40,10 +32,6 @@ Global
 		{0B28CA97-C813-41B7-A415-EFDCA4FB372E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0B28CA97-C813-41B7-A415-EFDCA4FB372E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0B28CA97-C813-41B7-A415-EFDCA4FB372E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{748AF99C-709A-4FAA-AD31-7876CD5469FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{748AF99C-709A-4FAA-AD31-7876CD5469FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{748AF99C-709A-4FAA-AD31-7876CD5469FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{748AF99C-709A-4FAA-AD31-7876CD5469FB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

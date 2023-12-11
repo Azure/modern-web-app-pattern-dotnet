@@ -7,6 +7,7 @@ using Relecloud.Web.Api.Services.MockServices;
 using Relecloud.Web.Api.Services.Search;
 using Relecloud.Web.Api.Services.SqlDatabaseConcertRepository;
 using Relecloud.Web.Api.Services.TicketManagementService;
+using Relecloud.Web.CallCenter.Api.Infrastructure;
 using Relecloud.Web.Models.Services;
 using Relecloud.Web.Services.Search;
 using System.Diagnostics;
@@ -162,6 +163,8 @@ namespace Relecloud.Web.Api
                 // https://aka.ms/IdentityModel/PII
                 IdentityModelEventSource.ShowPII = true;
             }
+
+            app.UseIntermittentErrorRequestMiddleware();
 
             app.UseHttpsRedirection();
 
