@@ -90,7 +90,7 @@ Once the command palette is open, search for `Dev Containers: Rebuild and Reopen
 
 The environment name should be less than 18 characters and must be comprised of lower-case, numeric, and dash characters (for example, `eapdotnetmwa`).  The environment name is used for resource group naming and specific resource naming. Also, select a password for the admin user of the database.
 
-Run the following command to start a PowerShell session:
+If not using PowerShell 7+, run the following command:
 
 ```shell
 pwsh
