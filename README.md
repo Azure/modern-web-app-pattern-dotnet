@@ -131,9 +131,9 @@ Get-AzSubscription
 To set the active subscription:
 
 ```pwsh
-$AZURE_SUBSCRIPTION="<your-subscription-id>"
-azd env set AZURE_SUBSCRIPTION_ID $AZURE_SUBSCRIPTION
-Set-AzContext -SubscriptionId $AZURE_SUBSCRIPTION
+$AZURE_SUBSCRIPTION_ID="<your-subscription-id>"
+azd env set AZURE_SUBSCRIPTION_ID $AZURE_SUBSCRIPTION_ID
+Set-AzContext -SubscriptionId $AZURE_SUBSCRIPTION_ID
 ```
 
 ### 5. Select a region for deployment
