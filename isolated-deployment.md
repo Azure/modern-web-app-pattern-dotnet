@@ -17,7 +17,7 @@ If you do not wish to use a Dev Container, please refer to the [prerequisites](p
 
 ## Steps to deploy the reference implementation
 
-For users familiar with the deployment process, you can use the following list of the deployments commands as a quick reference. The commands assume you have selected a suitable subscription and have logged into both the Azure Developer CLI and a pwsh AzContext:
+For users familiar with the deployment process, you can use the following list of the deployments commands as a quick reference. The commands assume you have selected a suitable subscription and have logged into both the [Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/reference#azd-auth-login) and a PowerShell 7+ [AzContext](https://learn.microsoft.com/powershell/azure/authenticate-interactive):
 
 ```shell
 git clone https://github.com/Azure/modern-web-app-pattern-dotnet.git
