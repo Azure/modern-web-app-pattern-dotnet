@@ -7,11 +7,11 @@
 
 > ⚠️ We are using version 1.3.0 for AZD while awaiting feedback on a known bicep issue.
 
-> ⚠️ Note that for the `az login` and `azd auth login` you must use the same account. And, you may also need to specify the `--tenant` option or `--tenant-id` as required by your administrator.
+> ⚠️ Note that for the `Connect-AzAccount` and `azd auth login` you must use the same account. And, you may also need to specify the `--tenant` option or `--tenant-id` as required by your administrator.
 
 The following tools are pre-requisites to running the associated deployment steps on Windows without using the Dev Container.
 
-1. To run the scripts, Windows users require Powershell 7.2 (LTS) or above. Alternatively, you can use a bash terminal using [Windows Subsystem for Linux](https://learn.microsoft.com/windows/wsl/install). macOS users can use a bash terminal.
+1. To run the scripts, Windows users require PowerShell 7.2 (LTS) or above.
 
    1. PowerShell users - [Install PowerShell](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows)
        Run the following to verify that you're running the latest PowerShell
@@ -34,10 +34,10 @@ The following tools are pre-requisites to running the associated deployment step
     az version
     ```
     
-    After the installation, run the following command to [sign in to Azure interactively](https://learn.microsoft.com/cli/azure/authenticate-azure-cli#sign-in-interactively).
+    After the installation, run the following command to [sign in to Azure PowerShell interactively](https://learn.microsoft.com/powershell/azure/authenticate-interactive).
 
     ```ps1
-    az login
+    Connect-AzAccount
     ```
 1. [Upgrade the Azure CLI Bicep extension](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install#azure-cli).
     Run the following command to verify that you're running version 0.12.40 or higher.
@@ -53,8 +53,8 @@ The following tools are pre-requisites to running the associated deployment step
     azd auth login
     ```
 
-1. [Install .NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0)
-    Run the following command to verify that the .NET SDK 6.0 is installed.
+1. [Install .NET 7 SDK](https://dotnet.microsoft.com/download/dotnet/7.0)
+    Run the following command to verify that the .NET SDK 7.0 is installed.
     ```ps1
     dotnet --version
     ```
