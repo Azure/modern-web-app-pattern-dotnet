@@ -156,7 +156,7 @@ If doing a multi-region deployment, set the `AZURE_LOCATION2` to the secondary r
 azd env set AZURE_LOCATION2 eastus
 ```
 
-Make sure the secondary region is a paired region with the primary region (`AZURE_LOCATION`). Paired regions are required to support Azure features like [geo-zone-redundant storage (GZRS) failover](https://learn.microsoft.com/azure/storage/common/storage-disaster-recovery-guidance). For a full list of region pairs, see [Azure region pairs](https://learn.microsoft.com/azure/reliability/cross-region-replication-azure#azure-cross-region-replication-pairings-for-all-geographies). We have validated the following paired regions.
+Make sure the secondary region is a paired region with the primary region (`AZURE_LOCATION`). Paired regions are required to support some Azure features; for example, [geo-zone-redundant storage (GZRS) failover](https://learn.microsoft.com/azure/storage/common/storage-disaster-recovery-guidance). For a full list of region pairs, see [Azure region pairs](https://learn.microsoft.com/azure/reliability/cross-region-replication-azure#azure-cross-region-replication-pairings-for-all-geographies). We have validated the following paired regions.
 
 | AZURE_LOCATION | AZURE_LOCATION2 |
 | ----- | ----- |
