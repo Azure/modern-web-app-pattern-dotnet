@@ -20,7 +20,7 @@ The following topics are intended to help readers with our most commonly reporte
     > You may need to `cd` into the directory you cloned to run this command.
 
 * **The deployment <azd-env-name> already exists in location**
-    This error most often happens when trying a new region with the same for a deployment with the same name used for the AZD environment name (e.g. by default it would be `eapdotnetmwa`).
+    This error most often happens when trying a new region with the same for a deployment with the same name used for the AZD environment name (e.g. by default it would be `dotnetwebapp`).
 
     When the `azd provision` command runs it creates a deployment resource in your subscription. You must delete this deployment before you can change the Azure region.
 

@@ -48,7 +48,7 @@ For users familiar with the deployment process, you can use the following list o
 ```shell
 git clone https://github.com/Azure/modern-web-app-pattern-dotnet.git
 cd modern-web-app-pattern-dotnet
-azd env new eapdotnetmwa
+azd env new dotnetwebapp
 azd env set AZURE_LOCATION westus3
 azd up
 ```
@@ -88,7 +88,7 @@ Once the command palette is open, search for `Dev Containers: Rebuild and Reopen
 
 ### 3. Create a new environment
 
-The environment name should be less than 18 characters and must be comprised of lower-case, numeric, and dash characters (for example, `eapdotnetmwa`).  The environment name is used for resource group naming and specific resource naming. Also, select a password for the admin user of the database.
+The environment name should be less than 18 characters and must be comprised of lower-case, numeric, and dash characters (for example, `dotnetwebapp`).  The environment name is used for resource group naming and specific resource naming. Also, select a password for the admin user of the database.
 
 If not using PowerShell 7+, run the following command:
 
@@ -99,7 +99,7 @@ pwsh
 Run the following commands to set these values and create a new environment:
 
 ```pwsh
-azd env new eapdotnetmwa
+azd env new dotnetwebapp
 ```
 
 Substitute the environment name with your own value.
