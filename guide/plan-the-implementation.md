@@ -10,7 +10,7 @@ There's a [reference implementation](https://aka.ms/eap/mwa/dotnet) of the moder
 
 The modern web app pattern uses a hub and spoke architecture. Shared resources are the hub virtual network and application endpoints sit in the spoke virtual network. The modern web app pattern is a set of principles, not a specific architecture. The following diagram (*figure 1*) represents the architecture of the reference implementation. It's one example that illustrates the principles of the modern web app pattern. Your business context, existing web app, and desired service level objective (SLO) are factors that shape the specific architecture of your web app.
 
-![Diagram showing the architecture of the reference implementation.](../docs/images/relecloud-solution-diagram.png)
+![Diagram showing the architecture of the reference implementation.](../assets/images/relecloud-solution-diagram.png)
 
 ## Business context
 

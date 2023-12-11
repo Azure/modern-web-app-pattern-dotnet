@@ -20,7 +20,7 @@ This project has a [companion article in the Azure Architecture Center](https://
 
 ## Architecture
 
-![Diagram showing the architecture of the reference implementation.](./docs/images/relecloud-solution-diagram.png)
+![Diagram showing the architecture of the reference implementation.](./assets/images/relecloud-solution-diagram.png)
 
 ## Workflow
 > ⚠️ Pending documentation of workflow - (Business reporting experience) covered by #1871276
@@ -74,7 +74,7 @@ code .
 
 Once Visual Studio Code is launched, you should see a popup allowing you to click on the button **Reopen in Container**.
 
-![Reopen in Container](docs/images/vscode-reopen-in-container.png)
+![Reopen in Container](assets/images/vscode-reopen-in-container.png)
 
 If you don't see the popup, open the Visual Studio Code Command Palette to execute the command. There are three ways to open the command palette:
 
@@ -84,7 +84,7 @@ If you don't see the popup, open the Visual Studio Code Command Palette to execu
 
 Once the command palette is open, search for `Dev Containers: Rebuild and Reopen in Container`.
 
-![WSL Ubuntu](docs/images/vscode-reopen-in-container-command.png)
+![WSL Ubuntu](assets/images/vscode-reopen-in-container-command.png)
 
 ### 3. Create a new environment
 
@@ -221,7 +221,7 @@ Use the following to find the URL for the Proseware application that you have de
 azd env get-values --output json | jq -r .WEB_URI
 ```
 
-![screenshot of Relecloud app home page](docs/images/WebAppHomePage.png)
+![screenshot of Relecloud app home page](assets/images/WebAppHomePage.png)
 
 It takes approximately 5 minutes for the Azure App Service to respond to requests using the code deployed during step 6.
 

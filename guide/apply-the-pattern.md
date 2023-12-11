@@ -10,7 +10,7 @@ There's a [reference implementation](https://aka.ms/eap/mwa/dotnet) of the moder
 
 The modern web app pattern uses a hub and spoke architecture. Shared resources are the hub virtual network and application endpoints sit in the spoke virtual network. The modern web app pattern is a set of principles, not a specific architecture. The following diagram (*figure 1*) represents the architecture of the reference implementation. It's one example that illustrates the principles of the modern web app pattern. Your business context, existing web app, and desired service level objective (SLO) are factors that shape the specific architecture of your web app.
 
-![Diagram showing the architecture of the reference implementation.](../docs/images/relecloud-solution-diagram.png)
+![Diagram showing the architecture of the reference implementation.](../assets/images/relecloud-solution-diagram.png)
 *Figure 1. The architecture of the reference implementation.*
 
 ## Evolutionary design changes
@@ -161,7 +161,7 @@ Performance efficiency is the ability of a workload to scale and meet the demand
 > ⚠️ Pending task Queue-based Load Leveling pattern - (Queue-based ticket rendering experience) covered by  #1865952
 > This section will talk about how applying the Queue-based Load leveling pattern changes our scaling paradigm so that we no longer need to plan for peak workloads. Autoscaling provides alignment with user load and Queue-based Load Leveling provides additional smoothing of the resource demands for our solution. This reduces waste by reducing scaling events and helping us plan for our expected consumption in a more consistent approach.
 
-![Diagram that shows the abstraction choices and their impacts on system costs.](../docs/images/choice-of-abstraction.png)
+![Diagram that shows the abstraction choices and their impacts on system costs.](../assets/images/choice-of-abstraction.png)
 
 - Learn more by reading about [Consumption and fixed cost models](https://learn.microsoft.com/azure/well-architected/cost/design-price)
 
