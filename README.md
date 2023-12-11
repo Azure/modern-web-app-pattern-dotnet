@@ -102,7 +102,7 @@ Run the following commands to set these values and create a new environment:
 azd env new eapdotnetmwa
 ```
 
-Substitute the environment name for your own values.
+Substitute the environment name with your own value.
 
 By default, Azure resources are sized for a "development" mode. If doing a Production deployment, set the `AZURE_ENV_TYPE` to `prod` using the following code:
 
