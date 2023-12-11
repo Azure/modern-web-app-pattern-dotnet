@@ -491,6 +491,9 @@ module applicationPostConfiguration './modules/application-post-config.bicep' = 
     applicationResourceGroupNamePrimary: resourceGroups.outputs.application_resource_group_name
     applicationResourceGroupNameSecondary: isMultiLocationDeployment ? resourceGroups2.outputs.application_resource_group_name : ''
   }
+  dependsOn: [
+    application
+  ]
 }
 
 /*
