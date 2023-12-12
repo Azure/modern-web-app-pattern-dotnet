@@ -237,17 +237,6 @@ To tear down the deployment, run the following command:
 azd down
 ```
 
-Your Azure subscription will retain your deployment request as a stateful object.
-If you would like to change the Azure region for this deployment you will need to
-delete the deployment by running the following command.
-
-```
-az deployment delete --name $myEnvironmentName
-```
-
-> You can list all deployments with the following command
-> `az deployment sub list --query "[].name" -o tsv`
-
 ## Additional links
 
 - [Plan the implementation](plan-the-implementation.md)
