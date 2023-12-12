@@ -32,7 +32,7 @@ We recommend that you use a Dev Container to deploy this application.  The requi
 - [Azure Subscription](https://azure.microsoft.com/pricing/member-offers/msdn-benefits-details/).
 - [Visual Studio Code](https://code.visualstudio.com/).
 - [Docker Desktop](https://www.docker.com/get-started/).
-- [Permissions to register an application in Azure AD](https://learn.microsoft.com/azure/active-directory/develop/quickstart-register-app).
+- [Permissions to register an application in Microsoft Entra ID](https://learn.microsoft.com/azure/active-directory/develop/quickstart-register-app).
 - Visual Studio Code [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
 
 If you do not wish to use a Dev Container, please refer to the [prerequisites](prerequisites.md) for detailed information on how to set up your development system to build, run, and deploy the application.
@@ -177,7 +177,7 @@ azd provision --no-prompt
 Relecloud devs have automated the process of creating Azure
 AD resources that support the authentication features of the
 web app. They use the following command to create two new
-App Registrations within Azure AD. The command is also
+App Registrations within Microsoft Entra ID. The command is also
 responsible for saving configuration data to Key Vault and
 App Configuration so that the web app can read this data
 (about 3-minutes to register).
