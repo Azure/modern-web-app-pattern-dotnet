@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
-using Relecloud.Web.Models.TicketManagement.Payment;
+using Relecloud.Models.TicketManagement.Payment;
 using System.ComponentModel.DataAnnotations;
 
 namespace Relecloud.Web.CallCenter.ViewModels

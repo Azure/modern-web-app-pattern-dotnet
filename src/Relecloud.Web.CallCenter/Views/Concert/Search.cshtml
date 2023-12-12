@@ -1,7 +1,7 @@
-﻿@model Relecloud.Web.Models.Search.SearchResponse<Relecloud.Web.Models.Search.ConcertSearchResult>
+﻿@model Relecloud.Models.Search.SearchResponse<Relecloud.Models.Search.ConcertSearchResult>
 @{
     ViewData["Title"] = "Search";
-    int MaxPageSize = Relecloud.Web.Models.Search.SearchRequest.PageSize;
+    int MaxPageSize = Relecloud.Models.Search.SearchRequest.PageSize;
 }
 
 @if (Model?.Request is null)

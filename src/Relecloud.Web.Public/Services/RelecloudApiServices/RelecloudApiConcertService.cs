@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
-using Relecloud.Web.Models.ConcertContext;
-using Relecloud.Web.Models.Services;
+using Relecloud.Models.ConcertContext;
+using Relecloud.Models.Services;
 using Relecloud.Web.Public.Infrastructure;
 using Relecloud.Web.Public.Services.RelecloudApiServices;
 using System.Net;

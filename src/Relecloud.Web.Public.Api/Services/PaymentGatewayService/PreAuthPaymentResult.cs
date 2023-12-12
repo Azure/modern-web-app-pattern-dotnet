@@ -1,4 +1,4 @@
-﻿using Relecloud.Web.Models.Services;
+﻿using Relecloud.Models.Services;
 
 namespace Relecloud.Web.Api.Services.PaymentGatewayService
 {

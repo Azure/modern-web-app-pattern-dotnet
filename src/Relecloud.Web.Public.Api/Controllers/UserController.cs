@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Relecloud.Web.Api.Services;
-using Relecloud.Web.Models.ConcertContext;
+using Relecloud.Models.ConcertContext;
 using System.Net.Mime;
 
 namespace Relecloud.Web.Api.Controllers

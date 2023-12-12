@@ -2,7 +2,7 @@
 using Azure.Storage.Sas;
 using Microsoft.EntityFrameworkCore;
 using Relecloud.Web.Api.Services.SqlDatabaseConcertRepository;
-using Relecloud.Web.Models.ConcertContext;
+using Relecloud.Models.ConcertContext;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;

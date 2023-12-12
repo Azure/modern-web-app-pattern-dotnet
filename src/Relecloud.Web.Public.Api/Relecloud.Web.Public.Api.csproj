@@ -38,7 +38,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Relecloud.Web.Models\Relecloud.Web.Models.csproj" />
+		<ProjectReference Include="..\Relecloud.Models\Relecloud.Models.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.Public", "Rel
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.CallCenter", "Relecloud.Web.CallCenter\Relecloud.Web.CallCenter.csproj", "{2A48F2D7-51D1-4C69-8E7E-3F7A6E4F7BED}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.Models", "Relecloud.Web.Models\Relecloud.Web.Models.csproj", "{257EA44D-0632-4029-ADD9-92EDD4B70931}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Models", "Relecloud.Models\Relecloud.Models.csproj", "{257EA44D-0632-4029-ADD9-92EDD4B70931}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.CallCenter.Api", "Relecloud.Web.CallCenter.Api\Relecloud.Web.CallCenter.Api.csproj", "{0B28CA97-C813-41B7-A415-EFDCA4FB372E}"
 EndProject

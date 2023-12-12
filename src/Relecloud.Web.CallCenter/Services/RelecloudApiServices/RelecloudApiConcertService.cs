@@ -2,8 +2,8 @@
 using Microsoft.Identity.Web;
 using Relecloud.Web.CallCenter.Infrastructure;
 using Relecloud.Web.CallCenter.Services.RelecloudApiServices;
-using Relecloud.Web.Models.ConcertContext;
-using Relecloud.Web.Models.Services;
+using Relecloud.Models.ConcertContext;
+using Relecloud.Models.Services;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;

@@ -1,5 +1,5 @@
-﻿using Relecloud.Web.Models.Search;
-using Relecloud.Web.Models.Services;
+﻿using Relecloud.Models.Search;
+using Relecloud.Models.Services;
 using Relecloud.Web.Public.Infrastructure;
 using System.Net;
 using System.Text.Json;
