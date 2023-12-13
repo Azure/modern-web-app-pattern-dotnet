@@ -552,5 +552,7 @@ output service_web_endpoints string[] = application.outputs.service_web_endpoint
 output AZURE_OPS_VAULT_NAME string = isNetworkIsolated ? hubNetwork.outputs.key_vault_name : application.outputs.key_vault_name
 
 // Local development values
-output App_AppConfig_Uri string = application.outputs.app_config_uri
+output APP_CONFIG_SERVICE_URI string = application.outputs.app_config_uri
 output WEB_URI string = application.outputs.web_uri
+output SQL_DATABASE_NAME string = application.outputs.sql_database_name
+output SQL_SERVER_NAME string = application.outputs.sql_server_name

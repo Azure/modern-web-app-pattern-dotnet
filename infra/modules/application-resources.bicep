@@ -556,3 +556,6 @@ output service_managed_identities object[] = [
 
 output service_web_endpoints string[] = [ deploymentSettings.isPrimaryLocation ? webFrontendFrontDoorRoute.outputs.endpoint : webFrontend.outputs.app_service_uri ]
 output web_uri string = deploymentSettings.isPrimaryLocation ? webFrontendFrontDoorRoute.outputs.uri : webFrontend.outputs.app_service_uri
+
+output sql_server_name string = sqlServer.outputs.name
+output sql_database_name string = sqlDatabase.outputs.name
