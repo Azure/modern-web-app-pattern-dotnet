@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
+    <UserSecretsId>dotnet-Relecloud.TicketRenderer-c86beace-5b54-480d-811f-83548196f47c</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.10.4" />
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.17.1" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
+  </ItemGroup>
+</Project>
