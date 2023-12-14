@@ -2,5 +2,5 @@
 
 public interface IImageStorage
 {
-    Task<bool> StoreImageAsync(MemoryStream image, string path);
+    Task<bool> StoreImageAsync(MemoryStream image, string path, CancellationToken cancellation);
 }

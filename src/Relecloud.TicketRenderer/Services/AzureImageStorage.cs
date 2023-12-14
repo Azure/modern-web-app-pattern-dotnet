@@ -1,9 +1,24 @@
-﻿namespace Relecloud.TicketRenderer.Services;
+﻿using Azure.Storage.Blobs;
+using Microsoft.Extensions.Options;
+using Relecloud.TicketRenderer.Models;
 
-public class AzureImageStorage(ILogger<AzureImageStorage> logger) : IImageStorage
+namespace Relecloud.TicketRenderer.Services;
+
+public class AzureImageStorage(ILogger<AzureImageStorage> logger, BlobServiceClient blobServiceClient, IOptionsMonitor<AzureStorageOptions> options) : IImageStorage
 {
-    public Task<bool> StoreImageAsync(MemoryStream image, string path)
+    public async Task<bool> StoreImageAsync(MemoryStream image, string path, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var blobContainer = blobServiceClient.GetBlobContainerClient(options.CurrentValue.Container);
+        var response = await blobContainer.UploadBlobAsync(path, image, cancellationToken);
+
+        if (response.GetRawResponse().IsError)
+        {
+            logger.LogError("Error storing image {BlobName} in Azure Blob Storage: {StatusCode}", path, response.GetRawResponse().Status);
+            return false;
+        }
+        {
+            logger.LogInformation("Successfully stored image {BlobName} in Azure Blob Storage", path);
+            return true;
+        }
     }
 }

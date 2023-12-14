@@ -17,4 +17,8 @@
     <PackageReference Include="Microsoft.Extensions.Azure" Version="1.7.1" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="8.0.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Relecloud.Models\Relecloud.Models.csproj" />
+  </ItemGroup>
 </Project>
