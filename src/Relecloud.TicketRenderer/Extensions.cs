@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Azure;
 using Relecloud.TicketRenderer.Models;
 using Relecloud.TicketRenderer.Services;
@@ -82,7 +83,17 @@ internal static class Extensions
                 ?? new ResilienceOptions();
 
             clientConfiguration.AddBlobServiceClient(new Uri(storageOptions.Uri));
-            clientConfiguration.AddServiceBusClientWithNamespace(serviceBusOptions.Namespace);
+            clientConfiguration.AddServiceBusClientWithNamespace(serviceBusOptions.Namespace)
+                .ConfigureOptions(options =>
+                {
+                    // Default resiliency options (set below) only apply to HTTP-based Azure SDK clients.
+                    // Service Bus uses AMQP here and, therefore, needs its own retry options configured.
+                    options.RetryOptions.Mode = ServiceBusRetryMode.Exponential;
+                    options.RetryOptions.Delay = TimeSpan.FromSeconds(resilienceOptions.BaseDelaySecondsBetweenRetries);
+                    options.RetryOptions.MaxRetries = resilienceOptions.MaxRetries;
+                    options.RetryOptions.MaxDelay = TimeSpan.FromSeconds(resilienceOptions.MaxDelaySeconds);
+                    options.RetryOptions.TryTimeout = TimeSpan.FromSeconds(resilienceOptions.MaxNetworkTimeoutSeconds);
+                });
 
             // ConfigureDefaults sets standard retry policies for all HTTP-based Azure clients.
             // Note that this is not the same as the AddStandardResilienceHandler in ConfigureHttpClientDefaults
