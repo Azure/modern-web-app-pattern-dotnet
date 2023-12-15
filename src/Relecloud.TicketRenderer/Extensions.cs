@@ -74,7 +74,7 @@ internal static class Extensions
                 throw new InvalidOperationException("Storage options (App:StorageAccount:Uri) not found");
             }
 
-            var serviceBusOptions = builder.Configuration.GetSection("App:ServiceBus").Get<AzureServiceBusOptions>()
+            var serviceBusOptions = builder.Configuration.GetRequiredSection("App:ServiceBus").Get<AzureServiceBusOptions>()
                 ?? throw new InvalidOperationException("Service Bus options (App:ServiceBus) not found");
 
             var resilienceOptions = builder.Configuration.GetSection("App:Resilience").Get<ResilienceOptions>()
