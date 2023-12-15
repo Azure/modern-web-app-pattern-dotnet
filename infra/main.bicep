@@ -389,21 +389,6 @@ module peerHubAndSecondarySpokeVirtualNetworks './modules/peer-networks.bicep' =
   }
 }
 
-/* peer the two spoke vnets so that replication is not forced through the hub */
-module peerSpokeVirtualNetworks './modules/peer-networks.bicep' = if (willDeployHubNetwork && isNetworkIsolated && isMultiLocationDeployment) {
-  name: '${prefix}-peer-spoke-and-spoke-networks'
-  params: {
-    hubNetwork: {
-      name: isMultiLocationDeployment ? spokeNetwork.outputs.virtual_network_name : ''
-      resourceGroupName: isMultiLocationDeployment ? naming.outputs.resourceNames.spokeResourceGroup : ''
-    }
-    spokeNetwork: {
-      name: isMultiLocationDeployment ? spokeNetwork2.outputs.virtual_network_name : ''
-      resourceGroupName: isMultiLocationDeployment ? naming2.outputs.resourceNames.spokeResourceGroup : ''
-    }
-  }
-}
-
 /*
 ** Create the application resources.
 */
@@ -546,6 +531,13 @@ output build_agent string = installBuildAgent ? buildAgent.outputs.build_agent_h
 
 // Application resources
 output AZURE_RESOURCE_GROUP string = resourceGroups.outputs.application_resource_group_name
+output SECONDARY_RESOURCE_GROUP string = isMultiLocationDeployment ? resourceGroups2.outputs.application_resource_group_name : 'not-deployed'
 output service_managed_identities object[] = application.outputs.service_managed_identities
 output service_web_endpoints string[] = application.outputs.service_web_endpoints
 output AZURE_OPS_VAULT_NAME string = isNetworkIsolated ? hubNetwork.outputs.key_vault_name : application.outputs.key_vault_name
+
+// Local development values
+output APP_CONFIG_SERVICE_URI string = application.outputs.app_config_uri
+output WEB_URI string = application.outputs.web_uri
+output SQL_DATABASE_NAME string = application.outputs.sql_database_name
+output SQL_SERVER_NAME string = application.outputs.sql_server_name

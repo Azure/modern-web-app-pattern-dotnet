@@ -542,6 +542,7 @@ module applicationBudget '../core/cost-management/budget.bicep' = {
 // OUTPUTS
 // ========================================================================
 
+output app_config_uri string = appConfiguration.outputs.app_config_uri
 output key_vault_name string = deploymentSettings.isNetworkIsolated ? resourceNames.keyVault : keyVault.outputs.name
 output redis_cache_name string = redis.outputs.name
 
@@ -554,3 +555,7 @@ output service_managed_identities object[] = [
 ]
 
 output service_web_endpoints string[] = [ deploymentSettings.isPrimaryLocation ? webFrontendFrontDoorRoute.outputs.endpoint : webFrontend.outputs.app_service_uri ]
+output web_uri string = deploymentSettings.isPrimaryLocation ? webFrontendFrontDoorRoute.outputs.uri : webFrontend.outputs.app_service_uri
+
+output sql_server_name string = sqlServer.outputs.name
+output sql_database_name string = sqlDatabase.outputs.name

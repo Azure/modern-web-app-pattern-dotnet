@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Relecloud.Web.Api.Services.SqlDatabaseConcertRepository;
 using Relecloud.Models.ConcertContext;
 using Relecloud.Models.TicketManagement;
+using Relecloud.Web.Api.Services.SqlDatabaseConcertRepository;
 
 namespace Relecloud.Web.Api.Services.TicketManagementService
 {

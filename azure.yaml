@@ -11,21 +11,6 @@ hooks:
     windows:
       interactive: true
       run: ./infra/scripts/preprovision/whats-my-ip.ps1
-  # postprovision:
-  #   posix:
-  #     interactive: true
-  #     run: ./infra/scripts/postprovision/call-create-app-registrations.sh
-  #   windows:
-  #     interactive: true
-  #     run: ./infra/scripts/postprovision/call-create-app-registrations.ps1
-  # skipping while pwsh7 is required because hooks cannot be separated
-  # predeploy:
-  #   posix:
-  #     interactive: true
-  #     run: ./infra/scripts/predeploy/call-set-app-configuration.sh
-  #   windows:
-  #     interactive: true
-  #     run: ./infra/scripts/predeploy/call-set-app-configuration.ps1
 services:
   web-callcenter-service:
     project: src/Relecloud.Web.CallCenter.Api

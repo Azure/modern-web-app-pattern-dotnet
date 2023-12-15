@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Relecloud.Web.CallCenter.Infrastructure;
-using Relecloud.Web.CallCenter.ViewModels;
 using Relecloud.Models.ConcertContext;
 using Relecloud.Models.Search;
 using Relecloud.Models.Services;
+using Relecloud.Web.CallCenter.Infrastructure;
+using Relecloud.Web.CallCenter.ViewModels;
 
 namespace Relecloud.Web.CallCenter.Controllers
 {

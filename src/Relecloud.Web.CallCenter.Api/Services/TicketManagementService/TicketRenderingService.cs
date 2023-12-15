@@ -1,18 +1,15 @@
 ﻿using Azure.Identity;
 using Azure.Storage.Blobs;
-
 using Microsoft.EntityFrameworkCore;
-
-using Relecloud.Web.Api.Services.SqlDatabaseConcertRepository;
 using Relecloud.Models.ConcertContext;
-
+using Relecloud.Web.Api.Services.SqlDatabaseConcertRepository;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 
 namespace Relecloud.Web.Api.Services.TicketManagementService
 {
-     public class TicketRenderingService : ITicketRenderingService
+    public class TicketRenderingService : ITicketRenderingService
     {
         private const string BlobNameFormatString = "ticket-{EntityId}.png";
 

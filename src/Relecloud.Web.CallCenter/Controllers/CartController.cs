@@ -1,13 +1,13 @@
 ﻿using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Relecloud.Web.CallCenter.Infrastructure;
-using Relecloud.Web.CallCenter.Services;
-using Relecloud.Web.CallCenter.ViewModels;
 using Relecloud.Models.ConcertContext;
 using Relecloud.Models.Services;
 using Relecloud.Models.TicketManagement;
 using Relecloud.Models.TicketManagement.Payment;
+using Relecloud.Web.CallCenter.Infrastructure;
+using Relecloud.Web.CallCenter.Services;
+using Relecloud.Web.CallCenter.ViewModels;
 
 namespace Relecloud.Web.CallCenter.Controllers
 {

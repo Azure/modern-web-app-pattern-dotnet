@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Relecloud.Models.ConcertContext;
+using Relecloud.Models.TicketManagement;
 using Relecloud.Web.Api.Services;
 using Relecloud.Web.Api.Services.PaymentGatewayService;
 using Relecloud.Web.Api.Services.TicketManagementService;
-using Relecloud.Models.ConcertContext;
 using Relecloud.Web.Models.Services;
-using Relecloud.Models.TicketManagement;
 using System.Net.Mime;
 
 namespace Relecloud.Web.Api.Controllers

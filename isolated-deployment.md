@@ -19,7 +19,7 @@ If you do not wish to use a Dev Container, please refer to the [prerequisites](p
 
 For users familiar with the deployment process, you can use the following list of the deployments commands as a quick reference. The commands assume you have selected a suitable subscription and have logged into both the [Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/reference#azd-auth-login) and a PowerShell 7+ [AzContext](https://learn.microsoft.com/powershell/azure/authenticate-interactive):
 
-```shell
+```pwsh
 git clone https://github.com/Azure/modern-web-app-pattern-dotnet.git
 cd modern-web-app-pattern-dotnet
 azd env new dotnetwebapp
@@ -31,9 +31,23 @@ azd env set OWNER_EMAIL <an email address alerted by Azure budget>
 azd env set AZURE_LOCATION westus3
 ```
 
-Provision the Azure resources (about 55-minutes to provision):
+If doing a multi-region deployment, set the `SECONDARY_AZURE_LOCATION` to the secondary region:
 
-```shell
+```pwsh
+azd env set SECONDARY_AZURE_LOCATION eastus
+```
+
+Make sure the secondary region is a paired region with the primary region (`AZURE_LOCATION`). Paired regions are required to support some Azure features; for example, [geo-zone-redundant storage (GZRS) failover](https://learn.microsoft.com/azure/storage/common/storage-disaster-recovery-guidance). For a full list of region pairs, see [Azure region pairs](https://learn.microsoft.com/azure/reliability/cross-region-replication-azure#azure-cross-region-replication-pairings-for-all-geographies). We have validated the following paired regions.
+
+| AZURE_LOCATION | SECONDARY_AZURE_LOCATION |
+| ----- | ----- |
+| westus3 | eastus |
+| westeurope | northeurope |
+| australiaeast | australiasoutheast |
+
+Provision the Azure resources (about 35-minutes to provision):
+
+```pwsh
 azd provision
 ```
 
@@ -103,7 +117,7 @@ From the jump host, launch Windows Terminal to setup required tools:
 
 1. Add dotnet to the path environment variable
 
-    ![#Add dotnet to the path variable](./docs/images/jumphost-path-setup.png)
+    ![#Add dotnet to the path variable](./assets/images/jumphost-path-setup.png)
 
     Add the path: `%USERPROFILE%\AppData\Local\Microsoft\dotnet`.
 
@@ -133,7 +147,7 @@ cd .\modern-web-app-pattern-dotnet
     Connect-AzAccount
     ```
 
-    This will open a browser to complete the authentication process.  See [the documentation](https://learn.microsoft.com/cli/azure/authenticate-azure-cli) for instructions on other mechanisms to sign in to the Azure CLI.
+    This will open a browser to complete the authentication process.  See [the documentation](https://learn.microsoft.com/powershell/azure/authenticate-interactive) for instructions on other mechanisms to sign in to Azure.
 
 1. [Sign in to azd](https://learn.microsoft.com/azure/developer/azure-developer-cli/reference#azd-auth-login):
 
@@ -150,10 +164,11 @@ Set up the required Azure Developer CLI environment:
 ```shell
 azd env new <Name of created environment>
 azd env set AZURE_LOCATION <Location>
-azd env set AZURE_RESOURCE_GROUP <name of application resource group from Azure Portal>
+azd env set AZURE_RESOURCE_GROUP <name of application resource group from from azd environment>
 azd env set AZURE_SUBSCRIPTION_ID "<Azure subscription ID>"
-azd env set NETWORK_ISOLATION "true"
 Set-AzContext -Subscription "<Azure Subscription ID>"
+azd env set NETWORK_ISOLATION "true"
+azd env set SECONDARY_RESOURCE_GROUP <name of secondary application resource group from azd environment>
 ```
 
 Ensure you use the same configuration you used when provisioning the services.
@@ -178,5 +193,17 @@ azd deploy
 
 It takes approximately 5 minutes to deploy the code.
 
+If you are doing a multi-region deployment, you must also deploy the code to the secondary region following these same steps on the secondary jump host.
+
 > **WARNING**
 > In some scenarios, the DNS entries for resources secured with Private Endpoint may have been cached incorrectly. It can take up to 10-minutes for the DNS cache to expire.
+
+###  Open and use the application
+
+From your Dev Container, use the following to find the URL for the Relecloud application that you have deployed:
+
+```pwsh
+(azd env get-values --output json | ConvertFrom-Json).WEB_URI
+```
+
+![screenshot of Relecloud app home page](assets/images/WebAppHomePage.png)
