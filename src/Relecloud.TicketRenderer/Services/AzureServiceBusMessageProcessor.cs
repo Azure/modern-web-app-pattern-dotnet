@@ -2,6 +2,9 @@
 
 namespace Relecloud.TicketRenderer.Services;
 
+/// <summary>
+/// A disposable message processor for Azure Service Bus.
+/// </summary>
 internal class AzureServiceBusMessageProcessor(ILogger<AzureServiceBusMessageProcessor> logger, ServiceBusProcessor processor) : IMessageProcessor
 {
     public async Task StopAsync(CancellationToken cancellationToken)

@@ -2,6 +2,9 @@
 
 namespace Relecloud.TicketRenderer.Services;
 
+/// <summary>
+/// Implements message bus functionality using Azure Service Bus.
+/// </summary>
 public class AzureServiceBusMessageBus(ILoggerFactory loggerFactory, ServiceBusClient serviceBusClient) : IMessageBus
 {
     readonly ILogger<AzureServiceBusMessageBus> logger = loggerFactory.CreateLogger<AzureServiceBusMessageBus>();
@@ -34,6 +37,7 @@ public class AzureServiceBusMessageBus(ILoggerFactory loggerFactory, ServiceBusC
             PrefetchCount = 0
         });
 
+        // Called for each message received by the processor
         processor.ProcessMessageAsync += async args =>
         {
             logger.LogInformation("Processing message {MessageId} from {ServiceBusNamespace}/{Path}", args.Message.MessageId, args.FullyQualifiedNamespace, args.EntityPath);
@@ -46,6 +50,7 @@ public class AzureServiceBusMessageBus(ILoggerFactory loggerFactory, ServiceBusC
             logger.LogInformation("Successfully processed message {MessageId} from {ServiceBusNamespace}/{Path}", args.Message.MessageId, args.FullyQualifiedNamespace, args.EntityPath);
         };
 
+        // Called when an unhandled exception occurs in the processor
         processor.ProcessErrorAsync += async args =>
         {
             logger.LogError(

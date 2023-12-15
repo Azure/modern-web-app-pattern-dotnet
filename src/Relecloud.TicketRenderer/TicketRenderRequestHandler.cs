@@ -5,6 +5,9 @@ using Relecloud.TicketRenderer.Services;
 
 namespace Relecloud.TicketRenderer;
 
+/// <summary>
+/// Background service that handles requests to render ticket images.
+/// </summary>
 internal sealed class TicketRenderRequestHandler(
     ILogger<TicketRenderRequestHandler> logger, 
     IOptions<AzureServiceBusOptions> options,
@@ -24,22 +27,27 @@ internal sealed class TicketRenderRequestHandler(
             return;
         }
 
+        // If a topic name was specified, use it to publish messages when tickets are rendered.
         if (!string.IsNullOrEmpty(options.Value.RenderedTicketTopicName))
         {
             sender = messageBus.CreateMessageSender<TicketRenderCompleteEvent>(options.Value.RenderedTicketTopicName);
         }
 
+        // Initialize the message processor to listen for ticket render requests.
         var processor = await messageBus.SubscribeAsync<TicketRenderRequestEvent>(
             async (request, cancellationToken) =>
             {
+                // Render the ticket image and get the path it was written to.
                 var outputPath = await ticketRenderer.RenderTicketAsync(request, cancellationToken);
+
+                // If a topic name was specified, publish a message indicating that the ticket was rendered.
                 if (outputPath is not null && sender is not null)
                 {
                     await sender.PublishAsync(new TicketRenderCompleteEvent(Guid.NewGuid(), request.Ticket.Id, outputPath, DateTime.Now), cancellationToken);
                 }
             },
-            null, 
-            options.Value.RenderRequestQueueName, 
+            null, // Error handling callback
+            options.Value.RenderRequestQueueName, // Queue to subscribe to.
             cancellationToken);
     }
 

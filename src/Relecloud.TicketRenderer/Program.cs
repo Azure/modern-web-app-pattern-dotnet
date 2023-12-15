@@ -44,11 +44,11 @@ builder.Services.ConfigureHttpClientDefaults(httpConfiguration =>
 
     // AddStandardResilienceHandler will apply standard rate limiting, retry, and circuit breaker
     // policies to HTTP requests. The policies can be configured via the options parameter.
-    httpConfiguration.AddStandardResilienceHandler(configure =>
+    httpConfiguration.AddStandardResilienceHandler(options =>
     {
-        configure.Retry.MaxRetryAttempts = resilienceOptions.MaxRetries;
-        configure.Retry.Delay = TimeSpan.FromSeconds(resilienceOptions.BaseDelaySecondsBetweenRetries);
-        configure.Retry.MaxDelay = TimeSpan.FromSeconds(resilienceOptions.MaxDelaySeconds);
+        options.Retry.MaxRetryAttempts = resilienceOptions.MaxRetries;
+        options.Retry.Delay = TimeSpan.FromSeconds(resilienceOptions.BaseDelaySecondsBetweenRetries);
+        options.Retry.MaxDelay = TimeSpan.FromSeconds(resilienceOptions.MaxDelaySeconds);
     });
 });
 

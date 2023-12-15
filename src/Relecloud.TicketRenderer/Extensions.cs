@@ -8,10 +8,7 @@ namespace Relecloud.TicketRenderer;
 
 internal static class Extensions
 {
-    /// <summary>
-    /// Helper method to retrieve a configuration value with validation that the value is not null or empty.
-    /// </summary>
-    /// <exception cref="InvalidOperationException"></exception>
+    // Helper method to retrieve a configuration value with validation that the value is not null or empty.
     public static string GetConfigurationValue(this IConfiguration configuration, string key)
     {
         var value = configuration[key];
@@ -64,6 +61,7 @@ internal static class Extensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        // The AddAzureClients extension method helps add multiple Azure SDK clients
         builder.Services.AddAzureClients(clientConfiguration =>
         {
             clientConfiguration.UseCredential(credential);

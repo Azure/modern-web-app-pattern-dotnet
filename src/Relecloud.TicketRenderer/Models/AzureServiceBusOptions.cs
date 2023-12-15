@@ -2,7 +2,7 @@
 
 namespace Relecloud.TicketRenderer.Models;
 
-public class AzureServiceBusOptions
+internal class AzureServiceBusOptions
 {
     [Required]
     public string? Namespace { get; set; }

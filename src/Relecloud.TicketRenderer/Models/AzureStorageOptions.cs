@@ -2,7 +2,7 @@
 
 namespace Relecloud.TicketRenderer.Models;
 
-public class AzureStorageOptions
+internal class AzureStorageOptions
 {
     [Required]
     public string? Uri { get; set; }

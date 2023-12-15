@@ -4,9 +4,11 @@ using Relecloud.TicketRenderer.Models;
 
 namespace Relecloud.TicketRenderer.Services;
 
+/// <summary>
+/// Stores images in Azure Blob Storage.
+/// </summary>
 internal class AzureImageStorage(ILogger<AzureImageStorage> logger, BlobServiceClient blobServiceClient, IOptionsMonitor<AzureStorageOptions> options) : IImageStorage
 {
-    
     public async Task<bool> StoreImageAsync(Stream image, string path, CancellationToken cancellationToken)
     {
         var blobContainer = blobServiceClient.GetBlobContainerClient(options.CurrentValue.Container);
