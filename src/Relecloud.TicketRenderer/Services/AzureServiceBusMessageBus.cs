@@ -5,13 +5,17 @@ namespace Relecloud.TicketRenderer.Services;
 /// <summary>
 /// Implements message bus functionality using Azure Service Bus.
 /// </summary>
-public class AzureServiceBusMessageBus(ILoggerFactory loggerFactory, ServiceBusClient serviceBusClient) : IMessageBus
+internal class AzureServiceBusMessageBus(ILoggerFactory loggerFactory, ServiceBusClient serviceBusClient) : IMessageBus
 {
+    // This class uses a logger factory so that it can generate the typed loggers
+    // needed by the message senders and processors it creates.
     readonly ILogger<AzureServiceBusMessageBus> logger = loggerFactory.CreateLogger<AzureServiceBusMessageBus>();
 
     public IMessageSender<T> CreateMessageSender<T>(string path)
     {
         logger.LogDebug("Creating message sender for {Namespace}/{Path}.", serviceBusClient.FullyQualifiedNamespace, path);
+
+        // Create an AzureServiceBusMessageSender for the given queue/topic path that can be used to publish messages
         var sender = serviceBusClient.CreateSender(path);
         return new AzureServiceBusMessageSender<T>(loggerFactory.CreateLogger<AzureServiceBusMessageSender<T>>(), sender);
     }
@@ -24,6 +28,7 @@ public class AzureServiceBusMessageBus(ILoggerFactory loggerFactory, ServiceBusC
     {
         logger.LogDebug("Subscribing to messages from {Namespace}/{Path}.", serviceBusClient.FullyQualifiedNamespace, path);
         
+        // Create a processor for the given queue that will process incoming messages
         var processor = serviceBusClient.CreateProcessor(path, new ServiceBusProcessorOptions
         {
             // Allow the messages to be auto-completed if processing finishes without failure

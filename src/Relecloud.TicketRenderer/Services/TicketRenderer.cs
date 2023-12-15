@@ -6,7 +6,7 @@ namespace Relecloud.TicketRenderer.Services
     /// <summary>
     /// Creates a ticket image from a ticket render request event.
     /// </summary>
-    public class TicketRenderer(ILogger<TicketRenderer> logger, IImageStorage imageStorage) : ITicketRenderer
+    internal class TicketRenderer(ILogger<TicketRenderer> logger, IImageStorage imageStorage) : ITicketRenderer
     {
         // Default ticket image name format string (in case no path is specified).
         private const string TicketNameFormatString = "ticket-{0}.png";
