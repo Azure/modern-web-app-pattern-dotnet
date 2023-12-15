@@ -14,7 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		global.json = global.json
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Relecloud.TicketRenderer", "Relecloud.TicketRenderer\Relecloud.TicketRenderer.csproj", "{3176F234-AC26-4890-8352-F200EC73FEFB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.TicketRenderer", "Relecloud.TicketRenderer\Relecloud.TicketRenderer.csproj", "{3176F234-AC26-4890-8352-F200EC73FEFB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,6 +34,10 @@ Global
 		{0B28CA97-C813-41B7-A415-EFDCA4FB372E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0B28CA97-C813-41B7-A415-EFDCA4FB372E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0B28CA97-C813-41B7-A415-EFDCA4FB372E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3176F234-AC26-4890-8352-F200EC73FEFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3176F234-AC26-4890-8352-F200EC73FEFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3176F234-AC26-4890-8352-F200EC73FEFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3176F234-AC26-4890-8352-F200EC73FEFB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
