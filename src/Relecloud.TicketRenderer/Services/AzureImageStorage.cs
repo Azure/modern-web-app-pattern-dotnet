@@ -4,9 +4,10 @@ using Relecloud.TicketRenderer.Models;
 
 namespace Relecloud.TicketRenderer.Services;
 
-public class AzureImageStorage(ILogger<AzureImageStorage> logger, BlobServiceClient blobServiceClient, IOptionsMonitor<AzureStorageOptions> options) : IImageStorage
+internal class AzureImageStorage(ILogger<AzureImageStorage> logger, BlobServiceClient blobServiceClient, IOptionsMonitor<AzureStorageOptions> options) : IImageStorage
 {
-    public async Task<bool> StoreImageAsync(MemoryStream image, string path, CancellationToken cancellationToken)
+    
+    public async Task<bool> StoreImageAsync(Stream image, string path, CancellationToken cancellationToken)
     {
         var blobContainer = blobServiceClient.GetBlobContainerClient(options.CurrentValue.Container);
         var response = await blobContainer.UploadBlobAsync(path, image, cancellationToken);

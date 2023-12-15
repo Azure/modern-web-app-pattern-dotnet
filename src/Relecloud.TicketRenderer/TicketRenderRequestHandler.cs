@@ -5,7 +5,7 @@ using Relecloud.TicketRenderer.Services;
 
 namespace Relecloud.TicketRenderer;
 
-public sealed class TicketRenderRequestHandler(
+internal sealed class TicketRenderRequestHandler(
     ILogger<TicketRenderRequestHandler> logger, 
     IOptions<AzureServiceBusOptions> options,
     IMessageBus messageBus, 
