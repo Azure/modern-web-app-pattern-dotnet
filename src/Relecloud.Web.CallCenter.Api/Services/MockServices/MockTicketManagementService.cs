@@ -1,5 +1,5 @@
-﻿using Relecloud.Web.Api.Services.TicketManagementService;
-using Relecloud.Models.TicketManagement;
+﻿using Relecloud.Models.TicketManagement;
+using Relecloud.Web.Api.Services.TicketManagementService;
 
 namespace Relecloud.Web.Api.Services.MockServices
 {

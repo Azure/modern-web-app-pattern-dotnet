@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
-
 using System.Net.Http.Headers;
 
 namespace Relecloud.Web.CallCenter.Services.RelecloudApiServices;

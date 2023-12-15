@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-
 using Relecloud.Web.Api.Services.TicketManagementService;
 
 namespace Relecloud.Web.Controllers

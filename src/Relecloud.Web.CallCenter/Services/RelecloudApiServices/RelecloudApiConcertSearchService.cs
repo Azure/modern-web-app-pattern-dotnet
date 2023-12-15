@@ -1,6 +1,6 @@
-﻿using Relecloud.Web.CallCenter.Infrastructure;
-using Relecloud.Models.Search;
+﻿using Relecloud.Models.Search;
 using Relecloud.Models.Services;
+using Relecloud.Web.CallCenter.Infrastructure;
 using System.Net;
 using System.Text.Json;
 

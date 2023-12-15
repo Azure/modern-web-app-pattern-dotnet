@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
-using Relecloud.Web.CallCenter.Infrastructure;
 using Relecloud.Models.TicketManagement;
+using Relecloud.Web.CallCenter.Infrastructure;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;

@@ -8,13 +8,13 @@ using Microsoft.Net.Http.Headers;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
+using Relecloud.Models.ConcertContext;
+using Relecloud.Models.Services;
 using Relecloud.Web.CallCenter.Infrastructure;
 using Relecloud.Web.CallCenter.Services;
 using Relecloud.Web.CallCenter.Services.ApiConcertService;
 using Relecloud.Web.CallCenter.Services.MockServices;
 using Relecloud.Web.CallCenter.Services.RelecloudApiServices;
-using Relecloud.Models.ConcertContext;
-using Relecloud.Models.Services;
 using System.Diagnostics;
 
 namespace Relecloud.Web

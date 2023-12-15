@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
 using Relecloud.Web.CallCenter.Services;
 
 namespace Relecloud.Web.CallCenter.Controllers;

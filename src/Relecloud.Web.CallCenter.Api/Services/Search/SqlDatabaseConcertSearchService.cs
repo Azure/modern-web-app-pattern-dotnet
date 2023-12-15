@@ -1,7 +1,7 @@
-using Relecloud.Web.Api.Services.SqlDatabaseConcertRepository;
 using Relecloud.Models.ConcertContext;
 using Relecloud.Models.Search;
 using Relecloud.Models.Services;
+using Relecloud.Web.Api.Services.SqlDatabaseConcertRepository;
 
 namespace Relecloud.Web.Api.Services.Search
 {
