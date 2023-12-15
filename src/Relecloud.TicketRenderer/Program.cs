@@ -25,6 +25,8 @@ builder.Services.AddApplicationInsightsTelemetry(options =>
 });
 
 // Add health checks, including health checks for Azure services that are used by this service.
+// The Blob Storage and Service Bus health checks are provided by AspNetCore.Diagnostics.HealthChecks
+// (a popular open source project) rather than by Microsoft. https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks
 builder.Services.AddHealthChecks()
     .AddAzureBlobStorage(options =>
     {

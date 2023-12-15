@@ -38,6 +38,8 @@ namespace Relecloud.TicketRenderer.Services
             }
 
             // Generate Skia assets for creating the image.
+            // SkiaSharp is a recommended cross-platform third-party open source alternative to System.Drawing which works.
+            // See https://learn.microsoft.com/dotnet/core/compatibility/core-libraries/6.0/system-drawing-common-windows-only#recommended-action
             using var headerFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 18);
             using var textFont = new SKFont(SKTypeface.FromFamilyName("Arial"), 12);
             using var bluePaint = new SKPaint { Color = SKColors.DarkSlateBlue, Style = SKPaintStyle.StrokeAndFill, IsAntialias = true };
