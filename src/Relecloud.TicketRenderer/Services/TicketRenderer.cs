@@ -7,7 +7,9 @@ namespace Relecloud.TicketRenderer.Services
 {
     public class TicketRenderer(ILogger<TicketRenderer> logger, IImageStorage imageStorage) : ITicketRenderer
     {
-        public async Task RenderTicketAsync(TicketRenderRequestEvent request, CancellationToken cancellationToken)
+        private const string TicketNameFormatString = "ticket-{0}.png";
+
+        public async Task<string?> RenderTicketAsync(TicketRenderRequestEvent request, CancellationToken cancellationToken)
         {
             logger.LogInformation("Rendering ticket {ticket} for event {event}", request.Ticket?.Id.ToString() ?? "<null>", request.EventId);
             var ticketImageBlob = new MemoryStream();
@@ -15,22 +17,22 @@ namespace Relecloud.TicketRenderer.Services
             if (request.Ticket == null)
             {
                 logger.LogWarning("Nothing to render for null ticket");
-                return;
+                return null;
             }
             if (request.Ticket.Concert == null)
             {
                 logger.LogWarning("Cannot find the concert related to this ticket");
-                return;
+                return null;
             }
             if (request.Ticket.User == null)
             {
                 logger.LogWarning("Cannot find the user related to this ticket");
-                return;
+                return null;
             }
             if (request.Ticket.Customer == null)
             {
                 logger.LogWarning("Cannot find the customer related to this ticket");
-                return;
+                return null;
             }
 
             // TODO - Replace with Linux friendly alternative
@@ -62,7 +64,18 @@ namespace Relecloud.TicketRenderer.Services
                 ticketImageBlob.Position = 0;
             }
 
-            await imageStorage.StoreImageAsync(ticketImageBlob, request.PathName, cancellationToken);
+            var outputPath = string.IsNullOrEmpty(request.PathName)
+                ? string.Format(TicketNameFormatString, request.Ticket.Id)
+                : request.PathName;
+            if (await imageStorage.StoreImageAsync(ticketImageBlob, outputPath, cancellationToken))
+            {
+                return outputPath;
+            }
+            else
+            {
+                logger.LogError("Failed to store image for ticket {TicketId}", request.Ticket.Id);
+                return null;
+            }
         }
     }
 }

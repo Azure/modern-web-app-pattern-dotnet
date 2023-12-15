@@ -34,7 +34,7 @@ builder.Services.AddHealthChecks()
     })
     .AddAzureServiceBusQueue(
         builder.Configuration.GetConfigurationValue("App:ServiceBus:Namespace"),
-        builder.Configuration.GetConfigurationValue("App:ServiceBus:QueueName"),
+        builder.Configuration.GetConfigurationValue("App:ServiceBus:RenderRequestQueueName"),
         azureCredentials);
 
 builder.Services.ConfigureHttpClientDefaults(httpConfiguration =>

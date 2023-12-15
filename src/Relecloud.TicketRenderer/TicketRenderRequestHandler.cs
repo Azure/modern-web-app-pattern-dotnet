@@ -1,4 +1,3 @@
-using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Options;
 using Relecloud.Models.Events;
 using Relecloud.TicketRenderer.Models;
@@ -9,57 +8,39 @@ namespace Relecloud.TicketRenderer;
 public sealed class TicketRenderRequestHandler(
     ILogger<TicketRenderRequestHandler> logger, 
     IOptions<AzureServiceBusOptions> options,
-    ServiceBusClient serviceBusClient, 
+    IMessageBus messageBus, 
     ITicketRenderer ticketRenderer) : IHostedService, IAsyncDisposable
 {
-    private ServiceBusProcessor? processor;
+    private IMessageProcessor? processor;
+    private IMessageSender<TicketRenderCompleteEvent>? sender;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         logger.LogDebug("TicketRenderRequestHandler is starting");
 
-        processor = serviceBusClient.CreateProcessor(options.Value.QueueName, new ServiceBusProcessorOptions
+        if (options.Value.RenderRequestQueueName is null)
         {
-            // Allow the messages to be auto-completed if processing finishes without failure
-            AutoCompleteMessages = true,
+            logger.LogWarning("No queue name was specified. TicketRenderRequestHandler will not start.");
+            return;
+        }
 
-            // PeekLock mode provides reliability in that unsettled messages will be redelivered on failure
-            ReceiveMode = ServiceBusReceiveMode.PeekLock,
+        if (!string.IsNullOrEmpty(options.Value.RenderedTicketTopicName))
+        {
+            sender = messageBus.CreateMessageSender<TicketRenderCompleteEvent>(options.Value.RenderedTicketTopicName);
+        }
 
-            // Containerized processors can scale at the container level and need not scale via the processor options
-            MaxConcurrentCalls = 1,
-            PrefetchCount = 0
-        });
-
-        processor.ProcessMessageAsync += HandleMessage;
-        processor.ProcessErrorAsync += HandleError;
-
-        await processor.StartProcessingAsync(cancellationToken);
-    }
-
-    private async Task HandleMessage(ProcessMessageEventArgs args)
-    {
-        logger.LogInformation("Processing message {MessageId} from Azure Service Bus {ServiceBusNamespace}", args.Message.MessageId, args.FullyQualifiedNamespace);
-
-        // Unhandled exceptions in the handler will be caught by the processor and result in abandoning and dead-lettering the message
-        var renderRequest = args.Message.Body.ToObjectFromJson<TicketRenderRequestEvent>()
-            ?? throw new InvalidOperationException("Message body is not a valid TicketRenderRequestEvent");
-
-        await ticketRenderer.RenderTicketAsync(renderRequest, args.CancellationToken);
-        logger.LogInformation("Successfully processed message {MessageId} from Azure Service Bus {ServiceBusNamespace}", args.Message.MessageId, args.FullyQualifiedNamespace);
-    }
-
-    private Task HandleError(ProcessErrorEventArgs args)
-    {
-        logger.LogError(
-            args.Exception, 
-            "Error processing message from Azure Service Bus {ServiceBusNamespace} (entity {EntityPath}): {ErrorSource} - {Exception}", 
-            args.FullyQualifiedNamespace, 
-            args.EntityPath, 
-            args.ErrorSource,
-            args.Exception);
-
-        return Task.CompletedTask;
+        var processor = await messageBus.SubscribeAsync<TicketRenderRequestEvent>(
+            async (request, cancellationToken) =>
+            {
+                var outputPath = await ticketRenderer.RenderTicketAsync(request, cancellationToken);
+                if (outputPath is not null && sender is not null)
+                {
+                    await sender.PublishAsync(new TicketRenderCompleteEvent(Guid.NewGuid(), request.Ticket.Id, outputPath, DateTime.Now), cancellationToken);
+                }
+            },
+            null, 
+            options.Value.RenderRequestQueueName, 
+            cancellationToken);
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
@@ -68,16 +49,29 @@ public sealed class TicketRenderRequestHandler(
 
         if (processor is not null)
         {
-            await processor.StopProcessingAsync(cancellationToken);
+            await processor.StopAsync(cancellationToken);
+        }
+
+        if (sender is not null)
+        {
+            await sender.CloseAsync(cancellationToken);
         }
     }
 
+    // Cleanup IAsyncDisposable dependencies
+    // as per https://learn.microsoft.com/dotnet/standard/garbage-collection/implementing-disposeasync#sealed-alternative-async-dispose-pattern
     public async ValueTask DisposeAsync()
     {
         if (processor is not null)
         {
             await processor.DisposeAsync();
             processor = null;
+        }
+
+        if (sender is not null)
+        {
+            await sender.DisposeAsync();
+            sender = null;
         }
     }
 }

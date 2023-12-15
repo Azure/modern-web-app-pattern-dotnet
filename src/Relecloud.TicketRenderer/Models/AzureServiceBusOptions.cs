@@ -8,5 +8,9 @@ public class AzureServiceBusOptions
     public string? Namespace { get; set; }
 
     [Required]
-    public string? QueueName { get; set; }
+    public string? RenderRequestQueueName { get; set; }
+
+    // This property is only required if events should be generated
+    // when ticket images are produced.
+    public string? RenderedTicketTopicName { get; set; }
 }

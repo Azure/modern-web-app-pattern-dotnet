@@ -26,6 +26,7 @@ internal static class Extensions
         builder.Services.AddHostedService<TicketRenderRequestHandler>();
         builder.Services.AddSingleton<IImageStorage, AzureImageStorage>();
         builder.Services.AddSingleton<ITicketRenderer, Services.TicketRenderer>();
+        builder.Services.AddSingleton<IMessageBus, AzureServiceBusMessageBus>();
     }
 
     public static void AddAzureAppConfiguration(this WebApplicationBuilder builder, TokenCredential credential)

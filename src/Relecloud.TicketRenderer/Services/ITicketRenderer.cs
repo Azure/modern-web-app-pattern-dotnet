@@ -4,5 +4,5 @@ namespace Relecloud.TicketRenderer.Services;
 
 public interface ITicketRenderer
 {
-    Task RenderTicketAsync(TicketRenderRequestEvent request, CancellationToken cancellation);
+    Task<string?> RenderTicketAsync(TicketRenderRequestEvent request, CancellationToken cancellation);
 }
