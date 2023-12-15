@@ -8,6 +8,7 @@ using Relecloud.Web.Api.Services.Search;
 using Relecloud.Web.Api.Services.SqlDatabaseConcertRepository;
 using Relecloud.Web.Api.Services.TicketManagementService;
 using Relecloud.Web.CallCenter.Api.Infrastructure;
+using Relecloud.Models.Services;
 using Relecloud.Web.Models.Services;
 using Relecloud.Web.Services.Search;
 using System.Diagnostics;

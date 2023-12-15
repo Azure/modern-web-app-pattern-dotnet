@@ -1,4 +1,4 @@
-﻿using Relecloud.Web.Models.ConcertContext;
+﻿using Relecloud.Models.ConcertContext;
 
 namespace Relecloud.Web.CallCenter.ViewModels
 {

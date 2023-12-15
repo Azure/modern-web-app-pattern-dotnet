@@ -13,8 +13,8 @@ using Relecloud.Web.CallCenter.Services;
 using Relecloud.Web.CallCenter.Services.ApiConcertService;
 using Relecloud.Web.CallCenter.Services.MockServices;
 using Relecloud.Web.CallCenter.Services.RelecloudApiServices;
-using Relecloud.Web.Models.ConcertContext;
-using Relecloud.Web.Models.Services;
+using Relecloud.Models.ConcertContext;
+using Relecloud.Models.Services;
 using System.Diagnostics;
 
 namespace Relecloud.Web

@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Relecloud.Web.CallCenter.Infrastructure;
 using Relecloud.Web.CallCenter.ViewModels;
-using Relecloud.Web.Models.ConcertContext;
-using Relecloud.Web.Models.Search;
-using Relecloud.Web.Models.Services;
+using Relecloud.Models.ConcertContext;
+using Relecloud.Models.Search;
+using Relecloud.Models.Services;
 
 namespace Relecloud.Web.CallCenter.Controllers
 {
