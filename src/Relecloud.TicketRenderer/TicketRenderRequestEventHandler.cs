@@ -8,8 +8,8 @@ namespace Relecloud.TicketRenderer;
 /// <summary>
 /// Background service that handles requests to render ticket images.
 /// </summary>
-internal sealed class TicketRenderRequestHandler(
-    ILogger<TicketRenderRequestHandler> logger, 
+internal sealed class TicketRenderRequestEventHandler(
+    ILogger<TicketRenderRequestEventHandler> logger, 
     IOptions<AzureServiceBusOptions> options,
     IMessageBus messageBus, 
     ITicketRenderer ticketRenderer) : IHostedService, IAsyncDisposable

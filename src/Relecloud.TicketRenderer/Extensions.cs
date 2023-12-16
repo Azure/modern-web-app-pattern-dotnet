@@ -9,7 +9,7 @@ namespace Relecloud.TicketRenderer;
 internal static class Extensions
 {
     // Helper method to retrieve a configuration value with validation that the value is not null or empty.
-    public static string GetConfigurationValue(this IConfiguration configuration, string key)
+    public static string GetRequiredConfigurationValue(this IConfiguration configuration, string key)
     {
         var value = configuration[key];
         if (string.IsNullOrWhiteSpace(value))
@@ -21,7 +21,7 @@ internal static class Extensions
 
     public static void AddTicketRenderingServices(this WebApplicationBuilder builder)
     {
-        builder.Services.AddHostedService<TicketRenderRequestHandler>();
+        builder.Services.AddHostedService<TicketRenderRequestEventHandler>();
         builder.Services.AddSingleton<IImageStorage, AzureImageStorage>();
         builder.Services.AddSingleton<ITicketRenderer, Services.TicketRenderer>();
         builder.Services.AddSingleton<IMessageBus, AzureServiceBusMessageBus>();
