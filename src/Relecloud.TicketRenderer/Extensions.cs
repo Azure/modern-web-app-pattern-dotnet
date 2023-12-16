@@ -66,7 +66,7 @@ internal static class Extensions
         {
             clientConfiguration.UseCredential(credential);
 
-            var storageOptions = builder.Configuration.GetSection("App:StorageAccount").Get<AzureStorageOptions>()
+            var storageOptions = builder.Configuration.GetRequiredSection("App:StorageAccount").Get<AzureStorageOptions>()
                 ?? throw new InvalidOperationException("Storage options (App:StorageAccount) not found");
 
             if (storageOptions.Uri is null)
@@ -74,7 +74,7 @@ internal static class Extensions
                 throw new InvalidOperationException("Storage options (App:StorageAccount:Uri) not found");
             }
 
-            var serviceBusOptions = builder.Configuration.GetSection("App:ServiceBus").Get<AzureServiceBusOptions>()
+            var serviceBusOptions = builder.Configuration.GetRequiredSection("App:ServiceBus").Get<AzureServiceBusOptions>()
                 ?? throw new InvalidOperationException("Service Bus options (App:ServiceBus) not found");
 
             var resilienceOptions = builder.Configuration.GetSection("App:Resilience").Get<ResilienceOptions>()
