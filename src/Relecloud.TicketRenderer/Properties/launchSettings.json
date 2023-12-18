@@ -13,7 +13,7 @@
       "environmentVariables": {
         "ASPNETCORE_HTTP_PORTS": "8080"
       },
-      "publishAllPorts": true
+      "DockerfileRunArguments": "-p 5050:8080"
     }
   }
 }
