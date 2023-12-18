@@ -37,8 +37,6 @@ We recommend that you use a Dev Container to deploy this application.  The requi
 
 If you do not wish to use a Dev Container, please refer to the [prerequisites](prerequisites.md) for detailed information on how to set up your development system to build, run, and deploy the application.
 
-> ⚠️ We are using version 1.3.0 for AZD while awaiting feedback on a known bicep issue.
-
 ## Steps to deploy the reference implementation
 
 This section describes the deployment steps for the reference implementation of a modern web application pattern with .NET on Microsoft Azure. There are nine steps, including teardown.
