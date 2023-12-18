@@ -16,7 +16,7 @@ RUN dotnet publish "./Relecloud.TicketRenderer.csproj" -c $BUILD_CONFIGURATION -
 
 ## Runtime Stage
 # Chiseled images contain only the minimal set of packages needed for .NET 8.0
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy AS final
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy-chiseled AS final
 WORKDIR /app
 EXPOSE 8080
 
