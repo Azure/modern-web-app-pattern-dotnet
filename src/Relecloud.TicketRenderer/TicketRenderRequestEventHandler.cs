@@ -34,7 +34,7 @@ internal sealed class TicketRenderRequestEventHandler(
         }
 
         // Initialize the message processor to listen for ticket render requests.
-        var processor = await messageBus.SubscribeAsync<TicketRenderRequestEvent>(
+        processor = await messageBus.SubscribeAsync<TicketRenderRequestEvent>(
             async (request, cancellationToken) =>
             {
                 // Render the ticket image and get the path it was written to.
