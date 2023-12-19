@@ -56,7 +56,7 @@ namespace Relecloud.TicketRenderer.Services
             // Print concert details.
             canvas.DrawText(SKTextBlob.Create(request.Ticket.Concert.Artist, headerFont), 10, 30, bluePaint);
             canvas.DrawText(SKTextBlob.Create($"{request.Ticket.Concert.Location}   |   {request.Ticket.Concert.StartTime.UtcDateTime}", textFont), 10, 50, grayPaint);
-            canvas.DrawText(SKTextBlob.Create($"{request.Ticket.Customer.Email}   |   {request.Ticket.Concert.Price:c}", textFont), 10, 70, grayPaint);
+            canvas.DrawText(SKTextBlob.Create($"{request.Ticket.Customer.Email}   |   ${request.Ticket.Concert.Price:F2}", textFont), 10, 70, grayPaint);
 
             // Print a fake barcode.
             var random = new Random();
