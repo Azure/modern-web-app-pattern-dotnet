@@ -11,8 +11,8 @@ internal class AzureImageStorage(ILogger<AzureImageStorage> logger, BlobServiceC
 {
     public async Task<bool> StoreImageAsync(Stream image, string path, CancellationToken cancellationToken)
     {
-        var blobContainer = blobServiceClient.GetBlobContainerClient(options.CurrentValue.Container);
-        var response = await blobContainer.UploadBlobAsync(path, image, cancellationToken);
+        var blobClient = blobServiceClient.GetBlobContainerClient(options.CurrentValue.Container).GetBlobClient(path);
+        var response = await blobClient.UploadAsync(image, overwrite: true, cancellationToken);
 
         if (response.GetRawResponse().IsError)
         {
