@@ -3,18 +3,24 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32104.313
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.CallCenter", "Relecloud.Web.CallCenter\Relecloud.Web.CallCenter.csproj", "{2A48F2D7-51D1-4C69-8E7E-3F7A6E4F7BED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.CallCenter", "src\Relecloud.Web.CallCenter\Relecloud.Web.CallCenter.csproj", "{2A48F2D7-51D1-4C69-8E7E-3F7A6E4F7BED}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Models", "Relecloud.Models\Relecloud.Models.csproj", "{257EA44D-0632-4029-ADD9-92EDD4B70931}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Models", "src\Relecloud.Models\Relecloud.Models.csproj", "{257EA44D-0632-4029-ADD9-92EDD4B70931}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.CallCenter.Api", "Relecloud.Web.CallCenter.Api\Relecloud.Web.CallCenter.Api.csproj", "{0B28CA97-C813-41B7-A415-EFDCA4FB372E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.CallCenter.Api", "src\Relecloud.Web.CallCenter.Api\Relecloud.Web.CallCenter.Api.csproj", "{0B28CA97-C813-41B7-A415-EFDCA4FB372E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FDD97D72-A655-45EB-8709-0E5265C12BE0}"
 	ProjectSection(SolutionItems) = preProject
 		global.json = global.json
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.TicketRenderer", "Relecloud.TicketRenderer\Relecloud.TicketRenderer.csproj", "{3176F234-AC26-4890-8352-F200EC73FEFB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.TicketRenderer", "src\Relecloud.TicketRenderer\Relecloud.TicketRenderer.csproj", "{3176F234-AC26-4890-8352-F200EC73FEFB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{13980BA0-4ECE-4914-BE75-C304BFC41F9E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.TicketRenderer.Tests", "tests\Relecloud.TicketRenderer.Tests\Relecloud.TicketRenderer.Tests.csproj", "{909B1F53-AF7E-4B6A-8DCC-C878FDF3CCE3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{92CB9EA9-42CD-4D69-8C98-965D0074431C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,9 +44,20 @@ Global
 		{3176F234-AC26-4890-8352-F200EC73FEFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3176F234-AC26-4890-8352-F200EC73FEFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3176F234-AC26-4890-8352-F200EC73FEFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{909B1F53-AF7E-4B6A-8DCC-C878FDF3CCE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{909B1F53-AF7E-4B6A-8DCC-C878FDF3CCE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{909B1F53-AF7E-4B6A-8DCC-C878FDF3CCE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{909B1F53-AF7E-4B6A-8DCC-C878FDF3CCE3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2A48F2D7-51D1-4C69-8E7E-3F7A6E4F7BED} = {92CB9EA9-42CD-4D69-8C98-965D0074431C}
+		{257EA44D-0632-4029-ADD9-92EDD4B70931} = {92CB9EA9-42CD-4D69-8C98-965D0074431C}
+		{0B28CA97-C813-41B7-A415-EFDCA4FB372E} = {92CB9EA9-42CD-4D69-8C98-965D0074431C}
+		{3176F234-AC26-4890-8352-F200EC73FEFB} = {92CB9EA9-42CD-4D69-8C98-965D0074431C}
+		{909B1F53-AF7E-4B6A-8DCC-C878FDF3CCE3} = {13980BA0-4ECE-4914-BE75-C304BFC41F9E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A0C384B5-59E7-474A-A07D-F48D883CA4F8}
