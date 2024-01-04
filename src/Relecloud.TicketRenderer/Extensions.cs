@@ -25,6 +25,7 @@ internal static class Extensions
         builder.Services.AddSingleton<IImageStorage, AzureImageStorage>();
         builder.Services.AddSingleton<ITicketRenderer, Services.TicketRenderer>();
         builder.Services.AddSingleton<IMessageBus, AzureServiceBusMessageBus>();
+        builder.Services.AddTransient<IBarcodeGenerator>(_ => new RandomBarcodeGenerator(615));
     }
 
     public static void AddAzureAppConfiguration(this WebApplicationBuilder builder, TokenCredential credential)

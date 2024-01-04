@@ -31,4 +31,9 @@
     <ProjectReference Include="..\..\src\Relecloud.TicketRenderer\Relecloud.TicketRenderer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+	<None Remove="ExpectedImages\*.png" />
+	<EmbeddedResource Include="ExpectedImages\*.png" />
+  </ItemGroup>
+	
 </Project>
