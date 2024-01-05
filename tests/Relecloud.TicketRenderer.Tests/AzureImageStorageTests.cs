@@ -11,9 +11,11 @@ public class AzureImageStorageTests
     {
         // Arrange
         var logger = Substitute.For<ILogger<AzureImageStorage>>();
+        var blobClient = Substitute.For<BlobClient>();
         var blobContainerClient = Substitute.For<BlobContainerClient>();
+        blobContainerClient.GetBlobClient("test-path").Returns(blobClient);
         var blobServiceClient = Substitute.For<BlobServiceClient>();
-        blobServiceClient.GetBlobContainerClient(Arg.Any<string>()).Returns(blobContainerClient);
+        blobServiceClient.GetBlobContainerClient("test-container").Returns(blobContainerClient);
 
         var options = Substitute.For<IOptionsMonitor<AzureStorageOptions>>();
         options.CurrentValue.Returns(new AzureStorageOptions
@@ -31,8 +33,7 @@ public class AzureImageStorageTests
         await imageStorage.StoreImageAsync(imageStream, "test-path", ct);
 
         // Assert
-        blobServiceClient.Received(1).GetBlobContainerClient("test-container");
-        await blobContainerClient.Received(1).UploadBlobAsync("test-path", imageStream, ct);
+        await blobClient.Received(1).UploadAsync(imageStream, true, ct);
     }
 
     [Theory]
@@ -49,11 +50,14 @@ public class AzureImageStorageTests
         var response = Substitute.For<Response<BlobContentInfo>>();
         response.GetRawResponse().Returns(rawResponse);
 
+        var blobClient = Substitute.For<BlobClient>();
+        blobClient.UploadAsync(Arg.Any<Stream>(), Arg.Any<bool>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(response));
+
         var blobContainerClient = Substitute.For<BlobContainerClient>();
-        blobContainerClient.UploadBlobAsync(Arg.Any<string>(), Arg.Any<Stream>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(response));
+        blobContainerClient.GetBlobClient("test-path").Returns(blobClient);
 
         var blobServiceClient = Substitute.For<BlobServiceClient>();
-        blobServiceClient.GetBlobContainerClient(Arg.Any<string>()).Returns(blobContainerClient);
+        blobServiceClient.GetBlobContainerClient("test-container").Returns(blobContainerClient);
 
         var options = Substitute.For<IOptionsMonitor<AzureStorageOptions>>();
         options.CurrentValue.Returns(new AzureStorageOptions
