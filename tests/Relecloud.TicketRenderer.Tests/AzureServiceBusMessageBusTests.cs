@@ -46,23 +46,26 @@ public class AzureServiceBusMessageBusTests
         Assert.Equal(ct, serviceBusProcessor.StartProcessing_CancellationToken);
     }
 
-    [InlineData(true)]
-    [InlineData(false)]
+    [InlineData(true, true)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(false, false)]
     [Theory]
-    public async Task SubscribeAsync_UsesHandlers(bool includeErrorHandler)
+    public async Task SubscribeAsync_UsesHandlers(bool includeErrorHandler, bool validMessage)
     {
         // Arrange
         var path = "TestPath";
         var messageHandlerCalled = 0;
         var errorHandlerCalled = 0;
         var serviceBusProcessor = new TestServiceBusProcessor();
+        var serviceBusReceiver = new TestServiceBusReceiver();
         var serviceBusClient = Substitute.For<ServiceBusClient>();
         serviceBusClient.CreateProcessor(path, Arg.Any<ServiceBusProcessorOptions>()).Returns(serviceBusProcessor);
         var logger = Substitute.For<ILoggerFactory>();
         var messageBus = new AzureServiceBusMessageBus(logger, serviceBusClient);
 
         var exception = new Exception();
-        var message = CreateMessage("TestMessage");
+        var message = validMessage ? CreateMessage("TestMessage") : CreateInvalidMessage();
         string? messageReceived = null;
         Exception? exceptionReceived = null;
 
@@ -73,12 +76,22 @@ public class AzureServiceBusMessageBusTests
             path,
             CancellationToken.None);
 
-        await serviceBusProcessor.SimulateMessageAsync(new ProcessMessageEventArgs(message, new TestServiceBusReceiver(), null, CancellationToken.None));
         await serviceBusProcessor.SimulateErrorAsync(new ProcessErrorEventArgs(exception, ServiceBusErrorSource.Receive, "TestNamespace", "TestPath", CancellationToken.None));
+        await serviceBusProcessor.SimulateMessageAsync(new ProcessMessageEventArgs(message, serviceBusReceiver, null, CancellationToken.None));
 
         // Assert
-        Assert.Equal(1, messageHandlerCalled);
-        Assert.Equal("TestMessage", messageReceived);
+        if (validMessage)
+        {
+            Assert.Equal(1, messageHandlerCalled);
+            Assert.Empty(serviceBusReceiver.DeadLetters);
+            Assert.Equal("TestMessage", messageReceived);
+        }
+        else
+        {
+            Assert.Equal(0, messageHandlerCalled);
+            Assert.Collection(serviceBusReceiver.DeadLetters, m => Assert.Equal(message, m));
+            Assert.Null(messageReceived);
+        }
 
         if (includeErrorHandler)
         {
@@ -96,6 +109,12 @@ public class AzureServiceBusMessageBusTests
     {
         var data = BinaryData.FromObjectAsJson(body);
         var amqpMessage = new AmqpAnnotatedMessage(AmqpMessageBody.FromData(new[] { data.ToMemory() }));
+        return ServiceBusReceivedMessage.FromAmqpMessage(amqpMessage, new BinaryData(Array.Empty<byte>()));
+    }
+
+    public static ServiceBusReceivedMessage CreateInvalidMessage()
+    {
+        var amqpMessage = new AmqpAnnotatedMessage(AmqpMessageBody.FromData(new[] { new ReadOnlyMemory<byte>([0x00, 0x00, 0xBB, 0xBB]) }));
         return ServiceBusReceivedMessage.FromAmqpMessage(amqpMessage, new BinaryData(Array.Empty<byte>()));
     }
 }

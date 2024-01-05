@@ -1,4 +1,5 @@
 ﻿using Azure.Messaging.ServiceBus;
+using System.Text.Json;
 
 namespace Relecloud.TicketRenderer.Services;
 
@@ -48,11 +49,17 @@ internal class AzureServiceBusMessageBus(ILoggerFactory loggerFactory, ServiceBu
             logger.LogInformation("Processing message {MessageId} from {ServiceBusNamespace}/{Path}", args.Message.MessageId, args.FullyQualifiedNamespace, args.EntityPath);
 
             // Unhandled exceptions in the handler will be caught by the processor and result in abandoning and dead-lettering the message
-            var message = args.Message.Body.ToObjectFromJson<T>()
-                ?? throw new InvalidOperationException($"Message body is not a valid {typeof(T).FullName}");
-
-            await messageHandler(message, args.CancellationToken);
-            logger.LogInformation("Successfully processed message {MessageId} from {ServiceBusNamespace}/{Path}", args.Message.MessageId, args.FullyQualifiedNamespace, args.EntityPath);
+            try
+            {
+                var message = args.Message.Body.ToObjectFromJson<T>();
+                await messageHandler(message, args.CancellationToken);
+                logger.LogInformation("Successfully processed message {MessageId} from {ServiceBusNamespace}/{Path}", args.Message.MessageId, args.FullyQualifiedNamespace, args.EntityPath);
+            }
+            catch (JsonException)
+            {
+                logger.LogError("Invalid message body; could not be deserialized to {Type}", typeof(T));
+                await args.DeadLetterMessageAsync(args.Message, $"Invalid message body; could not be deserialized to {typeof(T)}", cancellationToken: args.CancellationToken);
+            }
         };
 
         // Called when an unhandled exception occurs in the processor
