@@ -16,7 +16,7 @@ TokenCredential azureCredentials = builder.Configuration["App:AzureCredentialTyp
 {
     "AzureCLI" => new AzureCliCredential(),
     "Environment" => new EnvironmentCredential(),
-    "ManagedIdentity" => new ManagedIdentityCredential(),
+    "ManagedIdentity" => new ManagedIdentityCredential(builder.Configuration["AZURE_CLIENT_ID"]),
     "VisualStudio" => new VisualStudioCredential(),
     "VisualStudioCode" => new VisualStudioCodeCredential(),
     _ => new DefaultAzureCredential()
