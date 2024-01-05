@@ -5,4 +5,5 @@ global using Relecloud.Models.ConcertContext;
 global using Relecloud.Models.Events;
 global using Relecloud.TicketRenderer.Models;
 global using Relecloud.TicketRenderer.Services;
+global using Relecloud.TicketRenderer.Tests.TestHelpers;
 global using Xunit;

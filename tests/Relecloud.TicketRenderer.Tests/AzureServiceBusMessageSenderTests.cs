@@ -1,5 +1,4 @@
 ﻿using Azure.Messaging.ServiceBus;
-using NSubstitute.Exceptions;
 
 namespace Relecloud.TicketRenderer.Tests;
 

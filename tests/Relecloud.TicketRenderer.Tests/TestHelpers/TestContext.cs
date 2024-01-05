@@ -1,4 +1,4 @@
-﻿namespace Relecloud.TicketRenderer.Tests;
+﻿namespace Relecloud.TicketRenderer.Tests.TestHelpers;
 
 internal class TestContext
 {
@@ -27,7 +27,7 @@ internal class TestContext
 
         Logger = logger
             ?? Substitute.For<ILogger<TicketRenderRequestEventHandler>>();
-        
+
         Processor = processor
             ?? Substitute.For<IMessageProcessor>();
 
@@ -39,7 +39,7 @@ internal class TestContext
             MessageBus = messageBus;
         }
         else
-        {    
+        {
             MessageBus = Substitute.For<IMessageBus>();
             MessageBus.SubscribeAsync(
                 Arg.Any<Func<TicketRenderRequestEvent, CancellationToken, Task>>(),
