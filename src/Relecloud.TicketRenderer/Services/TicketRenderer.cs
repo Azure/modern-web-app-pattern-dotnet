@@ -60,7 +60,6 @@ namespace Relecloud.TicketRenderer.Services
 
             // Print a fake barcode.
             var barcode = barcodeGenerator.GenerateBarcode(request.Ticket).GetEnumerator();
-            var random = new Random();
             var offset = 15;
 
             while (barcode.MoveNext())

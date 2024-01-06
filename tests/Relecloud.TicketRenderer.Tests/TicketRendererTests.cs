@@ -1,6 +1,5 @@
-﻿using System.Reflection;
-using System.Runtime.InteropServices;
-using Renderer = Relecloud.TicketRenderer.Services.TicketRenderer;
+﻿using Renderer = Relecloud.TicketRenderer.Services.TicketRenderer;
+
 namespace Relecloud.TicketRenderer.Tests;
 
 public class TicketRendererTests
@@ -55,7 +54,7 @@ public class TicketRendererTests
     public async Task RenderTicketAsync_StoreImageWithCorrectData()
     {
         // Arrange
-        var expectedImage = GetImageStream();
+        var expectedImage = RelecloudTestHelpers.GetTestImageStream();
         var imagesEquivalent = false;
         var request = new TicketRenderRequestEvent(
             Guid.NewGuid(), 
@@ -81,7 +80,7 @@ public class TicketRendererTests
         {
             // When StoreImageAsync is called, assert that the image data is correct.
             var actualImage = callInfo.Arg<Stream>();
-            imagesEquivalent = AssertEquivalent(expectedImage, actualImage);
+            imagesEquivalent = RelecloudTestHelpers.AssertStreamsEquivalent(expectedImage, actualImage);
             return Task.FromResult(imagesEquivalent);
         });
         var ticketRenderer = new Renderer(Substitute.For<ILogger<Renderer>>(), imageStorage, new TestBarcodeGenerator(615));
@@ -93,53 +92,6 @@ public class TicketRendererTests
         await imageStorage.Received(1).StoreImageAsync(Arg.Any<Stream>(), request.PathName, CancellationToken.None);
         Assert.Equal(request.PathName, result);
         Assert.True(imagesEquivalent);
-    }
-
-    private static bool AssertEquivalent(Stream expected, Stream actual)
-    {
-        var equivalent = true;
-
-        if (expected.Length != actual.Length)
-        {
-            equivalent = false;
-        }
-
-        if (equivalent)
-        {
-            var expectedByte = expected.ReadByte();
-            var actualByte = actual.ReadByte();
-            while (expectedByte != -1 && actualByte != -1)
-            {
-                if (expectedByte != actualByte)
-                {
-                    equivalent = false;
-                }
-
-                expectedByte = expected.ReadByte();
-                actualByte = actual.ReadByte();
-            }
-        }
-
-        if (!equivalent)
-        {
-            actual.Position = 0;
-            using var actualImage = File.Create("actual.png");
-            actual.CopyTo(actualImage);
-            actualImage.Flush();
-            Assert.Fail("The actual image does not match the expected image. See actual.png.");
-        }
-
-        return equivalent;
-    }
-
-    private static Stream GetImageStream()
-    {
-        var resourceName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
-            ? "Relecloud.TicketRenderer.Tests.ExpectedImages.test-ticket-windows.png" 
-            : "Relecloud.TicketRenderer.Tests.ExpectedImages.test-ticket-linux.png";
-
-        return Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)
-            ?? throw new InvalidOperationException($"Could not find embedded resource: {resourceName}.");
     }
 
     private static Concert GetConcert() =>

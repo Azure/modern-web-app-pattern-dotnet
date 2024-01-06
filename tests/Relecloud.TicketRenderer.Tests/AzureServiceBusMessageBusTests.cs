@@ -31,7 +31,7 @@ public class AzureServiceBusMessageBusTests
         // Arrange
         var path = "TestPath";
         var ct = new CancellationToken();
-        var serviceBusProcessor = new TestServiceBusProcessor();
+        var serviceBusProcessor = new TestServiceBusProcessor(new TestServiceBusReceiver());
         var serviceBusClient = Substitute.For<ServiceBusClient>();
         serviceBusClient.CreateProcessor(path, Arg.Any<ServiceBusProcessorOptions>()).Returns(serviceBusProcessor);
         var logger = Substitute.For<ILoggerFactory>();
@@ -57,8 +57,8 @@ public class AzureServiceBusMessageBusTests
         var path = "TestPath";
         var messageHandlerCalled = 0;
         var errorHandlerCalled = 0;
-        var serviceBusProcessor = new TestServiceBusProcessor();
         var serviceBusReceiver = new TestServiceBusReceiver();
+        var serviceBusProcessor = new TestServiceBusProcessor(serviceBusReceiver);
         var serviceBusClient = Substitute.For<ServiceBusClient>();
         serviceBusClient.CreateProcessor(path, Arg.Any<ServiceBusProcessorOptions>()).Returns(serviceBusProcessor);
         var logger = Substitute.For<ILoggerFactory>();

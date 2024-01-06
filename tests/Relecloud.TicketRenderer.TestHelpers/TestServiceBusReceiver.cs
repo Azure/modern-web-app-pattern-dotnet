@@ -1,10 +1,10 @@
 ﻿using Azure.Messaging.ServiceBus;
 
-namespace Relecloud.TicketRenderer.Tests.TestHelpers;
+namespace Relecloud.TicketRenderer.TestHelpers;
 
 public class TestServiceBusReceiver : ServiceBusReceiver
 {
-    public List<ServiceBusReceivedMessage> DeadLetters { get; } = [];
+    public IList<ServiceBusReceivedMessage> DeadLetters { get; } = [];
 
     public override string FullyQualifiedNamespace => "TestNamespace";
 

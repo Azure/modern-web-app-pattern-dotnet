@@ -69,3 +69,6 @@ var app = builder.Build();
 app.MapHealthChecks("/health");
 
 await app.RunAsync();
+
+// Necessary to make this type available for use with integration test fixtures.
+public partial class Program { }

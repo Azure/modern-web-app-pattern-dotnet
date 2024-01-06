@@ -1,4 +1,4 @@
-﻿namespace Relecloud.TicketRenderer.Tests.TestHelpers;
+﻿namespace Relecloud.TicketRenderer.Tests;
 
 internal class TestContext
 {

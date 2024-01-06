@@ -1,7 +1,9 @@
 ﻿using Relecloud.Models.ConcertContext;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Relecloud.TicketRenderer.Services;
 
+[ExcludeFromCodeCoverage]
 public class RandomBarcodeGenerator(int width, int? seed = null) : IBarcodeGenerator
 {
     private readonly Random random = seed is null
