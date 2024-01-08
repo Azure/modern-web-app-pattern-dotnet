@@ -56,6 +56,7 @@ public class TicketRenderingTest(TicketRendererFixture factory)
 
         // Reset the state of the blob storage and service bus clients
         factory.BlobClient.Uploads.Clear();
+        factory.ServiceBusClient.Receiver.DeadLetters.Clear();
         factory.ServiceBusClient.Sender.SentMessages.Clear();
 
         // Act
@@ -66,6 +67,7 @@ public class TicketRenderingTest(TicketRendererFixture factory)
         // One image should have been written and it should be correct
         Assert.Equal(1, factory.ServiceBusClient.Processor.StartProcessingAsyncCallCount);
         var image = Assert.Single(factory.BlobClient.Uploads);
+        Assert.Empty(factory.ServiceBusClient.Receiver.DeadLetters);
         RelecloudTestHelpers.AssertStreamsEquivalent(RelecloudTestHelpers.GetTestImageStream(), new MemoryStream(image, false), "actual.png");
 
         // One message regarding image render completion should have been queued in the corresponding topic
@@ -73,5 +75,36 @@ public class TicketRenderingTest(TicketRendererFixture factory)
         var contents = message.Body.ToObjectFromJson<TicketRenderCompleteEvent>();
         Assert.Equal(request.Ticket.Id, contents.TicketId);
         Assert.Equal(expectedPath, contents.OutputPath);
+    }
+
+    [Fact]
+    public async Task InvalidMessageReceived_IsDeadLettered()
+    {
+        // Arrange
+        // Although we don't use the client to send requests, the must be created
+        // in order for the message processor to be started.
+        factory.CreateClient();
+
+        var invalidRequest = new byte[] { 0x00, 0x01, 0x02, 0x03 };
+
+        // Reset the state of the blob storage and service bus clients
+        factory.BlobClient.Uploads.Clear();
+        factory.ServiceBusClient.Receiver.DeadLetters.Clear();
+        factory.ServiceBusClient.Sender.SentMessages.Clear();
+
+        // Act
+        await factory.ServiceBusClient.Processor.SimulateMessageAsync(invalidRequest, CancellationToken.None);
+        await Task.Delay(100);
+
+        // Assert
+        // The processor should have started, but no image should have been written and no render completion message should have been sent
+        Assert.Equal(1, factory.ServiceBusClient.Processor.StartProcessingAsyncCallCount);
+        Assert.Empty(factory.BlobClient.Uploads);
+        Assert.Empty(factory.ServiceBusClient.Sender.SentMessages);
+
+        // One message should be dead lettered with correct contents
+        var deadLetterMessage = Assert.Single(factory.ServiceBusClient.Receiver.DeadLetters);
+        var messageBody = deadLetterMessage.Body.ToObjectFromJson<byte[]>();
+        Assert.Collection(messageBody, invalidRequest.Select<byte, Action<byte>>(e => a => Assert.Equal(e, a)).ToArray());
     }
 }
