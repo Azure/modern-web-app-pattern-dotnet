@@ -105,16 +105,9 @@ public class AzureServiceBusMessageBusTests
         }
     }
 
-    public static ServiceBusReceivedMessage CreateMessage<T>(T body)
-    {
-        var data = BinaryData.FromObjectAsJson(body);
-        var amqpMessage = new AmqpAnnotatedMessage(AmqpMessageBody.FromData(new[] { data.ToMemory() }));
-        return ServiceBusReceivedMessage.FromAmqpMessage(amqpMessage, new BinaryData(Array.Empty<byte>()));
-    }
+    public static ServiceBusReceivedMessage CreateMessage<T>(T body) =>
+        ServiceBusModelFactory.ServiceBusReceivedMessage(BinaryData.FromObjectAsJson(body));
 
-    public static ServiceBusReceivedMessage CreateInvalidMessage()
-    {
-        var amqpMessage = new AmqpAnnotatedMessage(AmqpMessageBody.FromData(new[] { new ReadOnlyMemory<byte>([0x00, 0x00, 0xBB, 0xBB]) }));
-        return ServiceBusReceivedMessage.FromAmqpMessage(amqpMessage, new BinaryData(Array.Empty<byte>()));
-    }
+    public static ServiceBusReceivedMessage CreateInvalidMessage() =>
+        ServiceBusModelFactory.ServiceBusReceivedMessage(BinaryData.FromBytes(new ReadOnlyMemory<byte>([0x00, 0x00, 0xBB, 0xBB])));
 }
