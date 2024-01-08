@@ -77,9 +77,9 @@ namespace Relecloud.TicketRenderer.Services
             using var data = image.Encode(SKEncodedImageFormat.Png, 100);
             
             // Generate an output path for the image if none is specified.
-            var outputPath = string.IsNullOrEmpty(request.PathName)
+            var outputPath = string.IsNullOrEmpty(request.OutputPath)
                 ? string.Format(TicketNameFormatString, request.Ticket.Id)
-                : request.PathName;
+                : request.OutputPath;
 
             if (await imageStorage.StoreImageAsync(data.AsStream(), outputPath, cancellationToken))
             {

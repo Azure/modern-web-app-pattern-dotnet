@@ -89,8 +89,8 @@ public class TicketRendererTests
         var result = await ticketRenderer.RenderTicketAsync(request, CancellationToken.None);
 
         // Assert
-        await imageStorage.Received(1).StoreImageAsync(Arg.Any<Stream>(), request.PathName, CancellationToken.None);
-        Assert.Equal(request.PathName, result);
+        await imageStorage.Received(1).StoreImageAsync(Arg.Any<Stream>(), "ticket-path.png", CancellationToken.None);
+        Assert.Equal(request.OutputPath, result);
         Assert.True(imagesEquivalent);
     }
 

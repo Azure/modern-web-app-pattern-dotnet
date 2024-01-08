@@ -107,7 +107,7 @@ public class TicketRenderRequestEventHandlerTests
         // Assert
         // Verify that the ticket renderer was called with the request and cancellation token
         await context.TicketRenderer.Received(1).RenderTicketAsync(request, ct);
-        await context.Sender.Received(senderUsed ? 1 : 0).PublishAsync(Arg.Is<TicketRenderCompleteEvent>(e => e.TicketId == 11 && e.PathName.Equals("outputPath")), ct);
+        await context.Sender.Received(senderUsed ? 1 : 0).PublishAsync(Arg.Is<TicketRenderCompleteEvent>(e => e.TicketId == 11 && e.OutputPath.Equals("outputPath")), ct);
     }
 
     [InlineData(null, false)]
