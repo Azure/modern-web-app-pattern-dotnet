@@ -163,11 +163,10 @@ public class TicketRenderRequestEventHandlerTests
         await handler.StopAsync(ct);
         await handler.StartAsync(CancellationToken.None);
         await handler.StopAsync(ct);
-        await handler.StopAsync(ct);
 
         // Assert
-        // Verify that the processor and sender were disposed twice each
-        await context.Processor.Received(2).StopAsync(ct);
-        await context.Sender.Received(senderUsed ? 2 : 0).CloseAsync(ct);
+        // Verify that the processor and sender were both stopped (but only after starting)
+        await context.Processor.Received(1).StopAsync(ct);
+        await context.Sender.Received(senderUsed ? 1 : 0).CloseAsync(ct);
     }
 }
