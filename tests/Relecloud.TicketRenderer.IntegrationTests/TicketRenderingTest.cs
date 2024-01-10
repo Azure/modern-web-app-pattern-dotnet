@@ -61,7 +61,6 @@ public class TicketRenderingTest(TicketRendererFixture factory)
 
         // Act
         await factory.ServiceBusClient.Processor.SimulateMessageAsync(request, CancellationToken.None);
-        await Task.Delay(100);
 
         // Assert
         // One image should have been written and it should be correct
@@ -94,7 +93,6 @@ public class TicketRenderingTest(TicketRendererFixture factory)
 
         // Act
         await factory.ServiceBusClient.Processor.SimulateMessageAsync(invalidRequest, CancellationToken.None);
-        await Task.Delay(100);
 
         // Assert
         // The processor should have started, but no image should have been written and no render completion message should have been sent
