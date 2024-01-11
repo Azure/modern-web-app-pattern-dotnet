@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Relecloud.Web.Api.Infrastructure
 {

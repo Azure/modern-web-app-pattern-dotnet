@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
 global using Microsoft.AspNetCore.Mvc.Testing;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Options;

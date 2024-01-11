@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+using Microsoft.EntityFrameworkCore;
 using Relecloud.Models.ConcertContext;
 using Relecloud.Models.TicketManagement;
 using Relecloud.Web.Api.Services.SqlDatabaseConcertRepository;

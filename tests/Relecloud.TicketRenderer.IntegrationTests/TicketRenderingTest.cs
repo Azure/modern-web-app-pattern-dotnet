@@ -1,4 +1,7 @@
-﻿using System.Net;
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+using System.Net;
 
 namespace Relecloud.TicketRenderer.IntegrationTests;
 

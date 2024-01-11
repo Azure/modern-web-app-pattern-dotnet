@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
 using Microsoft.Extensions.Options;
 using Relecloud.Models.Events;
 using Relecloud.TicketRenderer.Models;

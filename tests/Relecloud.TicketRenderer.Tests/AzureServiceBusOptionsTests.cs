@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
 using Relecloud.TicketRenderer.Models;
 using System.ComponentModel.DataAnnotations;
 

@@ -1,4 +1,7 @@
-﻿using Azure.Storage.Blobs;
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+using Azure.Storage.Blobs;
 using Microsoft.Extensions.Options;
 using Relecloud.TicketRenderer.Models;
 

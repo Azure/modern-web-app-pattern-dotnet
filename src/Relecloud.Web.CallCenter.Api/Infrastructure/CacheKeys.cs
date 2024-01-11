@@ -1,4 +1,7 @@
-﻿namespace Relecloud.Web.Api.Infrastructure
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+namespace Relecloud.Web.Api.Infrastructure
 {
     public static class CacheKeys
     {

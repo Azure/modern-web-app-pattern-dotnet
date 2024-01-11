@@ -1,4 +1,7 @@
-﻿namespace Relecloud.TicketRenderer.Models;
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+namespace Relecloud.TicketRenderer.Models;
 
 /// <summary>
 /// Options for retry policies. This is shared between

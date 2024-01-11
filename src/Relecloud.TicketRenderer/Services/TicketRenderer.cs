@@ -1,4 +1,7 @@
-﻿using Relecloud.Models.Events;
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+using Relecloud.Models.Events;
 using SkiaSharp;
 
 namespace Relecloud.TicketRenderer.Services

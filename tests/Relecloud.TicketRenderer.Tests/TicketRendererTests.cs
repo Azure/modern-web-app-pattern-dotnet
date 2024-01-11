@@ -1,4 +1,7 @@
-﻿using Renderer = Relecloud.TicketRenderer.Services.TicketRenderer;
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+using Renderer = Relecloud.TicketRenderer.Services.TicketRenderer;
 
 namespace Relecloud.TicketRenderer.Tests;
 

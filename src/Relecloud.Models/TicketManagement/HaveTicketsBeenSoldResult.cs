@@ -1,4 +1,7 @@
-﻿using Relecloud.Models.Services;
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+using Relecloud.Models.Services;
 
 namespace Relecloud.Models.TicketManagement
 {

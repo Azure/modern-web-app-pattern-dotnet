@@ -1,4 +1,7 @@
-﻿using Microsoft.ApplicationInsights;
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Relecloud.Models.ConcertContext;

@@ -1,4 +1,7 @@
-﻿using Relecloud.Models.Search;
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+using Relecloud.Models.Search;
 using Relecloud.Models.Services;
 using Relecloud.Web.CallCenter.Infrastructure;
 using System.Net;

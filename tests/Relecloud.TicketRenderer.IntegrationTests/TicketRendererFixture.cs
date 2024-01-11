@@ -1,4 +1,7 @@
-﻿using Azure.Messaging.ServiceBus;
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+using Azure.Messaging.ServiceBus;
 using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;

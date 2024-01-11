@@ -1,18 +1,14 @@
-﻿using Azure;
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+using Azure;
 using Azure.Core;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Relecloud.TicketRenderer.TestHelpers
 {
-    internal class TestAzureResponse : Response
+    internal class TestAzureResponse(int status) : Response
     {
-        private int status;
-
-        public TestAzureResponse(int status)
-        {
-            this.status = status;
-        }
-
         public override int Status => status;
 
         public override bool IsError => status >= 400;

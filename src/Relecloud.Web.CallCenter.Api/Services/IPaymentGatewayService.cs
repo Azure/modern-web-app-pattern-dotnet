@@ -1,4 +1,7 @@
-﻿using Relecloud.Web.Api.Services.PaymentGatewayService;
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+using Relecloud.Web.Api.Services.PaymentGatewayService;
 
 namespace Relecloud.Web.Models.Services
 {

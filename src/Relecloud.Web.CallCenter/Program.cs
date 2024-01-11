@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
 using Azure.Identity;
 using Microsoft.IdentityModel.Logging;
 using Relecloud.Web;

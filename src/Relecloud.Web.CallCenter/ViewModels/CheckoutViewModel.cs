@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Relecloud.Models.TicketManagement.Payment;
 using System.ComponentModel.DataAnnotations;
 

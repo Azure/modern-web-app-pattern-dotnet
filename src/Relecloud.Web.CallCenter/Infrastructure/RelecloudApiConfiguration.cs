@@ -1,4 +1,7 @@
-﻿using System.Text.Json;
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+using System.Text.Json;
 
 namespace Relecloud.Web.CallCenter.Infrastructure
 {

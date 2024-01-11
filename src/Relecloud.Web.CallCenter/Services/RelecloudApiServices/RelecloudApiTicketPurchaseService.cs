@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Options;
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
 using Relecloud.Models.TicketManagement;
 using Relecloud.Web.CallCenter.Infrastructure;

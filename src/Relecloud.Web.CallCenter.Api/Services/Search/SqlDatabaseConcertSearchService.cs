@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
 using Relecloud.Models.ConcertContext;
 using Relecloud.Models.Search;
 using Relecloud.Models.Services;

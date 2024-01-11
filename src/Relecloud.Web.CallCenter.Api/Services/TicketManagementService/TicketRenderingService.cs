@@ -1,4 +1,7 @@
-﻿using Azure.Identity;
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+using Azure.Identity;
 using Azure.Storage.Blobs;
 using Microsoft.EntityFrameworkCore;
 using Relecloud.Models.ConcertContext;

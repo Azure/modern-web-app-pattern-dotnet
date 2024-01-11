@@ -1,4 +1,7 @@
-﻿namespace Relecloud.TicketRenderer.Tests;
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Licensed under the MIT License.
+
+namespace Relecloud.TicketRenderer.Tests;
 
 public class ResilienceOptionsTests
 {
