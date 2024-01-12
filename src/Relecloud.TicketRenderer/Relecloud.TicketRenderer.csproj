@@ -18,7 +18,6 @@
     <PackageReference Include="AspNetCore.HealthChecks.AzureServiceBus" Version="7.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.AzureStorage" Version="7.0.0" />
     <PackageReference Include="Azure.Identity" Version="1.10.4" />
-    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.17.1" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
     <PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" Version="7.0.0" />
@@ -32,6 +31,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Relecloud.Models\Relecloud.Models.csproj" />
+    <ProjectReference Include="..\Relecloud.Messaging\Relecloud.Messaging.csproj" />
   </ItemGroup>
 
   <ItemGroup>

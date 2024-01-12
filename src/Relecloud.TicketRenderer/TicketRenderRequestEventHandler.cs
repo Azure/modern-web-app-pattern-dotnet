@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using Microsoft.Extensions.Options;
-using Relecloud.Models.Events;
-using Relecloud.TicketRenderer.Models;
+using Relecloud.Messaging;
+using Relecloud.Messaging.Events;
 using Relecloud.TicketRenderer.Services;
 
 namespace Relecloud.TicketRenderer;
@@ -13,7 +13,7 @@ namespace Relecloud.TicketRenderer;
 /// </summary>
 internal sealed class TicketRenderRequestEventHandler(
     ILogger<TicketRenderRequestEventHandler> logger, 
-    IOptions<AzureServiceBusOptions> options,
+    IOptions<MessageBusOptions> options,
     IMessageBus messageBus, 
     ITicketRenderer ticketRenderer) : IHostedService, IAsyncDisposable
 {

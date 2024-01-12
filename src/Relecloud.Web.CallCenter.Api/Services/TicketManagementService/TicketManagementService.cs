@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
 using Microsoft.EntityFrameworkCore;
@@ -11,13 +11,13 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
     public class TicketManagementService : ITicketManagementService
     {
         private readonly ConcertDataContext database;
-        private readonly ITicketRenderingService ticketRenderingService;
+        private readonly ITicketRenderingServiceFactory ticketRenderingServiceFactory;
         private readonly ILogger<TicketManagementService> logger;
 
-        public TicketManagementService(ConcertDataContext database, ITicketRenderingService ticketRenderingService, ILogger<TicketManagementService> logger)
+        public TicketManagementService(ConcertDataContext database, ITicketRenderingServiceFactory ticketRenderingServiceFactory, ILogger<TicketManagementService> logger)
         {
             this.database = database;
-            this.ticketRenderingService = ticketRenderingService;
+            this.ticketRenderingServiceFactory = ticketRenderingServiceFactory;
             this.logger = logger;
         }
 
@@ -49,6 +49,7 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
 
         public async Task<ReserveTicketsResult> ReserveTicketsAsync(int concertId, string userId, int numberOfTickets, int customerId)
         {
+            var ticketRenderingService = await ticketRenderingServiceFactory.CreateAsync();
             var newTickets = new List<Ticket>();
             for (int i = 0; i < numberOfTickets; i++)
             {

@@ -1,7 +1,8 @@
-﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.FeatureManagement;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
 using Relecloud.Models.Services;
@@ -32,6 +33,10 @@ namespace Relecloud.Web.Api
             AddAzureAdServices(services);
 
             services.AddControllers();
+
+            // Enable feature management for easily enabling or disabling
+            // optional features like rendering tickets out-of-process.
+            services.AddFeatureManagement();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             services.AddEndpointsApiExplorer();
@@ -68,7 +73,13 @@ namespace Relecloud.Web.Api
             else
             {
                 services.AddScoped<ITicketManagementService, TicketManagementService>();
-                services.AddScoped<ITicketRenderingService, TicketRenderingService>();
+
+                // Reading a feature flag is an asynchronous operation, so it's not possible
+                // to register an ITicketRenderingService provider method directly. Instead,
+                // use a factory pattern to retrieve the service asynchronously.
+                services.AddScoped<ITicketRenderingServiceFactory, FeatureDependentTicketRenderingServiceFactory>();
+                services.AddScoped<LocalTicketRenderingService>();
+                services.AddScoped<DistributedTicketRenderingService>();
             }
         }
 

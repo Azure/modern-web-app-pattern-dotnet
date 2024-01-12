@@ -1,10 +1,11 @@
-﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
 using Azure.Messaging.ServiceBus;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
-namespace Relecloud.TicketRenderer.Services;
+namespace Relecloud.Messaging.ServiceBus;
 
 /// <summary>
 /// Implements message bus functionality using Azure Service Bus.

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
 namespace Relecloud.TicketRenderer.Tests;
@@ -6,14 +6,14 @@ namespace Relecloud.TicketRenderer.Tests;
 internal class TestContext
 {
     public ILogger<TicketRenderRequestEventHandler> Logger { get; set; }
-    public IOptions<AzureServiceBusOptions> ServiceBusOptions { get; set; }
+    public IOptions<MessageBusOptions> ServiceBusOptions { get; set; }
     public IMessageBus MessageBus { get; set; }
     public ITicketRenderer TicketRenderer { get; set; }
     public IMessageProcessor Processor { get; set; }
     public IMessageSender<TicketRenderCompleteEvent> Sender { get; set; }
 
     public TestContext(
-        IOptions<AzureServiceBusOptions>? options = null,
+        IOptions<MessageBusOptions>? options = null,
         ILogger<TicketRenderRequestEventHandler>? logger = null,
         IMessageProcessor? processor = null,
         IMessageSender<TicketRenderCompleteEvent>? sender = null,
@@ -21,7 +21,7 @@ internal class TestContext
         ITicketRenderer? ticketRenderer = null)
     {
         ServiceBusOptions = options
-            ?? Options.Create(new AzureServiceBusOptions
+            ?? Options.Create(new MessageBusOptions
             {
                 Namespace = "test-namespace",
                 RenderRequestQueueName = "test-queue",

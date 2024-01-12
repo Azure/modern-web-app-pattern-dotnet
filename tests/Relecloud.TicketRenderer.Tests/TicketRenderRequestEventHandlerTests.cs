@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
 namespace Relecloud.TicketRenderer.Tests;
@@ -9,7 +9,7 @@ public class TicketRenderRequestEventHandlerTests
     public async Task StartAsync_WhenNoQueueNameIsSpecified_ShouldNotStart()
     {
         // Arrange
-        var options = Options.Create(new AzureServiceBusOptions
+        var options = Options.Create(new MessageBusOptions
         {
             Namespace = "test-namespace",
             RenderRequestQueueName = null
@@ -38,7 +38,7 @@ public class TicketRenderRequestEventHandlerTests
     public async Task StartAsync_SenderCalledOnlyIfTopicSupplied(string? topicName, bool senderUsed)
     {
         // Arrange
-        var options = Options.Create(new AzureServiceBusOptions
+        var options = Options.Create(new MessageBusOptions
         {
             Namespace = "test-namespace",
             RenderRequestQueueName = "test-queue",
@@ -72,7 +72,7 @@ public class TicketRenderRequestEventHandlerTests
     public async Task StartAsync_SubscriptionCallbackShouldCallRenderTicket(string? topicName, bool senderUsed)
     {
         // Arrange
-        var options = Options.Create(new AzureServiceBusOptions
+        var options = Options.Create(new MessageBusOptions
         {
             Namespace = "test-namespace",
             RenderRequestQueueName = "test-queue",
@@ -119,7 +119,7 @@ public class TicketRenderRequestEventHandlerTests
     public async Task DisposeAsync_DisposesProcessorAndSenderOnce(string? topicName, bool senderUsed)
     {
         // Arrange
-        var options = Options.Create(new AzureServiceBusOptions
+        var options = Options.Create(new MessageBusOptions
         {
             Namespace = "test-namespace",
             RenderRequestQueueName = "test-queue",
@@ -149,7 +149,7 @@ public class TicketRenderRequestEventHandlerTests
     public async Task StopAsync_StopsProcessorAndSenderOnce(string? topicName, bool senderUsed)
     {
         // Arrange
-        var options = Options.Create(new AzureServiceBusOptions
+        var options = Options.Create(new MessageBusOptions
         {
             Namespace = "test-namespace",
             RenderRequestQueueName = "test-queue",

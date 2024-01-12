@@ -1,17 +1,16 @@
 // Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
-using Relecloud.TicketRenderer.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace Relecloud.TicketRenderer.Tests;
 
-public class AzureServiceBusOptionsTests
+public class MessageBusOptionsTests
 {
     [Fact]
     public void NamespaceIsRequired()
     {
-        var options = new AzureServiceBusOptions
+        var options = new MessageBusOptions
         {
             RenderRequestQueueName = "TestQueue",
             RenderedTicketTopicName = "TestTopic"
@@ -28,7 +27,7 @@ public class AzureServiceBusOptionsTests
     [Fact]
     public void RenderRequestQueueNameIsRequired()
     {
-        var options = new AzureServiceBusOptions
+        var options = new MessageBusOptions
         {
             Namespace = "TestNamespace",
             RenderedTicketTopicName = "TestTopic"
@@ -45,7 +44,7 @@ public class AzureServiceBusOptionsTests
     [Fact]
     public void RenderedTicketTopicNameIsNotRequired()
     {
-        var options = new AzureServiceBusOptions
+        var options = new MessageBusOptions
         {
             Namespace = "TestNamespace",
             RenderRequestQueueName = "TestQueue"

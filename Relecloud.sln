@@ -27,6 +27,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.TicketRenderer.In
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.TicketRenderer.TestHelpers", "tests\Relecloud.TicketRenderer.TestHelpers\Relecloud.TicketRenderer.TestHelpers.csproj", "{BD6EB82E-5993-4013-9102-1D0811B4116D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Messaging", "src\Relecloud.Messaging\Relecloud.Messaging.csproj", "{5B17E14F-A571-4598-8D39-3BFE996B6CAA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Messaging.Tests", "tests\Relecloud.Messaging.Tests\Relecloud.Messaging.Tests.csproj", "{C2AF8789-15F6-48CC-B58A-F57E5DFD17CB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +65,14 @@ Global
 		{BD6EB82E-5993-4013-9102-1D0811B4116D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD6EB82E-5993-4013-9102-1D0811B4116D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD6EB82E-5993-4013-9102-1D0811B4116D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B17E14F-A571-4598-8D39-3BFE996B6CAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B17E14F-A571-4598-8D39-3BFE996B6CAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B17E14F-A571-4598-8D39-3BFE996B6CAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B17E14F-A571-4598-8D39-3BFE996B6CAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2AF8789-15F6-48CC-B58A-F57E5DFD17CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2AF8789-15F6-48CC-B58A-F57E5DFD17CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2AF8789-15F6-48CC-B58A-F57E5DFD17CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2AF8789-15F6-48CC-B58A-F57E5DFD17CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -73,6 +85,8 @@ Global
 		{909B1F53-AF7E-4B6A-8DCC-C878FDF3CCE3} = {13980BA0-4ECE-4914-BE75-C304BFC41F9E}
 		{BA42736F-7B4A-4B88-BDD7-614F7F2C0A4E} = {13980BA0-4ECE-4914-BE75-C304BFC41F9E}
 		{BD6EB82E-5993-4013-9102-1D0811B4116D} = {13980BA0-4ECE-4914-BE75-C304BFC41F9E}
+		{5B17E14F-A571-4598-8D39-3BFE996B6CAA} = {92CB9EA9-42CD-4D69-8C98-965D0074431C}
+		{C2AF8789-15F6-48CC-B58A-F57E5DFD17CB} = {13980BA0-4ECE-4914-BE75-C304BFC41F9E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A0C384B5-59E7-474A-A07D-F48D883CA4F8}
