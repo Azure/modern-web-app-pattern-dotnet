@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
 using Azure.Identity;
@@ -12,15 +12,15 @@ using System.Drawing.Imaging;
 
 namespace Relecloud.Web.Api.Services.TicketManagementService
 {
-    public class TicketRenderingService : ITicketRenderingService
+    public class LocalTicketRenderingService : ITicketRenderingService
     {
         private const string BlobNameFormatString = "ticket-{EntityId}.png";
 
         private readonly IConfiguration configuration;
         private readonly ConcertDataContext database;
-        private readonly ILogger<TicketRenderingService> logger;
+        private readonly ILogger<LocalTicketRenderingService> logger;
 
-        public TicketRenderingService(ConcertDataContext database, IConfiguration configuration, ILogger<TicketRenderingService> logger)
+        public LocalTicketRenderingService(ConcertDataContext database, IConfiguration configuration, ILogger<LocalTicketRenderingService> logger)
         {
             this.configuration = configuration;
             this.database = database;
