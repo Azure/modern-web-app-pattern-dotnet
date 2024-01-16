@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Relecloud.Messaging;
 using Relecloud.Messaging.Events;
-using Relecloud.Models.ConcertContext;
 using Relecloud.Web.Api.Services.SqlDatabaseConcertRepository;
 
 namespace Relecloud.Web.Api.Services.TicketManagementService
@@ -16,8 +15,6 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
     /// </summary>
     public class DistributedTicketRenderingService : ITicketRenderingService
     {
-        private const string BlobNameFormatString = "ticket-{0}.png";
-
         private readonly ConcertDataContext database;
         private readonly ILogger<DistributedTicketRenderingService> logger;
         private readonly IMessageSender<TicketRenderRequestEvent> messageSender;
@@ -42,23 +39,15 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
 
             if (ticket is null)
             {
-                logger.LogWarning($"No Ticket found for id:{ticketId}");
+                logger.LogWarning("No Ticket found for id:{TicketId}", ticketId);
                 return;
             }
 
-            // Publish a message to request that the ticket be rendered using a pre-determined blob name.
-            var outputPath = string.Format(BlobNameFormatString, ticket.Id);
-            await messageSender.PublishAsync(new TicketRenderRequestEvent(Guid.NewGuid(), ticket, outputPath, DateTime.Now), CancellationToken.None);
+            // Publish a message to request that the ticket be rendered.
+            // If no output path is specified, the remote ticket rendering service will generate one.
+            await messageSender.PublishAsync(new TicketRenderRequestEvent(Guid.NewGuid(), ticket, null, DateTime.Now), CancellationToken.None);
 
-            // Update the ticket with the blob name.
-            await UpdateTicketWithBlobNameAsync(ticket, outputPath);
-        }
-
-        private async Task UpdateTicketWithBlobNameAsync(Ticket ticket, string blobName)
-        {
-            ticket.ImageName = blobName;
-            database.Update(ticket);
-            await database.SaveChangesAsync();
+            // The database is not updated with the blob name until the ticket is rendered.
         }
     }
 }
