@@ -1,10 +1,13 @@
 // Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
+using Azure.Core;
+using Azure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FeatureManagement;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
+using Relecloud.Messaging.ServiceBus;
 using Relecloud.Models.Services;
 using Relecloud.Web.Api.Infrastructure;
 using Relecloud.Web.Api.Services;
@@ -29,6 +32,8 @@ namespace Relecloud.Web.Api
         public IConfiguration Configuration { get; }
         public void ConfigureServices(IServiceCollection services)
         {
+            var azureCredential = GetAzureCredential();
+
             // Add services to the container.
             AddAzureAdServices(services);
 
@@ -44,6 +49,9 @@ namespace Relecloud.Web.Api
 
             services.AddApplicationInsightsTelemetry(Configuration["App:Api:ApplicationInsights:ConnectionString"]);
 
+            // Add Azure Service Bus message bus.
+            services.AddAzureServiceBusMessageBus("App:ServiceBus", azureCredential);
+
             AddAzureSearchService(services);
             AddConcertContextServices(services);
             AddDistributedSession(services);
@@ -55,6 +63,17 @@ namespace Relecloud.Web.Api
             // they are all properly initialized upon construction.
             services.AddScoped<ApplicationInitializer, ApplicationInitializer>();
         }
+
+        private TokenCredential GetAzureCredential() =>
+            Configuration["App:AzureCredentialType"] switch
+            {
+                "AzureCLI" => new AzureCliCredential(),
+                "Environment" => new EnvironmentCredential(),
+                "ManagedIdentity" => new ManagedIdentityCredential(Configuration["AZURE_CLIENT_ID"]),
+                "VisualStudio" => new VisualStudioCredential(),
+                "VisualStudioCode" => new VisualStudioCodeCredential(),
+                _ => new DefaultAzureCredential(),
+            };
 
         private void AddAzureAdServices(IServiceCollection services)
         {
