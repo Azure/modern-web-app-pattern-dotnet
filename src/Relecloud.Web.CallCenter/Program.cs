@@ -44,18 +44,18 @@ if (hasRequiredConfigSettings)
     startup.ConfigureServices(builder.Services);
 }
 
-var hasAzureAdSettings = !string.IsNullOrEmpty(builder.Configuration["AzureAd:ClientId"]);
+var hasMicrosoftEntraIdSettings = !string.IsNullOrEmpty(builder.Configuration["MicrosoftEntraId:ClientId"]);
 
 var app = builder.Build();
 
-if (hasRequiredConfigSettings && hasAzureAdSettings)
+if (hasRequiredConfigSettings && hasMicrosoftEntraIdSettings)
 {
     startup.Configure(app, app.Environment);
 }
-else if (!hasAzureAdSettings)
+else if (!hasMicrosoftEntraIdSettings)
 {
     app.MapGet("/", () => $"" +
-    "Could not find required Azure AD settings. Check your App Config Service, you may need to run the create-app-registrations script.");
+    "Could not find required Microsoft Entra ID settings. Check your App Config Service, you may need to run the create-app-registrations script.");
 }
 else
 {

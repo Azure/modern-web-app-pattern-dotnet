@@ -36,7 +36,7 @@ namespace Relecloud.Web
             services.AddHttpContextAccessor();
             services.Configure<RelecloudApiOptions>(Configuration.GetSection("App:RelecloudApi"));
             services.AddOptions();
-            AddAzureAdServices(services);
+            AddMicrosoftEntraIdServices(services);
             services.AddControllersWithViews();
             services.AddApplicationInsightsTelemetry(Configuration["App:Api:ApplicationInsights:ConnectionString"]);
 
@@ -164,7 +164,7 @@ namespace Relecloud.Web
             }
         }
 
-        private void AddAzureAdServices(IServiceCollection services)
+        private void AddMicrosoftEntraIdServices(IServiceCollection services)
         {
             services.AddRazorPages().AddMicrosoftIdentityUI();
 
@@ -176,7 +176,7 @@ namespace Relecloud.Web
                 });
             });
 
-            var builder = services.AddMicrosoftIdentityWebAppAuthentication(Configuration, "AzureAd")
+            var builder = services.AddMicrosoftIdentityWebAppAuthentication(Configuration, "MicrosoftEntraId")
             .EnableTokenAcquisitionToCallDownstreamApi(new string[] { })
                .AddDownstreamWebApi("relecloud-api", Configuration.GetSection("GraphBeta"));
 
@@ -196,7 +196,7 @@ namespace Relecloud.Web
                 });
             }
 
-            // this sample uses AFD for the URL registered with Azure AD to make it easier to get started
+            // this sample uses AFD for the URL registered with Microsoft Entra ID to make it easier to get started
             // but we recommend host name preservation for production scenarios
             // https://learn.microsoft.com/en-us/azure/architecture/best-practices/host-name-preservation
             services.Configure<ForwardedHeadersOptions>(options =>
@@ -205,11 +205,11 @@ namespace Relecloud.Web
                 options.ForwardedHeaders = ForwardedHeaders.XForwardedHost | ForwardedHeaders.XForwardedProto;
             });
 
-            services.Configure<OpenIdConnectOptions>(Configuration.GetSection("AzureAd"));
+            services.Configure<OpenIdConnectOptions>(Configuration.GetSection("MicrosoftEntraId"));
             services.Configure((Action<MicrosoftIdentityOptions>)(options =>
             {
                 var frontDoorHostname = Configuration["App:FrontDoorHostname"];
-                var callbackPath = Configuration["AzureAd:CallbackPath"];
+                var callbackPath = Configuration["MicrosoftEntraId:CallbackPath"];
 
                 options.Events.OnTokenValidated += async ctx =>
                 {
@@ -271,7 +271,7 @@ namespace Relecloud.Web
                 IdentityModelEventSource.ShowPII = true;
             }
 
-            // this sample uses AFD for the URL registered with Azure AD to make it easier to get started
+            // this sample uses AFD for the URL registered with Microsoft Entra ID to make it easier to get started
             // but we recommend host name preservation for production scenarios
             // https://learn.microsoft.com/en-us/azure/architecture/best-practices/host-name-preservation
             app.UseForwardedHeaders();

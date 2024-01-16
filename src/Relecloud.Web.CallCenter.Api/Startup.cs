@@ -29,7 +29,7 @@ namespace Relecloud.Web.Api
         public void ConfigureServices(IServiceCollection services)
         {
             // Add services to the container.
-            AddAzureAdServices(services);
+            AddMicrosoftEntraIdServices(services);
 
             services.AddControllers();
 
@@ -51,10 +51,10 @@ namespace Relecloud.Web.Api
             services.AddScoped<ApplicationInitializer, ApplicationInitializer>();
         }
 
-        private void AddAzureAdServices(IServiceCollection services)
+        private void AddMicrosoftEntraIdServices(IServiceCollection services)
         {
             // Adds Microsoft Identity platform (AAD v2.0) support to protect this Api
-            services.AddMicrosoftIdentityWebApiAuthentication(Configuration, "Api:AzureAd");
+            services.AddMicrosoftIdentityWebApiAuthentication(Configuration, "Api:MicrosoftEntraId");
         }
 
         private void AddTicketManagementService(IServiceCollection services)

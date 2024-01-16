@@ -76,7 +76,7 @@ New team members should setup their environment by following these steps.
         ```pwsh
         dotnet user-secrets set App:AppConfig:Uri $appConfigServiceUri
         ```
-1. When connecting to Azure SQL database you'll connect with your Azure AD account.
+1. When connecting to Azure SQL database you'll connect with your Microsoft Entra ID account.
     1. Change out of the front-end web app to the root directory
         ```pwsh
         cd ../..

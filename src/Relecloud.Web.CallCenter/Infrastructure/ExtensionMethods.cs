@@ -15,7 +15,7 @@ namespace Relecloud.Web.CallCenter.Infrastructure
     {
         public static string GetUniqueId(this ClaimsPrincipal user)
         {
-            // Azure AD issues a globally unique user ID in the objectidentifier claim.
+            // Microsoft Entra ID issues a globally unique user ID in the objectidentifier claim.
             return user?.FindFirstValue("http://schemas.microsoft.com/identity/claims/objectidentifier") ?? new Guid().ToString();
         }
 
