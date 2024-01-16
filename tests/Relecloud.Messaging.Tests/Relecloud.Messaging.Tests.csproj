@@ -29,7 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Relecloud.Messaging\Relecloud.Messaging.csproj" />
-    <ProjectReference Include="..\Relecloud.TicketRenderer.TestHelpers\Relecloud.TicketRenderer.TestHelpers.csproj" />
+    <ProjectReference Include="..\Relecloud.TestHelpers\Relecloud.TestHelpers.csproj" />
   </ItemGroup>
 
 </Project>

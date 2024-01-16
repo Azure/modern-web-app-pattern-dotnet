@@ -25,11 +25,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{92CB9EA9-42C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.TicketRenderer.IntegrationTests", "tests\Relecloud.TicketRenderer.IntegrationTests\Relecloud.TicketRenderer.IntegrationTests.csproj", "{BA42736F-7B4A-4B88-BDD7-614F7F2C0A4E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.TicketRenderer.TestHelpers", "tests\Relecloud.TicketRenderer.TestHelpers\Relecloud.TicketRenderer.TestHelpers.csproj", "{BD6EB82E-5993-4013-9102-1D0811B4116D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.TestHelpers", "tests\Relecloud.TestHelpers\Relecloud.TestHelpers.csproj", "{BD6EB82E-5993-4013-9102-1D0811B4116D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Messaging", "src\Relecloud.Messaging\Relecloud.Messaging.csproj", "{5B17E14F-A571-4598-8D39-3BFE996B6CAA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Messaging.Tests", "tests\Relecloud.Messaging.Tests\Relecloud.Messaging.Tests.csproj", "{C2AF8789-15F6-48CC-B58A-F57E5DFD17CB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Relecloud.Web.CallCenter.Api.Tests", "tests\Relecloud.Web.CallCenter.Api.Tests\Relecloud.Web.CallCenter.Api.Tests.csproj", "{65773DBA-9A29-453E-A56A-6DFD2A40AB94}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -73,6 +75,10 @@ Global
 		{C2AF8789-15F6-48CC-B58A-F57E5DFD17CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C2AF8789-15F6-48CC-B58A-F57E5DFD17CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C2AF8789-15F6-48CC-B58A-F57E5DFD17CB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65773DBA-9A29-453E-A56A-6DFD2A40AB94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65773DBA-9A29-453E-A56A-6DFD2A40AB94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65773DBA-9A29-453E-A56A-6DFD2A40AB94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65773DBA-9A29-453E-A56A-6DFD2A40AB94}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -87,6 +93,7 @@ Global
 		{BD6EB82E-5993-4013-9102-1D0811B4116D} = {13980BA0-4ECE-4914-BE75-C304BFC41F9E}
 		{5B17E14F-A571-4598-8D39-3BFE996B6CAA} = {92CB9EA9-42CD-4D69-8C98-965D0074431C}
 		{C2AF8789-15F6-48CC-B58A-F57E5DFD17CB} = {13980BA0-4ECE-4914-BE75-C304BFC41F9E}
+		{65773DBA-9A29-453E-A56A-6DFD2A40AB94} = {13980BA0-4ECE-4914-BE75-C304BFC41F9E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A0C384B5-59E7-474A-A07D-F48D883CA4F8}
