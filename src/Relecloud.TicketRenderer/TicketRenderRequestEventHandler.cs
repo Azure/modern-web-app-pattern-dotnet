@@ -30,10 +30,10 @@ internal sealed class TicketRenderRequestEventHandler(
             return;
         }
 
-        // If a topic name was specified, use it to publish messages when tickets are rendered.
-        if (!string.IsNullOrEmpty(options.Value.RenderedTicketTopicName))
+        // If a queue/topic name was specified, use it to publish messages when tickets are rendered.
+        if (!string.IsNullOrEmpty(options.Value.RenderedTicketQueueName))
         {
-            sender = messageBus.CreateMessageSender<TicketRenderCompleteEvent>(options.Value.RenderedTicketTopicName);
+            sender = messageBus.CreateMessageSender<TicketRenderCompleteEvent>(options.Value.RenderedTicketQueueName);
         }
 
         // Initialize the message processor to listen for ticket render requests.
@@ -43,7 +43,7 @@ internal sealed class TicketRenderRequestEventHandler(
                 // Render the ticket image and get the path it was written to.
                 var outputPath = await ticketRenderer.RenderTicketAsync(request, cancellationToken);
 
-                // If a topic name was specified, publish a message indicating that the ticket was rendered.
+                // If a queue/topic name was specified, publish a message indicating that the ticket was rendered.
                 if (outputPath is not null && sender is not null)
                 {
                     await sender.PublishAsync(new TicketRenderCompleteEvent(Guid.NewGuid(), request.Ticket.Id, outputPath, DateTime.Now), cancellationToken);

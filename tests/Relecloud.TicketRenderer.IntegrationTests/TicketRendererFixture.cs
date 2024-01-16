@@ -34,7 +34,7 @@ public class TicketRendererFixture : WebApplicationFactory<Program>
                 { "App:StorageAccount:Container", "test" },
                 { "App:ServiceBus:Namespace", "test-namespace" },
                 { "App:ServiceBus:RenderRequestQueueName", "test-render-request-queue" },
-                { "App:ServiceBus:RenderedTicketTopicName", "test-rendered-ticket-topic" },
+                { "App:ServiceBus:RenderedTicketQueueName", "test-rendered-ticket-queue" },
             });
         });
 

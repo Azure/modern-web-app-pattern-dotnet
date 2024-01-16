@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -72,7 +72,7 @@ public class TicketRenderingTest(TicketRendererFixture factory)
         Assert.Empty(factory.ServiceBusClient.Receiver.DeadLetters);
         RelecloudTestHelpers.AssertStreamsEquivalent(RelecloudTestHelpers.GetTestImageStream(), new MemoryStream(image, false), "actual.png");
 
-        // One message regarding image render completion should have been queued in the corresponding topic
+        // One message regarding image render completion should have been queued in the corresponding queue
         var message = Assert.Single(factory.ServiceBusClient.Sender.SentMessages);
         var contents = message.Body.ToObjectFromJson<TicketRenderCompleteEvent>();
         Assert.Equal(request.Ticket.Id, contents.TicketId);

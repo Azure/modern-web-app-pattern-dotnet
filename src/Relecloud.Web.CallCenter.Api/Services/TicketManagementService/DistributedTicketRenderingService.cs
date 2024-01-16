@@ -46,10 +46,6 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
                 return;
             }
 
-            // TODO : Test this out and think hard about whether it's preferable to use this approach
-            //        or to wait to update the ticket blob name in the database until a ticket rendered
-            //        event is received.
-
             // Publish a message to request that the ticket be rendered using a pre-determined blob name.
             var outputPath = string.Format(BlobNameFormatString, ticket.Id);
             await messageSender.PublishAsync(new TicketRenderRequestEvent(Guid.NewGuid(), ticket, outputPath, DateTime.Now), CancellationToken.None);

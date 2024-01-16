@@ -33,9 +33,9 @@ public class TicketRenderRequestEventHandlerTests
 
     [InlineData(null, false)]
     [InlineData("", false)]
-    [InlineData("test-topic", true)]
+    [InlineData("test-response-queue", true)]
     [Theory]
-    public async Task StartAsync_SenderCalledOnlyIfTopicSupplied(string? topicName, bool senderUsed)
+    public async Task StartAsync_SenderCalledOnlyIfResponseQueueSupplied(string? responseQueueName, bool senderUsed)
     {
         // Arrange
         var options = Options.Create(new MessageBusOptions
@@ -43,8 +43,8 @@ public class TicketRenderRequestEventHandlerTests
             Namespace = "test-namespace",
             RenderRequestQueueName = "test-queue",
 
-            // Use a topic name to verify that the sender is instantiated
-            RenderedTicketTopicName = topicName
+            // Use a response queue name to verify that the sender is instantiated
+            RenderedTicketQueueName = responseQueueName
         });
 
         var ct = new CancellationToken();
@@ -62,14 +62,14 @@ public class TicketRenderRequestEventHandlerTests
             "test-queue",
             ct);
 
-        // Verify that the message bus was used to create a message sender if a topic name was specified
-        context.MessageBus.Received(senderUsed ? 1 : 0).CreateMessageSender<TicketRenderCompleteEvent>(topicName!);
+        // Verify that the message bus was used to create a message sender if a response queue name was specified
+        context.MessageBus.Received(senderUsed ? 1 : 0).CreateMessageSender<TicketRenderCompleteEvent>(responseQueueName!);
     }
 
     [InlineData(null, false)]
-    [InlineData("test-topic", true)]
+    [InlineData("test-response-queue", true)]
     [Theory]
-    public async Task StartAsync_SubscriptionCallbackShouldCallRenderTicket(string? topicName, bool senderUsed)
+    public async Task StartAsync_SubscriptionCallbackShouldCallRenderTicket(string? responseQueueName, bool senderUsed)
     {
         // Arrange
         var options = Options.Create(new MessageBusOptions
@@ -77,8 +77,8 @@ public class TicketRenderRequestEventHandlerTests
             Namespace = "test-namespace",
             RenderRequestQueueName = "test-queue",
 
-            // Use a topic name to verify that the sender is instantiated
-            RenderedTicketTopicName = topicName
+            // Use a response queue name to verify that the sender is instantiated
+            RenderedTicketQueueName = responseQueueName
         });
 
         var context = new TestContext(options: options);
@@ -114,9 +114,9 @@ public class TicketRenderRequestEventHandlerTests
     }
 
     [InlineData(null, false)]
-    [InlineData("test-topic", true)]
+    [InlineData("test-response-queue", true)]
     [Theory]
-    public async Task DisposeAsync_DisposesProcessorAndSenderOnce(string? topicName, bool senderUsed)
+    public async Task DisposeAsync_DisposesProcessorAndSenderOnce(string? responseQueueName, bool senderUsed)
     {
         // Arrange
         var options = Options.Create(new MessageBusOptions
@@ -124,8 +124,8 @@ public class TicketRenderRequestEventHandlerTests
             Namespace = "test-namespace",
             RenderRequestQueueName = "test-queue",
 
-            // Use a topic name to verify that the sender is instantiated
-            RenderedTicketTopicName = topicName
+            // Use a response queue name to verify that the sender is instantiated
+            RenderedTicketQueueName = responseQueueName
         });
 
         var context = new TestContext(options: options);
@@ -144,9 +144,9 @@ public class TicketRenderRequestEventHandlerTests
     }
 
     [InlineData(null, false)]
-    [InlineData("test-topic", true)]
+    [InlineData("test-response-queue", true)]
     [Theory]
-    public async Task StopAsync_StopsProcessorAndSenderOnce(string? topicName, bool senderUsed)
+    public async Task StopAsync_StopsProcessorAndSenderOnce(string? responseQueueName, bool senderUsed)
     {
         // Arrange
         var options = Options.Create(new MessageBusOptions
@@ -154,8 +154,8 @@ public class TicketRenderRequestEventHandlerTests
             Namespace = "test-namespace",
             RenderRequestQueueName = "test-queue",
 
-            // Use a topic name to verify that the sender is instantiated
-            RenderedTicketTopicName = topicName
+            // Use a response queue name to verify that the sender is instantiated
+            RenderedTicketQueueName = responseQueueName
         });
 
         var ct = new CancellationToken();
