@@ -8,7 +8,8 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
 {
     /// <summary>
     /// A ticket rendering service factory that creates <see cref="ITicketRenderingService"/>
-    /// instances based on feature flags.
+    /// instances based on feature flags. This factory type is used rather than registering
+    /// a factory method with DI because checking feature flags is an async operation.
     /// </summary>
     public class FeatureDependentTicketRenderingServiceFactory : ITicketRenderingServiceFactory
     {

@@ -5,7 +5,7 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
 {
     // Reading a feature flag is an asynchronous operation, so it's not possible
     // to register an ITicketRenderingService provider method directly. Instead,
-    // us a factory pattern to create the service asynchronously.
+    // use a factory pattern to create the service asynchronously.
 
     /// <summary>
     /// Interface for generating <see cref="ITicketRenderingService"/> instances based

@@ -30,6 +30,7 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
 
         public async Task CreateTicketImageAsync(int ticketId)
         {
+            // Get the ticket to render an image for.
             var ticket = database.Tickets
                 .Include(ticket => ticket.Concert)
                 .Include(ticket => ticket.User)
@@ -46,6 +47,7 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
             // Publish a message to request that the ticket be rendered.
             // If no output path is specified, the remote ticket rendering service will generate one.
             await messageSender.PublishAsync(new TicketRenderRequestEvent(Guid.NewGuid(), ticket, null, DateTime.Now), CancellationToken.None);
+            logger.LogInformation("Requested ticket rendering for ticket {TicketId}.", ticketId);
 
             // The database is not updated with the blob name until the ticket is rendered.
         }

@@ -9,6 +9,11 @@ using Relecloud.Web.Api.Services.SqlDatabaseConcertRepository;
 
 namespace Relecloud.Web.CallCenter.Api.Services.TicketManagementService
 {
+    /// <summary>
+    /// Background worker service that monitors the message bus for ticket render complete events.
+    /// When ticket render complete events are received, the service updates the database with the
+    /// image name for the ticket.
+    /// </summary>
     internal sealed class TicketRenderCompleteEventHandler : IHostedService, IAsyncDisposable
     {
         private readonly IServiceProvider serviceProvider;
@@ -29,6 +34,7 @@ namespace Relecloud.Web.CallCenter.Api.Services.TicketManagementService
             this.messageBus = messageBus;
             this.logger = logger;
         }
+
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             logger.LogInformation("TicketRenderCompleteEventHandler is starting");
