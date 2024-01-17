@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
-using Relecloud.Models.ConcertContext;
-using Relecloud.TicketRenderer.Services;
-
 namespace Relecloud.TicketRenderer.TestHelpers;
 
 public class TestBarcodeGenerator(int width) : IBarcodeGenerator
