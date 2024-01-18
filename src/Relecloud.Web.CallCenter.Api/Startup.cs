@@ -140,7 +140,9 @@ namespace Relecloud.Web.Api
 
         private void AddTicketImageService(IServiceCollection services)
         {
-            services.AddScoped<ITicketImageService, TicketImageService>();
+            // It is best practice to create Azure SDK clients once and reuse them.
+            // https://learn.microsoft.com/azure/storage/blobs/storage-blob-client-management#manage-client-objects
+            services.AddSingleton<ITicketImageService, TicketImageService>();
         }
 
         public void Configure(WebApplication app, IWebHostEnvironment env)
