@@ -3,6 +3,7 @@
 
 using Azure.Core;
 using Azure.Identity;
+using Azure.Storage.Blobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FeatureManagement;
 using Microsoft.Identity.Web;
@@ -64,17 +65,6 @@ namespace Relecloud.Web.Api
             // they are all properly initialized upon construction.
             services.AddScoped<ApplicationInitializer, ApplicationInitializer>();
         }
-
-        private TokenCredential GetAzureCredential() =>
-            Configuration["App:AzureCredentialType"] switch
-            {
-                "AzureCLI" => new AzureCliCredential(),
-                "Environment" => new EnvironmentCredential(),
-                "ManagedIdentity" => new ManagedIdentityCredential(Configuration["AZURE_CLIENT_ID"]),
-                "VisualStudio" => new VisualStudioCredential(),
-                "VisualStudioCode" => new VisualStudioCodeCredential(),
-                _ => new DefaultAzureCredential(),
-            };
 
         private void AddAzureAdServices(IServiceCollection services)
         {
@@ -172,8 +162,23 @@ namespace Relecloud.Web.Api
 
         private void AddTicketImageService(IServiceCollection services)
         {
-            services.AddScoped<ITicketImageService, TicketImageService>();
+            // It is best practice to create Azure SDK clients once and reuse them.
+            // https://learn.microsoft.com/azure/storage/blobs/storage-blob-client-management#manage-client-objects
+            // https://devblogs.microsoft.com/azure-sdk/lifetime-management-and-thread-safety-guarantees-of-azure-sdk-net-clients/
+            services.AddSingleton<ITicketImageService, TicketImageService>();
+            services.AddSingleton(sp => new BlobServiceClient(new Uri(Configuration["App:StorageAccount:Uri"]), GetAzureCredential()));
         }
+
+        private TokenCredential GetAzureCredential() =>
+            Configuration["App:AzureCredentialType"] switch
+            {
+                "AzureCLI" => new AzureCliCredential(),
+                "Environment" => new EnvironmentCredential(),
+                "ManagedIdentity" => new ManagedIdentityCredential(Configuration["AZURE_CLIENT_ID"]),
+                "VisualStudio" => new VisualStudioCredential(),
+                "VisualStudioCode" => new VisualStudioCodeCredential(),
+                _ => new DefaultAzureCredential(new DefaultAzureCredentialOptions { ManagedIdentityClientId = Configuration["AZURE_CLIENT_ID"] }),
+            };
 
         public void Configure(WebApplication app, IWebHostEnvironment env)
         {
