@@ -1,6 +1,9 @@
-﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
+using Azure.Core;
+using Azure.Identity;
+using Azure.Storage.Blobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
@@ -142,8 +145,21 @@ namespace Relecloud.Web.Api
         {
             // It is best practice to create Azure SDK clients once and reuse them.
             // https://learn.microsoft.com/azure/storage/blobs/storage-blob-client-management#manage-client-objects
+            // https://devblogs.microsoft.com/azure-sdk/lifetime-management-and-thread-safety-guarantees-of-azure-sdk-net-clients/
             services.AddSingleton<ITicketImageService, TicketImageService>();
+            services.AddSingleton(sp => new BlobServiceClient(new Uri(Configuration["App:StorageAccount:Uri"]), GetAzureCredential()));
         }
+
+        private TokenCredential GetAzureCredential() =>
+            Configuration["App:AzureCredentialType"] switch
+            {
+                "AzureCLI" => new AzureCliCredential(),
+                "Environment" => new EnvironmentCredential(),
+                "ManagedIdentity" => new ManagedIdentityCredential(Configuration["AZURE_CLIENT_ID"]),
+                "VisualStudio" => new VisualStudioCredential(),
+                "VisualStudioCode" => new VisualStudioCodeCredential(),
+                _ => new DefaultAzureCredential(new DefaultAzureCredentialOptions { ManagedIdentityClientId = Configuration["AZURE_CLIENT_ID"] }),
+            };
 
         public void Configure(WebApplication app, IWebHostEnvironment env)
         {

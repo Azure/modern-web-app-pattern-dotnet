@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
-using Azure.Identity;
 using Azure.Storage.Blobs;
 
 namespace Relecloud.Web.Api.Services.TicketManagementService
@@ -11,13 +10,14 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
         private readonly ILogger<TicketImageService> logger;
         private readonly BlobContainerClient blobContainerClient;
 
-        public TicketImageService(IConfiguration configuration, ILogger<TicketImageService> logger)
+        public TicketImageService(IConfiguration configuration, BlobServiceClient blobServiceClient, ILogger<TicketImageService> logger)
         {
             this.logger = logger;
 
             // It is best practice to create Azure SDK clients once and reuse them.
-            this.blobContainerClient = new BlobServiceClient(new Uri(configuration["App:StorageAccount:Uri"]), new DefaultAzureCredential())
-                .GetBlobContainerClient(configuration["App:StorageAccount:Container"]);
+            // https://learn.microsoft.com/azure/storage/blobs/storage-blob-client-management#manage-client-objects
+            // https://devblogs.microsoft.com/azure-sdk/lifetime-management-and-thread-safety-guarantees-of-azure-sdk-net-clients/
+            this.blobContainerClient = blobServiceClient.GetBlobContainerClient(configuration["App:StorageAccount:Container"]);
         }
 
         public Task<Stream> GetTicketImagesAsync(string imageName)
