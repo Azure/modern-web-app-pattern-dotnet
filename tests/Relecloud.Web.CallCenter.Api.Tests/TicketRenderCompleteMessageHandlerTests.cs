@@ -3,7 +3,7 @@
 
 namespace Relecloud.Web.CallCenter.Api.Tests;
 
-public class TicketRenderCompleteEventHandlerTests
+public class TicketRenderCompleteMessageHandlerTests
 {
 
     [InlineData(null)]
@@ -16,10 +16,10 @@ public class TicketRenderCompleteEventHandlerTests
         var options = Options.Create(new MessageBusOptions { RenderedTicketQueueName = queueName });
         var ct = new CancellationToken();
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
-        var logger = Substitute.For<ILogger<TicketRenderCompleteEventHandler>>();
+        var logger = Substitute.For<ILogger<TicketRenderCompleteMessageHandler>>();
         var messageBus = Substitute.For<IMessageBus>();
 
-        var handler = new TicketRenderCompleteEventHandler(serviceProvider, options, messageBus, logger);
+        var handler = new TicketRenderCompleteMessageHandler(serviceProvider, options, messageBus, logger);
 
         // Act
         await handler.StartAsync(ct);
@@ -28,7 +28,7 @@ public class TicketRenderCompleteEventHandlerTests
         if (string.IsNullOrEmpty(queueName))
         {
             await messageBus.DidNotReceive().SubscribeAsync(
-                Arg.Any<Func<TicketRenderCompleteEvent, CancellationToken, Task>>(),
+                Arg.Any<Func<TicketRenderCompleteMessage, CancellationToken, Task>>(),
                 Arg.Any<Func<Exception, CancellationToken, Task>>(),
                 Arg.Any<string>(),
                 Arg.Any<CancellationToken>());
@@ -36,7 +36,7 @@ public class TicketRenderCompleteEventHandlerTests
         else
         {
             await messageBus.Received(1).SubscribeAsync(
-                Arg.Any<Func<TicketRenderCompleteEvent, CancellationToken, Task>>(),
+                Arg.Any<Func<TicketRenderCompleteMessage, CancellationToken, Task>>(),
                 Arg.Any<Func<Exception, CancellationToken, Task>>(),
                 queueName,
                 ct);
@@ -46,18 +46,18 @@ public class TicketRenderCompleteEventHandlerTests
     [InlineData(true)]
     [InlineData(false)]
     [Theory]
-    public async Task ProcessTicketRenderCompleteEvent_ShouldUpdateTicketImageName_WhenTicketExists(bool ticketExists)
+    public async Task ProcessTicketRenderCompleteMessage_ShouldUpdateTicketImageName_WhenTicketExists(bool ticketExists)
     {
         // Arrange
-        Func<TicketRenderCompleteEvent, CancellationToken, Task>? messageHandler = null;
+        Func<TicketRenderCompleteMessage, CancellationToken, Task>? messageHandler = null;
 
         var ct = new CancellationToken();
         var options = Options.Create(new MessageBusOptions { RenderedTicketQueueName = "test-queue" });
-        var logger = Substitute.For<ILogger<TicketRenderCompleteEventHandler>>();
+        var logger = Substitute.For<ILogger<TicketRenderCompleteMessageHandler>>();
 
         var messageBus = Substitute.For<IMessageBus>();
         await messageBus.SubscribeAsync(
-            Arg.Do<Func<TicketRenderCompleteEvent, CancellationToken, Task>>(handler => messageHandler = handler),
+            Arg.Do<Func<TicketRenderCompleteMessage, CancellationToken, Task>>(handler => messageHandler = handler),
             Arg.Any<Func<Exception, CancellationToken, Task>>(),
             "test-queue",
             ct);
@@ -67,17 +67,17 @@ public class TicketRenderCompleteEventHandlerTests
             .AddSingleton(sp => database)
             .BuildServiceProvider();
 
-        var ticketRenderCompleteEvent = new TicketRenderCompleteEvent(Guid.NewGuid(), ticketExists ? 11 : 5, "TestPath", DateTime.Now);
+        var ticketRenderCompleteMessage = new TicketRenderCompleteMessage(Guid.NewGuid(), ticketExists ? 11 : 5, "TestPath", DateTime.Now);
 
-        var handler = new TicketRenderCompleteEventHandler(serviceProvider, options, messageBus, logger);
+        var handler = new TicketRenderCompleteMessageHandler(serviceProvider, options, messageBus, logger);
 
         // Act
         await handler.StartAsync(ct);
-        messageHandler?.Invoke(ticketRenderCompleteEvent, ct);
+        messageHandler?.Invoke(ticketRenderCompleteMessage, ct);
 
         // Assert
         Assert.NotNull(messageHandler);
-        var ticketPath = database.Tickets.Find(ticketRenderCompleteEvent.TicketId)?.ImageName;
+        var ticketPath = database.Tickets.Find(ticketRenderCompleteMessage.TicketId)?.ImageName;
         Assert.Equal(ticketExists ? "TestPath" : null, ticketPath);
     }
 
@@ -86,19 +86,19 @@ public class TicketRenderCompleteEventHandlerTests
     {
         // Arrange
         var serviceProvider = Substitute.For<IServiceProvider>();
-        var logger = Substitute.For<ILogger<TicketRenderCompleteEventHandler>>();
+        var logger = Substitute.For<ILogger<TicketRenderCompleteMessageHandler>>();
         var options = Options.Create(new MessageBusOptions { RenderedTicketQueueName = "test-queue" });
         var processor = Substitute.For<IMessageProcessor>();
         var messageBus = Substitute.For<IMessageBus>();
         messageBus.SubscribeAsync(
-            Arg.Any<Func<TicketRenderCompleteEvent, CancellationToken, Task>>(),
+            Arg.Any<Func<TicketRenderCompleteMessage, CancellationToken, Task>>(),
             Arg.Any<Func<Exception, CancellationToken, Task>>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
         .Returns(Task.FromResult(processor));
         var ct = new CancellationToken();
 
-        var handler = new TicketRenderCompleteEventHandler(serviceProvider, options, messageBus, logger);
+        var handler = new TicketRenderCompleteMessageHandler(serviceProvider, options, messageBus, logger);
 
         // Act
         await handler.StartAsync(CancellationToken.None);
@@ -113,18 +113,18 @@ public class TicketRenderCompleteEventHandlerTests
     {
         // Arrange
         var serviceProvider = Substitute.For<IServiceProvider>();
-        var logger = Substitute.For<ILogger<TicketRenderCompleteEventHandler>>();
+        var logger = Substitute.For<ILogger<TicketRenderCompleteMessageHandler>>();
         var options = Options.Create(new MessageBusOptions { RenderedTicketQueueName = "test-queue" });
         var processor = Substitute.For<IMessageProcessor>();
         var messageBus = Substitute.For<IMessageBus>();
         messageBus.SubscribeAsync(
-            Arg.Any<Func<TicketRenderCompleteEvent, CancellationToken, Task>>(),
+            Arg.Any<Func<TicketRenderCompleteMessage, CancellationToken, Task>>(),
             Arg.Any<Func<Exception, CancellationToken, Task>>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
         .Returns(Task.FromResult(processor));
 
-        var handler = new TicketRenderCompleteEventHandler(serviceProvider, options, messageBus, logger);
+        var handler = new TicketRenderCompleteMessageHandler(serviceProvider, options, messageBus, logger);
 
         // Act
         await handler.StartAsync(CancellationToken.None);

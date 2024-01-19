@@ -25,12 +25,12 @@ public class DistributedTicketRenderingServiceTests
     [InlineData(true)]
     [InlineData(false)]
     [Theory]
-    public async Task CreateTicketImageAsync_PublishesEventIfTicketIsValid(bool validTicket)
+    public async Task CreateTicketImageAsync_PublishesMessageIfTicketIsValid(bool validTicket)
     {
         // Arrange
-        var messageSender = Substitute.For<IMessageSender<TicketRenderRequestEvent>>();
+        var messageSender = Substitute.For<IMessageSender<TicketRenderRequestMessage>>();
         var messageBus = Substitute.For<IMessageBus>();
-        messageBus.CreateMessageSender<TicketRenderRequestEvent>(Arg.Any<string>()).Returns(messageSender);
+        messageBus.CreateMessageSender<TicketRenderRequestMessage>(Arg.Any<string>()).Returns(messageSender);
 
         var database = await TestHelpers.CreateTestDatabaseAsync();
 
@@ -45,6 +45,6 @@ public class DistributedTicketRenderingServiceTests
         await service.CreateTicketImageAsync(validTicket ? 11 : 5);
 
         // Assert
-        await messageSender.Received(validTicket ? 1 : 0).PublishAsync(Arg.Is<TicketRenderRequestEvent>(e => e.Ticket.Id == 11), Arg.Any<CancellationToken>());
+        await messageSender.Received(validTicket ? 1 : 0).PublishAsync(Arg.Is<TicketRenderRequestMessage>(e => e.Ticket.Id == 11), Arg.Any<CancellationToken>());
     }
 }

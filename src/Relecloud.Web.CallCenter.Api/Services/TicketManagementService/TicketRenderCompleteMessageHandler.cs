@@ -4,30 +4,30 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Relecloud.Messaging;
-using Relecloud.Messaging.Events;
+using Relecloud.Messaging.Messages;
 using Relecloud.Web.Api.Services.SqlDatabaseConcertRepository;
 
 namespace Relecloud.Web.CallCenter.Api.Services.TicketManagementService
 {
     /// <summary>
-    /// Background worker service that monitors the message bus for ticket render complete events.
-    /// When ticket render complete events are received, the service updates the database with the
+    /// Background worker service that monitors the message bus for ticket render complete messages.
+    /// When ticket render complete messages are received, the service updates the database with the
     /// image name for the ticket.
     /// </summary>
-    internal sealed class TicketRenderCompleteEventHandler : IHostedService, IAsyncDisposable
+    internal sealed class TicketRenderCompleteMessageHandler : IHostedService, IAsyncDisposable
     {
         private readonly IServiceProvider serviceProvider;
         private readonly IOptions<MessageBusOptions> options;
         private readonly IMessageBus messageBus;
-        private readonly ILogger<TicketRenderCompleteEventHandler> logger;
+        private readonly ILogger<TicketRenderCompleteMessageHandler> logger;
 
         private IMessageProcessor? processor;
 
-        public TicketRenderCompleteEventHandler(
+        public TicketRenderCompleteMessageHandler(
             IServiceProvider serviceProvider,
             IOptions<MessageBusOptions> options,
             IMessageBus messageBus,
-            ILogger<TicketRenderCompleteEventHandler> logger)
+            ILogger<TicketRenderCompleteMessageHandler> logger)
         {
             this.serviceProvider = serviceProvider;
             this.options = options;
@@ -37,25 +37,25 @@ namespace Relecloud.Web.CallCenter.Api.Services.TicketManagementService
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation("TicketRenderCompleteEventHandler is starting");
+            logger.LogInformation("TicketRenderCompleteMessageHandler is starting");
 
             var queueName = options.Value.RenderedTicketQueueName;
 
             if (string.IsNullOrEmpty(queueName))
             {
-                logger.LogWarning("No queue name was specified. TicketRenderCompleteEventHandler will not start.");
+                logger.LogWarning("No queue name was specified. TicketRenderCompleteMessageHandler will not start.");
                 return;
             }
 
-            // Initialize the message processor to listen for ticket render complete events.
-            processor = await messageBus.SubscribeAsync<TicketRenderCompleteEvent>(
-                ProcessTicketRenderCompleteEvent,
+            // Initialize the message processor to listen for ticket render complete messages.
+            processor = await messageBus.SubscribeAsync<TicketRenderCompleteMessage>(
+                ProcessTicketRenderCompleteMessage,
                 null, // Error handling callback
                 queueName,
                 cancellationToken);
         }
 
-        private async Task ProcessTicketRenderCompleteEvent(TicketRenderCompleteEvent ticketRenderCompleteEvent, CancellationToken cancellationToken)
+        private async Task ProcessTicketRenderCompleteMessage(TicketRenderCompleteMessage ticketRenderCompleteMessage, CancellationToken cancellationToken)
         {
             using (var diScope = serviceProvider.CreateScope())
             {
@@ -68,18 +68,18 @@ namespace Relecloud.Web.CallCenter.Api.Services.TicketManagementService
                     .Include(ticket => ticket.Concert)
                     .Include(ticket => ticket.User)
                     .Include(ticket => ticket.Customer)
-                    .Where(ticket => ticket.Id == ticketRenderCompleteEvent.TicketId)
+                    .Where(ticket => ticket.Id == ticketRenderCompleteMessage.TicketId)
                 .FirstOrDefault();
 
                 if (ticket is null)
                 {
-                    logger.LogWarning("No Ticket found for id:{TicketId}", ticketRenderCompleteEvent.TicketId);
+                    logger.LogWarning("No Ticket found for id:{TicketId}", ticketRenderCompleteMessage.TicketId);
                     return;
                 }
 
-                // Set the ticket's image name to the path returned by the render event
+                // Set the ticket's image name to the path returned by the render message
                 // and update the database.
-                ticket.ImageName = ticketRenderCompleteEvent.OutputPath;
+                ticket.ImageName = ticketRenderCompleteMessage.OutputPath;
                 database.Update(ticket);
                 await database.SaveChangesAsync(cancellationToken);
                 logger.LogInformation("Updated ticket image name for id {TicketId}", ticket.Id);
@@ -88,7 +88,7 @@ namespace Relecloud.Web.CallCenter.Api.Services.TicketManagementService
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            logger.LogDebug("TicketRenderCompleteEventHandler is stopping");
+            logger.LogDebug("TicketRenderCompleteMessageHandler is stopping");
 
             if (processor is not null)
             {

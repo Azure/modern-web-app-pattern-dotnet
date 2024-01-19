@@ -13,8 +13,6 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
     /// </summary>
     public class FeatureDependentTicketRenderingServiceFactory : ITicketRenderingServiceFactory
     {
-        private const string FeatureName = "DistributedTicketRendering";
-
         private readonly IFeatureManager featureManager;
         private readonly IServiceProvider serviceProvider;
 
@@ -33,7 +31,7 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
         /// or <see cref="LocalTicketRenderingService"/> depending on the state of the
         /// DistributedTicketRendering feature flag.</returns>
         public async Task<ITicketRenderingService> CreateAsync() =>
-            (await featureManager.IsEnabledAsync(FeatureName))
+            (await featureManager.IsEnabledAsync(FeatureFlags.DistributedTicketRendering))
                 ? serviceProvider.GetRequiredService<DistributedTicketRenderingService>()
                 : serviceProvider.GetRequiredService<LocalTicketRenderingService>();
     }

@@ -24,7 +24,7 @@ internal static class Extensions
 
     public static void AddTicketRenderingServices(this WebApplicationBuilder builder)
     {
-        builder.Services.AddHostedService<TicketRenderRequestEventHandler>();
+        builder.Services.AddHostedService<TicketRenderRequestMessageHandler>();
         builder.Services.AddSingleton<IImageStorage, AzureImageStorage>();
         builder.Services.AddSingleton<ITicketRenderer, Services.TicketRenderer>();
         builder.Services.AddTransient<IBarcodeGenerator>(_ => new RandomBarcodeGenerator(615));
@@ -50,6 +50,8 @@ internal static class Extensions
             // Prefer user secrets over all other configuration, including app configuration
             builder.Configuration.AddUserSecrets<Program>(optional: true);
         }
+
+        builder.Services.AddAzureAppConfiguration();
     }
 
     public static void AddAzureServices(this WebApplicationBuilder builder, TokenCredential credential)
