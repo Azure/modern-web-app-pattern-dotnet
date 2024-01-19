@@ -4,7 +4,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Relecloud.Messaging;
-using Relecloud.Messaging.Events;
+using Relecloud.Messaging.Messages;
 using Relecloud.Web.Api.Services.SqlDatabaseConcertRepository;
 
 namespace Relecloud.Web.Api.Services.TicketManagementService
@@ -17,7 +17,7 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
     {
         private readonly ConcertDataContext database;
         private readonly ILogger<DistributedTicketRenderingService> logger;
-        private readonly IMessageSender<TicketRenderRequestEvent> messageSender;
+        private readonly IMessageSender<TicketRenderRequestMessage> messageSender;
 
         public DistributedTicketRenderingService(ConcertDataContext database, IMessageBus messageBus, IOptions<MessageBusOptions> options, ILogger<DistributedTicketRenderingService> logger)
         {
@@ -25,7 +25,7 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
 
             this.database = database;
             this.logger = logger;
-            messageSender = messageBus.CreateMessageSender<TicketRenderRequestEvent>(queueName);
+            messageSender = messageBus.CreateMessageSender<TicketRenderRequestMessage>(queueName);
         }
 
         public async Task CreateTicketImageAsync(int ticketId)
@@ -46,7 +46,7 @@ namespace Relecloud.Web.Api.Services.TicketManagementService
 
             // Publish a message to request that the ticket be rendered.
             // If no output path is specified, the remote ticket rendering service will generate one.
-            await messageSender.PublishAsync(new TicketRenderRequestEvent(Guid.NewGuid(), ticket, null, DateTime.Now), CancellationToken.None);
+            await messageSender.PublishAsync(new TicketRenderRequestMessage(Guid.NewGuid(), ticket, null, DateTime.Now), CancellationToken.None);
             logger.LogInformation("Requested ticket rendering for ticket {TicketId}.", ticketId);
 
             // The database is not updated with the blob name until the ticket is rendered.

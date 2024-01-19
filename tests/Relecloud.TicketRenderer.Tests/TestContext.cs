@@ -5,18 +5,18 @@ namespace Relecloud.TicketRenderer.Tests;
 
 internal class TestContext
 {
-    public ILogger<TicketRenderRequestEventHandler> Logger { get; set; }
+    public ILogger<TicketRenderRequestMessageHandler> Logger { get; set; }
     public IOptions<MessageBusOptions> ServiceBusOptions { get; set; }
     public IMessageBus MessageBus { get; set; }
     public ITicketRenderer TicketRenderer { get; set; }
     public IMessageProcessor Processor { get; set; }
-    public IMessageSender<TicketRenderCompleteEvent> Sender { get; set; }
+    public IMessageSender<TicketRenderCompleteMessage> Sender { get; set; }
 
     public TestContext(
         IOptions<MessageBusOptions>? options = null,
-        ILogger<TicketRenderRequestEventHandler>? logger = null,
+        ILogger<TicketRenderRequestMessageHandler>? logger = null,
         IMessageProcessor? processor = null,
-        IMessageSender<TicketRenderCompleteEvent>? sender = null,
+        IMessageSender<TicketRenderCompleteMessage>? sender = null,
         IMessageBus? messageBus = null,
         ITicketRenderer? ticketRenderer = null)
     {
@@ -29,13 +29,13 @@ internal class TestContext
             });
 
         Logger = logger
-            ?? Substitute.For<ILogger<TicketRenderRequestEventHandler>>();
+            ?? Substitute.For<ILogger<TicketRenderRequestMessageHandler>>();
 
         Processor = processor
             ?? Substitute.For<IMessageProcessor>();
 
         Sender = sender
-            ?? Substitute.For<IMessageSender<TicketRenderCompleteEvent>>();
+            ?? Substitute.For<IMessageSender<TicketRenderCompleteMessage>>();
 
         if (messageBus is not null)
         {
@@ -45,12 +45,12 @@ internal class TestContext
         {
             MessageBus = Substitute.For<IMessageBus>();
             MessageBus.SubscribeAsync(
-                Arg.Any<Func<TicketRenderRequestEvent, CancellationToken, Task>>(),
+                Arg.Any<Func<TicketRenderRequestMessage, CancellationToken, Task>>(),
                 Arg.Any<Func<Exception, CancellationToken, Task>>(),
                 Arg.Any<string>(),
                 Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(Processor));
-            MessageBus.CreateMessageSender<TicketRenderCompleteEvent>(Arg.Any<string>())
+            MessageBus.CreateMessageSender<TicketRenderCompleteMessage>(Arg.Any<string>())
                 .Returns(Sender);
         }
 
@@ -58,8 +58,8 @@ internal class TestContext
             ?? Substitute.For<ITicketRenderer>();
     }
 
-    public TicketRenderRequestEventHandler CreateHandler()
+    public TicketRenderRequestMessageHandler CreateHandler()
     {
-        return new TicketRenderRequestEventHandler(Logger, ServiceBusOptions, MessageBus, TicketRenderer);
+        return new TicketRenderRequestMessageHandler(Logger, ServiceBusOptions, MessageBus, TicketRenderer);
     }
 }

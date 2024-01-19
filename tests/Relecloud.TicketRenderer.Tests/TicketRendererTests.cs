@@ -13,10 +13,10 @@ public class TicketRendererTests
         // Arrange
         var requests = new[]
         {
-            new TicketRenderRequestEvent(Guid.Empty, null!, "TicketImagePath", new DateTime()),
-            new TicketRenderRequestEvent(Guid.Empty, new Ticket { User = new User(), Customer = new Customer() }, "TicketImagePath", new DateTime()),
-            new TicketRenderRequestEvent(Guid.Empty, new Ticket { User = new User(), Concert = new Concert() }, "TicketImagePath", new DateTime()),
-            new TicketRenderRequestEvent(Guid.Empty, new Ticket { Customer = new Customer(), Concert = new Concert() }, "TicketImagePath", new DateTime()),
+            new TicketRenderRequestMessage(Guid.Empty, null!, "TicketImagePath", new DateTime()),
+            new TicketRenderRequestMessage(Guid.Empty, new Ticket { User = new User(), Customer = new Customer() }, "TicketImagePath", new DateTime()),
+            new TicketRenderRequestMessage(Guid.Empty, new Ticket { User = new User(), Concert = new Concert() }, "TicketImagePath", new DateTime()),
+            new TicketRenderRequestMessage(Guid.Empty, new Ticket { Customer = new Customer(), Concert = new Concert() }, "TicketImagePath", new DateTime()),
         };
         var ticketRenderer = new Renderer(Substitute.For<ILogger<Renderer>>(), Substitute.For<IImageStorage>(), Substitute.For<IBarcodeGenerator>());
 
@@ -39,7 +39,7 @@ public class TicketRendererTests
     {
         // Arrange
         var ticket = new Ticket { Id = 0, User = new User(), Customer = new Customer { Email = "a@test.com" }, Concert = GetConcert() };
-        var request = new TicketRenderRequestEvent(Guid.NewGuid(), ticket, requestPathName, new DateTime());
+        var request = new TicketRenderRequestMessage(Guid.NewGuid(), ticket, requestPathName, new DateTime());
         var barcodeGenerator = Substitute.For<IBarcodeGenerator>();
         var imageStorage = Substitute.For<IImageStorage>();
         imageStorage.StoreImageAsync(Arg.Any<Stream>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(storeImageAsyncResult));
@@ -59,7 +59,7 @@ public class TicketRendererTests
         // Arrange
         var expectedImage = RelecloudTestHelpers.GetTestImageStream();
         var imagesEquivalent = false;
-        var request = new TicketRenderRequestEvent(
+        var request = new TicketRenderRequestMessage(
             Guid.NewGuid(), 
             new Ticket 
             { 

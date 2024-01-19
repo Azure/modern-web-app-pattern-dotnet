@@ -37,7 +37,7 @@ public class TicketRenderingTest(TicketRendererFixture factory)
         factory.CreateClient();
 
         var expectedPath = string.IsNullOrEmpty(outputPath) ? "ticket-11.png" : outputPath;
-        var request = new TicketRenderRequestEvent(
+        var request = new TicketRenderRequestMessage(
             Guid.NewGuid(),
             new Ticket
             {
@@ -74,7 +74,7 @@ public class TicketRenderingTest(TicketRendererFixture factory)
 
         // One message regarding image render completion should have been queued in the corresponding queue
         var message = Assert.Single(factory.ServiceBusClient.Sender.SentMessages);
-        var contents = message.Body.ToObjectFromJson<TicketRenderCompleteEvent>();
+        var contents = message.Body.ToObjectFromJson<TicketRenderCompleteMessage>();
         Assert.Equal(request.Ticket.Id, contents.TicketId);
         Assert.Equal(expectedPath, contents.OutputPath);
     }

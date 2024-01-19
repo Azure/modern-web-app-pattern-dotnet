@@ -40,6 +40,8 @@ namespace Relecloud.Web.Api
 
             services.AddControllers();
 
+            services.AddAzureAppConfiguration();
+
             // Enable feature management for easily enabling or disabling
             // optional features like rendering tickets out-of-process.
             services.AddFeatureManagement();
@@ -100,7 +102,7 @@ namespace Relecloud.Web.Api
                 services.AddScoped<ITicketRenderingServiceFactory, FeatureDependentTicketRenderingServiceFactory>();
                 services.AddScoped<LocalTicketRenderingService>();
                 services.AddScoped<DistributedTicketRenderingService>();
-                services.AddHostedService<TicketRenderCompleteEventHandler>();
+                services.AddHostedService<TicketRenderCompleteMessageHandler>();
             }
         }
 
@@ -177,6 +179,9 @@ namespace Relecloud.Web.Api
 
         public void Configure(WebApplication app, IWebHostEnvironment env)
         {
+            // Allows refreshing configuration values from Azure App Configuration
+            app.UseAzureAppConfiguration();
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {

@@ -13,7 +13,7 @@ public class MessageBusOptions
     [Required]
     public string? RenderRequestQueueName { get; set; }
 
-    // This property is only required if events should be generated
+    // This property is only required if messages should be generated
     // when ticket images are produced.
     public string? RenderedTicketQueueName { get; set; }
 
