@@ -68,17 +68,6 @@ namespace Relecloud.Web.Api
             services.AddScoped<ApplicationInitializer, ApplicationInitializer>();
         }
 
-        private TokenCredential GetAzureCredential() =>
-            Configuration["App:AzureCredentialType"] switch
-            {
-                "AzureCLI" => new AzureCliCredential(),
-                "Environment" => new EnvironmentCredential(),
-                "ManagedIdentity" => new ManagedIdentityCredential(Configuration["AZURE_CLIENT_ID"]),
-                "VisualStudio" => new VisualStudioCredential(),
-                "VisualStudioCode" => new VisualStudioCodeCredential(),
-                _ => new DefaultAzureCredential(),
-            };
-
         private void AddAzureAdServices(IServiceCollection services)
         {
             // Adds Microsoft Identity platform (AAD v2.0) support to protect this Api
