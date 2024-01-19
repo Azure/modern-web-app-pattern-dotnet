@@ -22,7 +22,7 @@ namespace Relecloud.TicketRenderer.TestHelpers
 
         protected override bool ContainsHeader(string name) => false;
 
-        protected override IEnumerable<HttpHeader> EnumerateHeaders() => Enumerable.Empty<HttpHeader>();
+        protected override IEnumerable<HttpHeader> EnumerateHeaders() => [];
 
         protected override bool TryGetHeader(string name, [NotNullWhen(true)] out string? value)
         {

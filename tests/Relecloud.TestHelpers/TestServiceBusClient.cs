@@ -5,7 +5,7 @@ using Azure.Messaging.ServiceBus;
 
 namespace Relecloud.TicketRenderer.TestHelpers;
 
-public class TestServiceBusClient : ServiceBusClient
+public sealed class TestServiceBusClient : ServiceBusClient
 {
     public TestServiceBusSender Sender { get; }
 
