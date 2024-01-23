@@ -51,8 +51,8 @@ for webapp_id in $webapp_ids; do
     done
 
     if [[ $retry_count -eq 5 ]]; then
-        echo "Failed to retrieve pending private endpoint connections for web app with ID: $webapp_id"
-        exit 1
+        # this can happen on the second deployment of the web app when the front door is already created
+        echo "Found no pending private endpoint connections for web app with ID: $webapp_id"
     fi
 
     # Approve any pending private endpoint connections.
