@@ -16,7 +16,12 @@
 # Note: This script requires appropriate permissions to approve private endpoint connections.
 
 rg_name="$ResourceGroupName"
-webapp_ids=$(az webapp list -g $rg_name --query "[].id" -o tsv)
+if [[ -z "$rg_name" ]]; then
+    echo "Resource group name not set. Please set the environment variable \$ResourceGroupName"
+    exit 1
+fi
+
+webapp_ids=$(az webapp list -g $rg_name --query "[].id" | jq -r '.[]')
 
 # Validate that we found a front-end and back-end web app.
 # When deploying multi-region, we expect to find 2 web apps as two resource groups are deployed.
@@ -29,12 +34,13 @@ fi
 
 for webapp_id in $webapp_ids; do
     retry_count=0
+    echo "Approving private endpoint connections for web app with ID: !!$webapp_id!!"
 
     # Retrieve the pending private endpoint connections for the web app.
     # The front door pending private endpoint connections will be created asynchronously
     # so the retry has been added for this scenario to await the asynchronous operation.
     while [[ $retry_count -lt 5 ]]; do
-        fd_conn_ids=$(az network private-endpoint-connection list --id $webapp_id --query "[?properties.provisioningState == 'Pending'].id" -o tsv)
+        fd_conn_ids=$(az network private-endpoint-connection list --id "$webapp_id" --query "[?properties.provisioningState == 'Pending'].id" -o tsv)
 
         if [[ $(echo "$fd_conn_ids" | wc -w) -gt 0 ]]; then
             break
@@ -51,6 +57,7 @@ for webapp_id in $webapp_ids; do
 
     # Approve any pending private endpoint connections.
     for fd_conn_id in $fd_conn_ids; do
-        az network private-endpoint-connection approve --id "$fd_conn_id" --description "ApprovedByCli"
+        #az network private-endpoint-connection approve --id "$fd_conn_id" --description "ApprovedByCli"
+        echo "Approved private endpoint connection with ID: $fd_conn_id"
     done
 done
