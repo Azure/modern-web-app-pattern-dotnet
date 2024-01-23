@@ -40,7 +40,7 @@ for webapp_id in $webapp_ids; do
     # The front door pending private endpoint connections will be created asynchronously
     # so the retry has been added for this scenario to await the asynchronous operation.
     while [[ $retry_count -lt 5 ]]; do
-        fd_approved_conn_ids=$(az network private-endpoint-connection list --id "$webapp_id" --query "[?properties.provisioningState == 'Approved'].id" -o tsv)
+        fd_approved_conn_ids=$(az network private-endpoint-connection list --id "$webapp_id" --query "[?properties.provisioningState == 'Succeeded'].id" -o tsv)
         # break from loop if we found 2 approved private endpoint connections
         # because that means there is nothing to approve
         if [[ $(echo "$fd_approved_conn_ids" | wc -w) -eq 2 ]]; then
@@ -58,6 +58,7 @@ for webapp_id in $webapp_ids; do
         retry_count=$((retry_count + 1))
         # allows for a maximum of 30 seconds waiting with an incrementally increasing sleep duration
         sleep_duration=$((retry_count * 2))
+        echo "... retrying in $sleep_duration seconds"
         sleep $sleep_duration
     done
 
