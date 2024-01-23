@@ -23,6 +23,8 @@ webapp_ids=$(az webapp list -g $rg_name --query "[].id" -o tsv)
 if [[ $(echo "$webapp_ids" | wc -w) -ne 2 ]]; then
     echo "Invalid webapp_ids length. Expected 2, but found $(echo "$webapp_ids" | wc -w)"
     exit 1
+else
+    echo "Proceeding to approve private endpoint connections for web apps in resource group: $rg_name"
 fi
 
 for webapp_id in $webapp_ids; do
