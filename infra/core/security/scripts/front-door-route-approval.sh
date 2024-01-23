@@ -57,7 +57,7 @@ for webapp_id in $webapp_ids; do
 
     # Approve any pending private endpoint connections.
     for fd_conn_id in $fd_conn_ids; do
-        #az network private-endpoint-connection approve --id "$fd_conn_id" --description "ApprovedByCli"
         echo "Approved private endpoint connection with ID: $fd_conn_id"
+        az network private-endpoint-connection approve --id "$fd_conn_id" --description "ApprovedByCli"        
     done
 done
