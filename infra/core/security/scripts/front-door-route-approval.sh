@@ -40,19 +40,31 @@ for webapp_id in $webapp_ids; do
     # The front door pending private endpoint connections will be created asynchronously
     # so the retry has been added for this scenario to await the asynchronous operation.
     while [[ $retry_count -lt 5 ]]; do
-        fd_conn_ids=$(az network private-endpoint-connection list --id "$webapp_id" --query "[?properties.provisioningState == 'Pending'].id" -o tsv)
+        fd_approved_conn_ids=$(az network private-endpoint-connection list --id "$webapp_id" --query "[?properties.provisioningState == 'Approved'].id" -o tsv)
+        # break from loop if we found 2 approved private endpoint connections
+        # because that means there is nothing to approve
+        if [[ $(echo "$fd_approved_conn_ids" | wc -w) -eq 2 ]]; then
+            echo "Found 2 approved private endpoint connections for web app with ID: $webapp_id"
+            fd_conn_ids=""
+            break
+        fi
 
+        fd_conn_ids=$(az network private-endpoint-connection list --id "$webapp_id" --query "[?properties.provisioningState == 'Pending'].id" -o tsv)
+        # break from loop if we found any pending private endpoint connections
         if [[ $(echo "$fd_conn_ids" | wc -w) -gt 0 ]]; then
             break
         fi
 
         retry_count=$((retry_count + 1))
-        sleep 5
+        # allows for a maximum of 30 seconds waiting with an incrementally increasing sleep duration
+        sleep_duration=$((retry_count * 2))
+        sleep $sleep_duration
     done
 
+    # report an error condition; we expect to find 2 approved private endpoint connections or to have something that needs approved
     if [[ $retry_count -eq 5 ]]; then
-        # this can happen on the second deployment of the web app when the front door is already created
-        echo "Found no pending private endpoint connections for web app with ID: $webapp_id"
+        echo "Failed to find pending private endpoint connections for web app with ID: $webapp_id"
+        exit 1
     fi
 
     # Approve any pending private endpoint connections.
