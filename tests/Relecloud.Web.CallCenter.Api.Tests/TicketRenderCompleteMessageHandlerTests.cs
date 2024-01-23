@@ -13,7 +13,7 @@ public class TicketRenderCompleteMessageHandlerTests
     public async Task StartAsync_ShouldSubscribeToMessageBus_WhenQueueNameIsNotNullOrEmpty(string queueName)
     {
         // Arrange
-        var options = Options.Create(new MessageBusOptions { RenderedTicketQueueName = queueName });
+        var options = Options.Create(new MessageBusOptions { RenderCompleteQueueName = queueName });
         var ct = new CancellationToken();
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
         var logger = Substitute.For<ILogger<TicketRenderCompleteMessageHandler>>();
@@ -52,7 +52,7 @@ public class TicketRenderCompleteMessageHandlerTests
         Func<TicketRenderCompleteMessage, CancellationToken, Task>? messageHandler = null;
 
         var ct = new CancellationToken();
-        var options = Options.Create(new MessageBusOptions { RenderedTicketQueueName = "test-queue" });
+        var options = Options.Create(new MessageBusOptions { RenderCompleteQueueName = "test-queue" });
         var logger = Substitute.For<ILogger<TicketRenderCompleteMessageHandler>>();
 
         var messageBus = Substitute.For<IMessageBus>();
@@ -87,7 +87,7 @@ public class TicketRenderCompleteMessageHandlerTests
         // Arrange
         var serviceProvider = Substitute.For<IServiceProvider>();
         var logger = Substitute.For<ILogger<TicketRenderCompleteMessageHandler>>();
-        var options = Options.Create(new MessageBusOptions { RenderedTicketQueueName = "test-queue" });
+        var options = Options.Create(new MessageBusOptions { RenderCompleteQueueName = "test-queue" });
         var processor = Substitute.For<IMessageProcessor>();
         var messageBus = Substitute.For<IMessageBus>();
         messageBus.SubscribeAsync(
@@ -114,7 +114,7 @@ public class TicketRenderCompleteMessageHandlerTests
         // Arrange
         var serviceProvider = Substitute.For<IServiceProvider>();
         var logger = Substitute.For<ILogger<TicketRenderCompleteMessageHandler>>();
-        var options = Options.Create(new MessageBusOptions { RenderedTicketQueueName = "test-queue" });
+        var options = Options.Create(new MessageBusOptions { RenderCompleteQueueName = "test-queue" });
         var processor = Substitute.For<IMessageProcessor>();
         var messageBus = Substitute.For<IMessageBus>();
         messageBus.SubscribeAsync(

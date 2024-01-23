@@ -44,7 +44,7 @@ public class TicketRenderRequestMessageHandlerTests
             RenderRequestQueueName = "test-queue",
 
             // Use a response queue name to verify that the sender is instantiated
-            RenderedTicketQueueName = responseQueueName
+            RenderCompleteQueueName = responseQueueName
         });
 
         var ct = new CancellationToken();
@@ -78,7 +78,7 @@ public class TicketRenderRequestMessageHandlerTests
             RenderRequestQueueName = "test-queue",
 
             // Use a response queue name to verify that the sender is instantiated
-            RenderedTicketQueueName = responseQueueName
+            RenderCompleteQueueName = responseQueueName
         });
 
         var context = new TestContext(options: options);
@@ -125,7 +125,7 @@ public class TicketRenderRequestMessageHandlerTests
             RenderRequestQueueName = "test-queue",
 
             // Use a response queue name to verify that the sender is instantiated
-            RenderedTicketQueueName = responseQueueName
+            RenderCompleteQueueName = responseQueueName
         });
 
         var context = new TestContext(options: options);
@@ -155,7 +155,7 @@ public class TicketRenderRequestMessageHandlerTests
             RenderRequestQueueName = "test-queue",
 
             // Use a response queue name to verify that the sender is instantiated
-            RenderedTicketQueueName = responseQueueName
+            RenderCompleteQueueName = responseQueueName
         });
 
         var ct = new CancellationToken();

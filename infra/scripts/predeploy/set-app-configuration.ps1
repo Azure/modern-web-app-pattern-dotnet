@@ -64,7 +64,7 @@ function Get-WorkloadSqlManagedIdentityConnectionString {
         [string]$ResourceGroupName
     )
     Write-Host "`tGetting sql server connection for $highlightColor'$ResourceGroupName'$defaultColor"
-    
+
     $group = Get-AzResourceGroup -Name $ResourceGroupName
 
     # the group contains tags that explain what the default name of the Azure SQL resource should be
@@ -162,6 +162,24 @@ function Get-RedisCacheKeyName {
 
 }
 
+# Working around https://github.com/Azure/azure-powershell/issues/17773
+function Set-AzAppConfiguration-FeatureFlag {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Endpoint,
+        [Parameter(Mandatory = $true)]
+        [string]$FeatureFlagName,
+        [Parameter(Mandatory = $true)]
+        [string]$FeatureFlagDescription,
+        [Parameter(Mandatory = $true)]
+        [bool]$FeatureFlagValue
+    )
+
+    $configValue = "{ `"id`": `"$FeatureFlagName`", `"description`": `"$FeatureFlagDescription`", `"enabled`": $($FeatureFlagValue.ToString().ToLower()), `"conditions`" : { `"client_filters`": [] } }"
+    $featureFlagContentType = "application/vnd.microsoft.appconfig.ff+json;charset=utf-8"
+    Set-AzAppConfigurationKeyValue -ContentType $featureFlagContentType -Endpoint $configStore.Endpoint -Key .appconfig.featureflag/$FeatureFlagName -Value $configValue > $null
+}
+
 Write-Host "Configuring app settings for $highlightColor'$ResourceGroupName'$defaultColor"
 
 # default settings
@@ -172,6 +190,14 @@ $defaultAzureFrontDoorHostName = "$((Get-MyFrontDoorEndpoint -ResourceGroupName 
 $defaultRelecloudBaseUri = "https://$((Get-MyFrontDoorEndpoint -ResourceGroupName $ResourceGroupName).HostName)/api" # used by the frontend to call the backend through the front door
 $defaultKeyVaultUri = (Get-WorkloadKeyVault -ResourceGroupName $ResourceGroupName).VaultUri # the URI of the key vault where secrets are stored
 $defaultRedisCacheKeyName = (Get-RedisCacheKeyName -ResourceGroupName $ResourceGroupName) # workloads use independent redis caches and a shared vault to store the connection string
+$defaultTicketRenderRequestQueueName = "ticket-render-requests" # matches the default defined in application-resources.bicep file
+$defaultTicketRenderCompleteQueueName = "ticket-render-completions" # matches the default defined in application-resources.bicep file
+
+# Bicep templates don't yet deploy the Service Bus namespace used to communicate with the ticket rendering service, so we use a placeholder value
+# here to satisfy the app configuration validation. We also default using distributed ticket rendering to false.
+# Once the Service Bus namespace is deployed, we will update the app configuration to use the correct value and enable distributed ticket rendering by default.
+$defaultAzureServiceBusNamespace = "placeholder" # (Get-WorkloadServiceBus -ResourceGroupName $ResourceGroupName).Namespace
+$defaultUseDistributedTicketRenderingResponse = "n"
 
 # prompt to confirm settings
 $azureStorageTicketContainerName = ""
@@ -237,6 +263,50 @@ if ($redisCacheKeyName -eq "") {
     $redisCacheKeyName = $defaultRedisCacheKeyName
 }
 
+$azureServiceBusNamespace = ""
+if (-not $NoPrompt) {
+    $azureServiceBusNamespace = Read-Host -Prompt "`nWhat is the namespace of the Service Bus instance for message queues? [default: $highlightColor$defaultAzureServiceBusNamespace$defaultColor]"
+}
+
+if ($azureServiceBusNamespace -eq "") {
+    $azureServiceBusNamespace = $defaultAzureServiceBusNamespace
+}
+
+$ticketRenderRequestQueueName = ""
+if (-not $NoPrompt) {
+    $ticketRenderRequestQueueName = Read-Host -Prompt "`nWhat value should be used for the Service Bus queue storing ticket render requests? [default: $highlightColor$defaultTicketRenderRequestQueueName$defaultColor]"
+}
+
+if ($ticketRenderRequestQueueName -eq "") {
+    $ticketRenderRequestQueueName = $defaultTicketRenderRequestQueueName
+}
+
+$ticketRenderCompleteQueueName = ""
+if (-not $NoPrompt) {
+    $ticketRenderCompleteQueueName = Read-Host -Prompt "`nWhat value should be used for the Service Bus queue storing ticket render complete messages? [default: $highlightColor$defaultTicketRenderCompleteQueueName$defaultColor]"
+}
+
+if ($ticketRenderCompleteQueueName -eq "") {
+    $ticketRenderCompleteQueueName = $defaultTicketRenderCompleteQueueName
+}
+
+$useDistributedTicketRenderingResponse = ""
+if (-not $NoPrompt) {
+    while ($useDistributedTicketRenderingResponse -ne "y" -and $useDistributedTicketRenderingResponse -ne "n") {
+        $useDistributedTicketRenderingResponse = Read-Host -Prompt "`nShould distributed ticket rendering be enabled? [y/n] [default: $highlightColor$defaultUseDistributedTicketRenderingResponse$defaultColor]"
+
+        if ($useDistributedTicketRenderingResponse -eq "") {
+            $useDistributedTicketRenderingResponse = $defaultUseDistributedTicketRenderingResponse
+        }
+    }
+}
+
+if ($useDistributedTicketRenderingResponse -eq "") {
+    $useDistributedTicketRenderingResponse = $defaultUseDistributedTicketRenderingResponse
+}
+
+$useDistributedTicketRendering = $useDistributedTicketRenderingResponse -eq "y"
+
 # display the settings so that the user can verify them in the output log
 Write-Host "`nWorking settings:"
 Write-Host "`tazureStorageTicketContainerName: $highlightColor'$azureStorageTicketContainerName'$defaultColor"
@@ -246,7 +316,10 @@ Write-Host "`tAzureStorageTicketUri: $highlightColor'$azureStorageTicketUri'$def
 Write-Host "`tAzureFrontDoorHostName: $highlightColor'$azureFrontDoorHostName'$defaultColor"
 Write-Host "`tRelecloudBaseUri: $highlightColor'$relecloudBaseUri'$defaultColor"
 Write-Host "`tRedisCacheKeyName: $highlightColor'$redisCacheKeyName'$defaultColor"
-Write-Host "`tKeyVaultUri: $highlightColor'$keyVaultUri'$defaultColor"
+Write-Host "`tAzureServiceBusNamespace: $highlightColor'$azureServiceBusNamespace'$defaultColor"
+Write-Host "`tRenderRequestQueueName: $highlightColor'$ticketRenderRequestQueueName'$defaultColor"
+Write-Host "`tRenderCompleteQueueName: $highlightColor'$ticketRenderCompleteQueueName'$defaultColor"
+Write-Host "`tDistributedTicketRendering: $highlightColor'$useDistributedTicketRendering'$defaultColor"
 
 # handles multi-regional app configuration because the app config must be in the same region as the code deployment
 $configStore = Get-AzAppConfigurationStore -ResourceGroupName $resourceGroupName
@@ -256,11 +329,18 @@ try {
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:SqlDatabase:ConnectionString -Value $sqlConnectionString > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:StorageAccount:Container -Value $azureStorageTicketContainerName > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:StorageAccount:Uri -Value $azureStorageTicketUri > $null
-    
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:ServiceBus:Namespace -Value $azureServiceBusNamespace > $null
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:ServiceBus:RenderRequestQueueName -Value $ticketRenderRequestQueueName > $null
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:ServiceBus:RenderCompleteQueueName -Value $ticketRenderCompleteQueueName > $null
+
+    # Az.AppConfiguration does not support feature flags yet, so we use our own helper function
+    # https://github.com/Azure/azure-powershell/issues/17773
+    Set-AzAppConfiguration-FeatureFlag -Endpoint $configStore.Endpoint -FeatureFlagName "DistributedTicketRendering" -FeatureFlagDescription "Enable to render ticket images out-of-process" -FeatureFlagValue $useDistributedTicketRendering
+
     Write-Host "Set values for frontend..."
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:FrontDoorHostname -Value $azureFrontDoorHostName > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RelecloudApi:BaseUri -Value $relecloudBaseUri > $null
-    
+
     Write-Host "Set values for key vault references..."
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:AzureAd:ClientId -Value "{ `"uri`":`"$($keyVaultUri)secrets/Api--AzureAd--ClientId`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:AzureAd:Instance -Value "{ `"uri`":`"$($keyVaultUri)secrets/Api--AzureAd--Instance`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null

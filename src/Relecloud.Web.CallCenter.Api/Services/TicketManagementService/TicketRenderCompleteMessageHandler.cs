@@ -39,7 +39,7 @@ namespace Relecloud.Web.CallCenter.Api.Services.TicketManagementService
         {
             logger.LogInformation("TicketRenderCompleteMessageHandler is starting");
 
-            var queueName = options.Value.RenderedTicketQueueName;
+            var queueName = options.Value.RenderCompleteQueueName;
 
             if (string.IsNullOrEmpty(queueName))
             {

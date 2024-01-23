@@ -25,7 +25,7 @@ internal class TestContext
             {
                 Namespace = "test-namespace",
                 RenderRequestQueueName = "test-queue",
-                RenderedTicketQueueName = "test-response-queue"
+                RenderCompleteQueueName = "test-response-queue"
             });
 
         Logger = logger

@@ -31,9 +31,9 @@ internal sealed class TicketRenderRequestMessageHandler(
         }
 
         // If a queue/topic name was specified, use it to publish messages when tickets are rendered.
-        if (!string.IsNullOrEmpty(options.Value.RenderedTicketQueueName))
+        if (!string.IsNullOrEmpty(options.Value.RenderCompleteQueueName))
         {
-            sender = messageBus.CreateMessageSender<TicketRenderCompleteMessage>(options.Value.RenderedTicketQueueName);
+            sender = messageBus.CreateMessageSender<TicketRenderCompleteMessage>(options.Value.RenderCompleteQueueName);
         }
 
         // Initialize the message processor to listen for ticket render requests.

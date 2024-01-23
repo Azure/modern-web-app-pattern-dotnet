@@ -13,7 +13,7 @@ public class MessageBusOptionsTests
         var options = new MessageBusOptions
         {
             RenderRequestQueueName = "TestRequestQueue",
-            RenderedTicketQueueName = "TestReponseQueue"
+            RenderCompleteQueueName = "TestReponseQueue"
         };
 
         var context = new ValidationContext(options);
@@ -30,7 +30,7 @@ public class MessageBusOptionsTests
         var options = new MessageBusOptions
         {
             Namespace = "TestNamespace",
-            RenderedTicketQueueName = "TestReponseQueue"
+            RenderCompleteQueueName = "TestReponseQueue"
         };
 
         var context = new ValidationContext(options);
@@ -55,7 +55,7 @@ public class MessageBusOptionsTests
         var isValid = Validator.TryValidateObject(options, context, results, true);
 
         Assert.True(isValid);
-        Assert.Null(options.RenderedTicketQueueName);
+        Assert.Null(options.RenderCompleteQueueName);
         Assert.DoesNotContain(results, r => r.MemberNames.Contains("RenderedTicketQueueName"));
     }
 }

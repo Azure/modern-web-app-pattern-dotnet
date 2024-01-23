@@ -15,7 +15,7 @@ public class MessageBusOptions
 
     // This property is only required if messages should be generated
     // when ticket images are produced.
-    public string? RenderedTicketQueueName { get; set; }
+    public string? RenderCompleteQueueName { get; set; }
 
     public int MaxRetries { get; set; } = 3;
 
