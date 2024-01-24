@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
-using Azure.Core.Amqp;
 using Azure.Messaging.ServiceBus;
 
 namespace Relecloud.TicketRenderer.Tests;

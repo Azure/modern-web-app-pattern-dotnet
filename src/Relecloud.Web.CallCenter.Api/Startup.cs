@@ -1,9 +1,14 @@
-﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
+using Azure.Core;
+using Azure.Identity;
+using Azure.Storage.Blobs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.FeatureManagement;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
+using Relecloud.Messaging.ServiceBus;
 using Relecloud.Models.Services;
 using Relecloud.Web.Api.Infrastructure;
 using Relecloud.Web.Api.Services;
@@ -12,6 +17,7 @@ using Relecloud.Web.Api.Services.Search;
 using Relecloud.Web.Api.Services.SqlDatabaseConcertRepository;
 using Relecloud.Web.Api.Services.TicketManagementService;
 using Relecloud.Web.CallCenter.Api.Infrastructure;
+using Relecloud.Web.CallCenter.Api.Services.TicketManagementService;
 using Relecloud.Web.Models.Services;
 using Relecloud.Web.Services.Search;
 using System.Diagnostics;
@@ -28,16 +34,27 @@ namespace Relecloud.Web.Api
         public IConfiguration Configuration { get; }
         public void ConfigureServices(IServiceCollection services)
         {
+            var azureCredential = GetAzureCredential();
+
             // Add services to the container.
             AddMicrosoftEntraIdServices(services);
 
             services.AddControllers();
+
+            services.AddAzureAppConfiguration();
+
+            // Enable feature management for easily enabling or disabling
+            // optional features like rendering tickets out-of-process.
+            services.AddFeatureManagement();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
 
             services.AddApplicationInsightsTelemetry(Configuration["App:Api:ApplicationInsights:ConnectionString"]);
+
+            // Add Azure Service Bus message bus.
+            services.AddAzureServiceBusMessageBus("App:ServiceBus", azureCredential);
 
             AddAzureSearchService(services);
             AddConcertContextServices(services);
@@ -68,7 +85,14 @@ namespace Relecloud.Web.Api
             else
             {
                 services.AddScoped<ITicketManagementService, TicketManagementService>();
-                services.AddScoped<ITicketRenderingService, TicketRenderingService>();
+
+                // Reading a feature flag is an asynchronous operation, so it's not possible
+                // to register an ITicketRenderingService provider method directly. Instead,
+                // use a factory pattern to retrieve the service asynchronously.
+                services.AddScoped<ITicketRenderingServiceFactory, FeatureDependentTicketRenderingServiceFactory>();
+                services.AddScoped<LocalTicketRenderingService>();
+                services.AddScoped<DistributedTicketRenderingService>();
+                services.AddHostedService<TicketRenderCompleteMessageHandler>();
             }
         }
 
@@ -140,11 +164,31 @@ namespace Relecloud.Web.Api
 
         private void AddTicketImageService(IServiceCollection services)
         {
-            services.AddScoped<ITicketImageService, TicketImageService>();
+            // It is best practice to create Azure SDK clients once and reuse them.
+            // https://learn.microsoft.com/azure/storage/blobs/storage-blob-client-management#manage-client-objects
+            // https://devblogs.microsoft.com/azure-sdk/lifetime-management-and-thread-safety-guarantees-of-azure-sdk-net-clients/
+            services.AddSingleton<ITicketImageService, TicketImageService>();
+            var storageAccountUri = Configuration["App:StorageAccount:Uri"]
+                ?? throw new InvalidOperationException("Required configuration missing. Could not find App:StorageAccount:Uri setting.");
+            services.AddSingleton(sp => new BlobServiceClient(new Uri(storageAccountUri), GetAzureCredential()));
         }
+
+        private TokenCredential GetAzureCredential() =>
+            Configuration["App:AzureCredentialType"] switch
+            {
+                "AzureCLI" => new AzureCliCredential(),
+                "Environment" => new EnvironmentCredential(),
+                "ManagedIdentity" => new ManagedIdentityCredential(Configuration["AZURE_CLIENT_ID"]),
+                "VisualStudio" => new VisualStudioCredential(),
+                "VisualStudioCode" => new VisualStudioCodeCredential(),
+                _ => new DefaultAzureCredential(new DefaultAzureCredentialOptions { ManagedIdentityClientId = Configuration["AZURE_CLIENT_ID"] }),
+            };
 
         public void Configure(WebApplication app, IWebHostEnvironment env)
         {
+            // Allows refreshing configuration values from Azure App Configuration
+            app.UseAzureAppConfiguration();
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {

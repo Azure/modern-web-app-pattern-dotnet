@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
 using System.Reflection;
@@ -12,8 +12,8 @@ public class RelecloudTestHelpers
     public static Stream GetTestImageStream()
     {
         var resourceName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? "Relecloud.TicketRenderer.TestHelpers.ExpectedImages.test-ticket-windows.png"
-            : "Relecloud.TicketRenderer.TestHelpers.ExpectedImages.test-ticket-linux.png";
+            ? "Relecloud.TestHelpers.ExpectedImages.test-ticket-windows.png"
+            : "Relecloud.TestHelpers.ExpectedImages.test-ticket-linux.png";
 
         return Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)
             ?? throw new InvalidOperationException($"Could not find embedded resource: {resourceName}.");

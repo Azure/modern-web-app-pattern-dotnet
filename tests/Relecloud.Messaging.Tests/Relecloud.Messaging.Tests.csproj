@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Relecloud.TicketRenderer\Relecloud.TicketRenderer.csproj" />
+    <ProjectReference Include="..\..\src\Relecloud.Messaging\Relecloud.Messaging.csproj" />
     <ProjectReference Include="..\Relecloud.TestHelpers\Relecloud.TestHelpers.csproj" />
   </ItemGroup>
 

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+	
+  <ItemGroup>
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.17.1" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
+    <PackageReference Include="xunit.assert" Version="2.6.6" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Relecloud.Models\Relecloud.Models.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<None Remove="ExpectedImages\*.png" />
+	<EmbeddedResource Include="ExpectedImages\*.png" />
+  </ItemGroup>	
+</Project>

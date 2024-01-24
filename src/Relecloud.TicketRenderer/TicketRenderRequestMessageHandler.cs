@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using Microsoft.Extensions.Options;
-using Relecloud.Models.Events;
-using Relecloud.TicketRenderer.Models;
+using Relecloud.Messaging;
+using Relecloud.Messaging.Messages;
 using Relecloud.TicketRenderer.Services;
 
 namespace Relecloud.TicketRenderer;
@@ -11,14 +11,14 @@ namespace Relecloud.TicketRenderer;
 /// <summary>
 /// Background service that handles requests to render ticket images.
 /// </summary>
-internal sealed class TicketRenderRequestEventHandler(
-    ILogger<TicketRenderRequestEventHandler> logger, 
-    IOptions<AzureServiceBusOptions> options,
+internal sealed class TicketRenderRequestMessageHandler(
+    ILogger<TicketRenderRequestMessageHandler> logger, 
+    IOptions<MessageBusOptions> options,
     IMessageBus messageBus, 
     ITicketRenderer ticketRenderer) : IHostedService, IAsyncDisposable
 {
     private IMessageProcessor? processor;
-    private IMessageSender<TicketRenderCompleteEvent>? sender;
+    private IMessageSender<TicketRenderCompleteMessage>? sender;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -30,23 +30,23 @@ internal sealed class TicketRenderRequestEventHandler(
             return;
         }
 
-        // If a topic name was specified, use it to publish messages when tickets are rendered.
-        if (!string.IsNullOrEmpty(options.Value.RenderedTicketTopicName))
+        // If a queue/topic name was specified, use it to publish messages when tickets are rendered.
+        if (!string.IsNullOrEmpty(options.Value.RenderCompleteQueueName))
         {
-            sender = messageBus.CreateMessageSender<TicketRenderCompleteEvent>(options.Value.RenderedTicketTopicName);
+            sender = messageBus.CreateMessageSender<TicketRenderCompleteMessage>(options.Value.RenderCompleteQueueName);
         }
 
         // Initialize the message processor to listen for ticket render requests.
-        processor = await messageBus.SubscribeAsync<TicketRenderRequestEvent>(
+        processor = await messageBus.SubscribeAsync<TicketRenderRequestMessage>(
             async (request, cancellationToken) =>
             {
                 // Render the ticket image and get the path it was written to.
                 var outputPath = await ticketRenderer.RenderTicketAsync(request, cancellationToken);
 
-                // If a topic name was specified, publish a message indicating that the ticket was rendered.
+                // If a queue/topic name was specified, publish a message indicating that the ticket was rendered.
                 if (outputPath is not null && sender is not null)
                 {
-                    await sender.PublishAsync(new TicketRenderCompleteEvent(Guid.NewGuid(), request.Ticket.Id, outputPath, DateTime.Now), cancellationToken);
+                    await sender.PublishAsync(new TicketRenderCompleteMessage(Guid.NewGuid(), request.Ticket.Id, outputPath, DateTime.Now), cancellationToken);
                 }
             },
             null, // Error handling callback

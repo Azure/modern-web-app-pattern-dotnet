@@ -1,9 +1,9 @@
-﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Azure;
+using Relecloud.Messaging.ServiceBus;
 using Relecloud.TicketRenderer.Models;
 using Relecloud.TicketRenderer.Services;
 
@@ -24,10 +24,9 @@ internal static class Extensions
 
     public static void AddTicketRenderingServices(this WebApplicationBuilder builder)
     {
-        builder.Services.AddHostedService<TicketRenderRequestEventHandler>();
+        builder.Services.AddHostedService<TicketRenderRequestMessageHandler>();
         builder.Services.AddSingleton<IImageStorage, AzureImageStorage>();
         builder.Services.AddSingleton<ITicketRenderer, Services.TicketRenderer>();
-        builder.Services.AddSingleton<IMessageBus, AzureServiceBusMessageBus>();
         builder.Services.AddTransient<IBarcodeGenerator>(_ => new RandomBarcodeGenerator(615));
     }
 
@@ -51,17 +50,17 @@ internal static class Extensions
             // Prefer user secrets over all other configuration, including app configuration
             builder.Configuration.AddUserSecrets<Program>(optional: true);
         }
+
+        builder.Services.AddAzureAppConfiguration();
     }
 
     public static void AddAzureServices(this WebApplicationBuilder builder, TokenCredential credential)
     {
+        // Use the Azure Service Bus message bus implementation
+        builder.Services.AddAzureServiceBusMessageBus("App:ServiceBus", credential);
+
         builder.Services.AddOptions<AzureStorageOptions>()
             .BindConfiguration("App:StorageAccount")
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        builder.Services.AddOptions<AzureServiceBusOptions>()
-            .BindConfiguration("App:ServiceBus")
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
@@ -78,24 +77,10 @@ internal static class Extensions
                 throw new InvalidOperationException("Storage options (App:StorageAccount:Uri) not found");
             }
 
-            var serviceBusOptions = builder.Configuration.GetRequiredSection("App:ServiceBus").Get<AzureServiceBusOptions>()
-                ?? throw new InvalidOperationException("Service Bus options (App:ServiceBus) not found");
-
             var resilienceOptions = builder.Configuration.GetSection("App:Resilience").Get<ResilienceOptions>()
                 ?? new ResilienceOptions();
 
             clientConfiguration.AddBlobServiceClient(new Uri(storageOptions.Uri));
-            clientConfiguration.AddServiceBusClientWithNamespace(serviceBusOptions.Namespace)
-                .ConfigureOptions(options =>
-                {
-                    // Default resiliency options (set below) only apply to HTTP-based Azure SDK clients.
-                    // Service Bus uses AMQP here and, therefore, needs its own retry options configured.
-                    options.RetryOptions.Mode = ServiceBusRetryMode.Exponential;
-                    options.RetryOptions.Delay = TimeSpan.FromSeconds(resilienceOptions.BaseDelaySecondsBetweenRetries);
-                    options.RetryOptions.MaxRetries = resilienceOptions.MaxRetries;
-                    options.RetryOptions.MaxDelay = TimeSpan.FromSeconds(resilienceOptions.MaxDelaySeconds);
-                    options.RetryOptions.TryTimeout = TimeSpan.FromSeconds(resilienceOptions.MaxNetworkTimeoutSeconds);
-                });
 
             // ConfigureDefaults sets standard retry policies for all HTTP-based Azure clients.
             // Note that this is not the same as the AddStandardResilienceHandler in ConfigureHttpClientDefaults

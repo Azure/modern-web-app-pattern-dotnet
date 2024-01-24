@@ -15,6 +15,7 @@ if (hasRequiredConfigSettings)
     {
         options
             .Connect(new Uri(builder.Configuration["App:AppConfig:Uri"]), new DefaultAzureCredential())
+            .UseFeatureFlags() // Feature flags will be loaded and, by default, refreshed every 30 seconds
             .ConfigureKeyVault(kv =>
             {
                 // Some of the values coming from Azure App Configuration are stored Key Vault, use

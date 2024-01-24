@@ -1,9 +1,10 @@
-﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
 using Azure.Messaging.ServiceBus;
+using Microsoft.Extensions.Logging;
 
-namespace Relecloud.TicketRenderer.Services;
+namespace Relecloud.Messaging.ServiceBus;
 
 /// <summary>
 /// A message sender for publishing messages to specific Azure Service Bus queues or topics.

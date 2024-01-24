@@ -6,8 +6,9 @@ WORKDIR /src
 
 # Restore packages
 COPY ["Relecloud.TicketRenderer/Relecloud.TicketRenderer.csproj", "Relecloud.TicketRenderer/"]
+COPY ["Relecloud.Messaging/Relecloud.Messaging.csproj", "Relecloud.Messaging/"]
 COPY ["Relecloud.Models/Relecloud.Models.csproj", "Relecloud.Models/"]
-RUN dotnet restore "./Relecloud.TicketRenderer/./Relecloud.TicketRenderer.csproj"
+RUN dotnet restore "./Relecloud.TicketRenderer/Relecloud.TicketRenderer.csproj"
 
 # Build and publish
 COPY . .

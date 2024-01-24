@@ -1,13 +1,13 @@
-﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
-using Relecloud.Models.Events;
+using Relecloud.Messaging.Messages;
 using SkiaSharp;
 
 namespace Relecloud.TicketRenderer.Services
 {
     /// <summary>
-    /// Creates a ticket image from a ticket render request event.
+    /// Creates a ticket image from a ticket render request message.
     /// </summary>
     internal class TicketRenderer(ILogger<TicketRenderer> logger, IImageStorage imageStorage, IBarcodeGenerator barcodeGenerator) : ITicketRenderer
     {
@@ -16,9 +16,9 @@ namespace Relecloud.TicketRenderer.Services
 
         private static readonly Dictionary<string, SKTypeface> Typefaces = GetFonts();
 
-        public async Task<string?> RenderTicketAsync(TicketRenderRequestEvent request, CancellationToken cancellationToken)
+        public async Task<string?> RenderTicketAsync(TicketRenderRequestMessage request, CancellationToken cancellationToken)
         {
-            logger.LogInformation("Rendering ticket {ticket} for event {event}", request.Ticket?.Id.ToString() ?? "<null>", request.EventId);
+            logger.LogInformation("Rendering ticket {ticket} for message {message}", request.Ticket?.Id.ToString() ?? "<null>", request.MessageId);
 
             // Error checking to ensure that we have all the necessary information to render the ticket.
             if (request.Ticket == null)
