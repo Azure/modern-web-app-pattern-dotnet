@@ -17,13 +17,13 @@ targetScope = 'subscription'
 type DeploymentSettings = {
   @description('If \'true\', then two regional deployments will be performed.')
   isMultiLocationDeployment: bool
-  
+
   @description('If \'true\', use production SKUs and settings.')
   isProduction: bool
 
   @description('If \'true\', isolate the workload in a virtual network.')
   isNetworkIsolated: bool
-  
+
   @description('If \'false\', then this is a multi-location deployment for the second location.')
   isPrimaryLocation: bool
 
@@ -333,7 +333,7 @@ module commonAppServicePlan '../core/hosting/app-service-plan.bicep' = if (useCo
     name: resourceNames.commonAppServicePlan
     location: deploymentSettings.location
     tags: moduleTags
-    
+
     // Dependencies
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
 
@@ -353,7 +353,7 @@ module webService './application-appservice.bicep' = {
     diagnosticSettings: diagnosticSettings
     // mapping code projects to web apps by tags matching names from azure.yaml
     tags: moduleTags
-    
+
     // Dependencies
     appConfigurationName: appConfiguration.outputs.name
     applicationInsightsId: applicationInsightsId
@@ -405,7 +405,7 @@ module webFrontend './application-appservice.bicep' = {
     diagnosticSettings: diagnosticSettings
     // mapping code projects to web apps by tags matching names from azure.yaml
     tags: moduleTags
-    
+
     // Dependencies
     appConfigurationName: appConfiguration.outputs.name
     applicationInsightsId: applicationInsightsId
@@ -463,7 +463,7 @@ module redis '../core/database/azure-cache-for-redis.bicep' = {
     redisCacheSku : deploymentSettings.isProduction ? 'Standard' : 'Basic'
     redisCacheFamily : 'C'
     redisCacheCapacity: deploymentSettings.isProduction ? 1 : 0
-    
+
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
       dnsResourceGroupName: dnsResourceGroupName
       name: resourceNames.redisPrivateEndpoint
@@ -534,6 +534,34 @@ module applicationBudget '../core/cost-management/budget.bicep' = {
   }
 }
 
+module containerRegistry '../core/containers/container-registry.bicep' = {
+  name: 'application-container-registry'
+  scope: resourceGroup
+  params: {
+    name: resourceNames.containerRegistry
+    location: deploymentSettings.location
+    tags: moduleTags
+
+    // Dependencies
+    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
+
+    // Settings
+    diagnosticSettings: diagnosticSettings
+    adminUserEnabled: false
+    anonymousPullEnabled: false
+    zoneRedundancyEnabled: deploymentSettings.isProduction
+    publicNetworkAccess: deploymentSettings.isNetworkIsolated ? 'Disabled' : 'Enabled'
+    skuName: deploymentSettings.isProduction ? 'Premium' : 'Basic'
+    pushIdentities: [
+      { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
+      { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
+    ]
+    pullIdentities: [
+      { principalId: appManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
+    ]
+  }
+}
+
 // ========================================================================
 // OUTPUTS
 // ========================================================================
@@ -555,3 +583,5 @@ output web_uri string = deploymentSettings.isPrimaryLocation ? webFrontendFrontD
 
 output sql_server_name string = sqlServer.outputs.name
 output sql_database_name string = sqlDatabase.outputs.name
+
+output containerRegistry_loginServer string = containerRegistry.outputs.loginServer
