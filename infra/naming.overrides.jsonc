@@ -2,7 +2,7 @@
     /*
     ** Use this file to override any of the names that are chosen for resources.
     */
-  
+
     // Hub network resources
     // "hubBastionHost": "",
     // "hubBastionPublicIpAddress": "",
@@ -18,7 +18,7 @@
     // "hubSubnetJumphost": "",
     // "hubSubnetPrivateEndpoint": "",
     // "hubVirtualNetwork": "",
-  
+
     // Spoke network resources
     // "spokeApiInboundSubnet": "",
     // "spokeApiInboundNSG": "",
@@ -34,14 +34,15 @@
     // "spokeWebInboundNSG": "",
     // "spokeWebOutboundSubnet": "",
     // "spokeWebOutboundNSG": "",
-  
+
     // Common services - may be in hub or application resource group
     // "applicationInsights": "",
     // "buildAgent": "",
+    // "containerRegistry": "",
     // "keyVault": "",
     // "keyVaultPrivateEndpoint": "",
     // "logAnalyticsWorkspace": "",
-  
+
     // Application resources
     // "apiAppService": "",
     // "apiAppServicePlan": "",
@@ -51,12 +52,15 @@
     // "appManagedIdentity": "",
     // "budget": "",
     // "commonAppServicePlan": "",
+    // "commonContainerAppEnvironment": "",
     // "frontDoorEndpoint": "",
     // "frontDoorProfile": "",
     // "ownerManagedIdentity": "",
     // "redis": "",
     // "redisPrivateEndpoint": "",
+    // "renderingServiceContainerApp": "",
     // "resourceGroup": "",
+    // "serviceBus": "",
     // "storageAccount": "",
     // "storageAccountContainer": "",
     // "sqlDatabase": "",
@@ -69,7 +73,7 @@
     // "webApplicationFirewall": "",
     // "webAppFrontendPrivateEndpoint": "",
     // "webwebAppServicePrivateEndpoint": "",
-  
+
     /*
     ** End of file - don't remove the next line as it signifies the end.
     */
