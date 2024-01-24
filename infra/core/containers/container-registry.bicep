@@ -1,3 +1,5 @@
+targetScope = 'resourceGroup'
+
 /*
 ** Azure Container Registry
 ** Copyright (C) 2024 Microsoft, Inc.
@@ -7,8 +9,6 @@
 **
 ** Creates an Azure Container Registry resource, including permission grants and diagnostics.
 */
-
-targetScope = 'resourceGroup'
 
 // ========================================================================
 // USER-DEFINED TYPES
