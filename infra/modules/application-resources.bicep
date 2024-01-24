@@ -551,7 +551,7 @@ module containerRegistry '../core/containers/container-registry.bicep' = {
     anonymousPullEnabled: false
     zoneRedundancyEnabled: deploymentSettings.isProduction
     publicNetworkAccess: deploymentSettings.isNetworkIsolated ? 'Disabled' : 'Enabled'
-    skuName: deploymentSettings.isProduction ? 'Premium' : 'Basic'
+    skuName: deploymentSettings.isNetworkIsolated ? 'Premium' : deploymentSettings.isProduction ? 'Standard' : 'Basic'
     pushIdentities: [
       { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
