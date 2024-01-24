@@ -104,12 +104,6 @@ azd env new dotnetwebapp
 
 You can substitute the environment name with your own value.
 
-By default, Azure resources are sized for a "development" mode. If doing a Production deployment, set the `AZURE_ENV_TYPE` to `prod` using the following command:
-
-```pwsh
-azd env set AZURE_ENV_TYPE prod
-```
-
 ### 4. Log in to Azure
 
 Before deploying, you must be authenticated to Azure and have the appropriate subscription selected. Run the following command to authenticate:
