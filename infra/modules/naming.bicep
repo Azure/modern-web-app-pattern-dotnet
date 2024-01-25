@@ -90,7 +90,6 @@ var defaultResourceNames = {
   hubFirewallPublicIpAddress: 'pip-afw-${resourceToken}'
   hubJumphost: 'vm-jump-${resourceToken}'
   hubResourceGroup: '${hubResourceGroupPrefix}-hub'
-  hubRouteTable: 'rt-${resourceToken}'
   hubSubnetBastionHost: 'AzureBastionSubnet'
   hubSubnetFirewall: 'AzureFirewallSubnet'
   hubSubnetJumphost: 'JumphostSubnet'
@@ -105,6 +104,7 @@ var defaultResourceNames = {
   spokeDevopsSubnet: 'DevopsBuildAgents'
   spokeDeploymentSubnet: 'Deployment'
   spokeResourceGroup: '${resourceGroupPrefix}-spoke'
+  spokeRouteTable: 'rt-${resourceToken}'
   spokePrivateEndpointNSG: 'nsg-pep-${resourceToken}'
   spokePrivateEndpointSubnet: 'Private-Endpoints'
   spokeVirtualNetwork: 'vnet-spoke-${resourceToken}'
@@ -166,7 +166,6 @@ output resourceNames object = {
   hubFirewallPublicIpAddress: contains(overrides, 'hubFirewallPublicIpAddress') && !empty(overrides.hubFirewallPublicIpAddress) ? overrides.hubFirewallPublicIpAddress : defaultResourceNames.hubFirewallPublicIpAddress
   hubJumphost: contains(overrides, 'hubJumphost') && !empty(overrides.hubJumphost) ? overrides.hubJumphost : defaultResourceNames.hubJumphost
   hubResourceGroup: contains(overrides, 'hubResourceGroup') && !empty(overrides.hubResourceGroup) ? overrides.hubResourceGroup : defaultResourceNames.hubResourceGroup
-  hubRouteTable: contains(overrides, 'hubRouteTable') && !empty(overrides.hubRouteTable) ? overrides.hubRouteTable : defaultResourceNames.hubRouteTable
   hubSubnetBastionHost: contains(overrides, 'hubSubnetBastionHost') && !empty(overrides.hubSubnetBastionHost) ? overrides.hubSubnetBastionHost : defaultResourceNames.hubSubnetBastionHost
   hubSubnetFirewall: contains(overrides, 'hubSubnetFirewall') && !empty(overrides.hubSubnetFirewall) ? overrides.hubSubnetFirewall : defaultResourceNames.hubSubnetFirewall
   hubSubnetJumphost: contains(overrides, 'hubSubnetJumphost') && !empty(overrides.hubSubnetJumphost) ? overrides.hubSubnetJumphost : defaultResourceNames.hubSubnetJumphost
@@ -181,6 +180,7 @@ output resourceNames object = {
   spokeDevopsSubnet: contains(overrides, 'spokeDevopsSubnet') && !empty(overrides.spokeDevopsSubnet) ? overrides.spokeDevopsSubnet : defaultResourceNames.spokeDevopsSubnet
   spokeDeploymentSubnet: contains(overrides, 'spokeDeploymentSubnet') && !empty(overrides.spokeDeploymentSubnet) ? overrides.spokeDeploymentSubnet : defaultResourceNames.spokeDeploymentSubnet
   spokeResourceGroup: contains(overrides, 'spokeResourceGroup') && !empty(overrides.spokeResourceGroup) ? overrides.spokeResourceGroup : defaultResourceNames.spokeResourceGroup
+  spokeRouteTable: contains(overrides, 'spokeRouteTable') && !empty(overrides.spokeRouteTable) ? overrides.spokeRouteTable : defaultResourceNames.spokeRouteTable
   spokePrivateEndpointNSG: contains(overrides, 'spokePrivateEndpointNSG') && !empty(overrides.spokePrivateEndpointNSG) ? overrides.spokePrivateEndpointNSG : defaultResourceNames.spokePrivateEndpointNSG
   spokePrivateEndpointSubnet: contains(overrides, 'spokePrivateEndpointSubnet') && !empty(overrides.spokePrivateEndpointSubnet) ? overrides.spokePrivateEndpointSubnet : defaultResourceNames.spokePrivateEndpointSubnet
   spokeVirtualNetwork: contains(overrides, 'spokeVirtualNetwork') && !empty(overrides.spokeVirtualNetwork) ? overrides.spokeVirtualNetwork : defaultResourceNames.spokeVirtualNetwork
