@@ -21,13 +21,18 @@ For users familiar with the deployment process, you can use the following list o
 git clone https://github.com/Azure/modern-web-app-pattern-dotnet.git
 cd modern-web-app-pattern-dotnet
 azd env new dotnetwebapp
-azd env set AZURE_ENV_TYPE prod
 azd env set NETWORK_ISOLATION true
 azd env set DEPLOY_HUB_NETWORK true
 azd env set COMMON_APP_SERVICE_PLAN false
 azd env set OWNER_NAME <a name listed as resource owner in Azure tags>
 azd env set OWNER_EMAIL <an email address alerted by Azure budget>
 azd env set AZURE_LOCATION westus3
+```
+
+If doing a production deployment, set the `AZURE_ENV_TYPE` parameter with the following command. This will choose more expensive SKUs which provide more resource capacity and higher SLAs.
+
+```pwsh
+azd env set AZURE_ENV_TYPE prod
 ```
 
 If doing a multi-region deployment, set the `SECONDARY_AZURE_LOCATION` to the secondary region:
