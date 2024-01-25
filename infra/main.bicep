@@ -155,6 +155,12 @@ var defaultDeploymentSettings = {
   }
 }
 
+var primaryNamingDeployment = defaultDeploymentSettings
+var secondaryNamingDeployment = union(defaultDeploymentSettings, {
+  isPrimaryLocation: false
+  location: secondaryAzureLocation
+})
+
 var primaryDeployment = {
   workloadTags: {
     IsPrimaryLocation: 'true'
@@ -166,6 +172,7 @@ var primaryDeployment = {
 var primaryDeploymentSettings = union(defaultDeploymentSettings, primaryDeployment)
 
 var secondDeployment = {
+  location: secondaryAzureLocation
   isPrimaryLocation: false
   workloadTags: {
     IsPrimaryLocation: 'false'
@@ -201,7 +208,7 @@ var spokeAddressPrefixSecondary = '10.0.32.0/20'
 module naming './modules/naming.bicep' = {
   name: '${prefix}-naming'
   params: {
-    deploymentSettings: defaultDeploymentSettings
+    deploymentSettings: primaryNamingDeployment
     differentiator: differentiator != 'none' ? differentiator : ''
     overrides: loadJsonContent('./naming.overrides.jsonc')
   }
@@ -210,7 +217,7 @@ module naming './modules/naming.bicep' = {
 module naming2 './modules/naming.bicep' = {
   name: '${prefix}-naming2'
   params: {
-    deploymentSettings: defaultDeploymentSettings
+    deploymentSettings: secondaryNamingDeployment
     differentiator: differentiator != 'none' ? '${differentiator}2' : '2'
     overrides: loadJsonContent('./naming.overrides.jsonc')
   }
