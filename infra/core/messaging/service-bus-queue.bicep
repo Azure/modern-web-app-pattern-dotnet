@@ -39,7 +39,7 @@ param serviceBusNamespaceName string
 @description('The maximum size of the queue in megabytes. Default is 1024.')
 param maxQueueSizeInMegabytes int = 1024
 
-@description('The maximum size of the message in kilobytes. Default is 1024.')
+@description('The maximum size of the message in kilobytes. Only used when SKU is Premium. Default is 1024.')
 param maxMessageSizeInKilobytes int = 1024
 
 @description('The number of delivery attempts before a message is moved to the dead letter queue. Default is 10.')
@@ -74,7 +74,7 @@ resource serviceBusQueue 'Microsoft.ServiceBus/namespaces/queues@2022-10-01-prev
 
   properties: {
     maxSizeInMegabytes: maxQueueSizeInMegabytes
-    maxMessageSizeInKilobytes: maxMessageSizeInKilobytes
+    maxMessageSizeInKilobytes: serviceBusNamespace.sku.name == 'Premium' ? maxMessageSizeInKilobytes : null
     maxDeliveryCount: maxDeliveryCount
     defaultMessageTimeToLive: defaultMessageTimeToLive
     lockDuration: lockDuration

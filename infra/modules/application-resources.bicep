@@ -156,6 +156,10 @@ var redisConnectionSecretName= deploymentSettings.isPrimaryLocation ? 'App--Redi
 // describes the Azure Storage container where ticket images will be stored after they are rendered during purchase
 var ticketContainerName = 'tickets'
 
+// Service Bus queues used for ticket rendering
+// Match the names in set-app-configuration.ps1
+var renderingQueueNames = [ 'ticket-render-requests', 'ticket-render-completions']
+
 // Built-in Azure Contributor role
 var contributorRole = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
 
@@ -550,8 +554,8 @@ module containerRegistry '../core/containers/container-registry.bicep' = {
     adminUserEnabled: false
     anonymousPullEnabled: false
     zoneRedundancyEnabled: deploymentSettings.isProduction
-    publicNetworkAccess: deploymentSettings.isNetworkIsolated ? 'Disabled' : 'Enabled'
-    skuName: deploymentSettings.isNetworkIsolated ? 'Premium' : deploymentSettings.isProduction ? 'Standard' : 'Basic'
+    publicNetworkAccess: 'Default'
+    skuName: (deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated) ? 'Premium' :  'Basic'
     pushIdentities: [
       { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
@@ -562,6 +566,45 @@ module containerRegistry '../core/containers/container-registry.bicep' = {
   }
 }
 
+module serviceBusNamespace '../core/messaging/service-bus-namespace.bicep' = {
+  name: 'application-service-bus-namespace'
+  scope: resourceGroup
+  params: {
+    name: resourceNames.serviceBusNamespace
+    location: deploymentSettings.location
+    tags: moduleTags
+
+    // Dependencies
+    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
+
+    // Settings
+    diagnosticSettings: diagnosticSettings
+    localAuthenticationEnabled: false
+    publicNetworkAccess: 'Default'
+    skuName: (deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated) ? 'Premium' : 'Basic'
+    zoneRedundancyEnabled: deploymentSettings.isProduction
+    dataOwnerIdentities: [
+      { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
+      { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
+    ]
+    dataReceiverIdentities: [
+      { principalId: appManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
+    ]
+    dataSenderIdentities: [
+      { principalId: appManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
+    ]
+  }
+}
+
+module renderingQueues '../core/messaging/service-bus-queue.bicep' = [ for queueName in renderingQueueNames: {
+  name: 'application-service-bus-queue-${queueName}'
+  scope: resourceGroup
+  params: {
+    name: queueName
+    serviceBusNamespaceName: serviceBusNamespace.name
+  }
+}]
+
 // ========================================================================
 // OUTPUTS
 // ========================================================================
@@ -569,6 +612,8 @@ module containerRegistry '../core/containers/container-registry.bicep' = {
 output app_config_uri string = appConfiguration.outputs.app_config_uri
 output key_vault_name string = deploymentSettings.isNetworkIsolated ? resourceNames.keyVault : keyVault.outputs.name
 output redis_cache_name string = redis.outputs.name
+output containerRegistry_loginServer string = containerRegistry.outputs.loginServer
+output service_bus_endpoint string = serviceBusNamespace.outputs.endpoint
 
 output owner_managed_identity_id string = ownerManagedIdentity.outputs.id
 output app_managed_identity_id string = appManagedIdentity.outputs.id
@@ -583,5 +628,3 @@ output web_uri string = deploymentSettings.isPrimaryLocation ? webFrontendFrontD
 
 output sql_server_name string = sqlServer.outputs.name
 output sql_database_name string = sqlDatabase.outputs.name
-
-output containerRegistry_loginServer string = containerRegistry.outputs.loginServer

@@ -244,5 +244,8 @@ resource serviceBusDiagnosticSettings 'Microsoft.Insights/diagnosticSettings@202
 @description('The ID of the Service Bus namespace.')
 output id string = serviceBusNamespace.id
 
+@description('The name of the Service Bus namespace.')
+output name string = serviceBusNamespace.name
+
 @description('The Service Bus namespace host endpoint.')
 output endpoint string = serviceBusNamespace.properties.serviceBusEndpoint
