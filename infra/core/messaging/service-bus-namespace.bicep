@@ -1,13 +1,13 @@
 targetScope = 'resourceGroup'
 
 /*
-** Azure Container Registry
+** Azure Service Bus
 ** Copyright (C) 2024 Microsoft, Inc.
 ** All Rights Reserved
 **
 ***************************************************************************
 **
-** Creates an Azure Container Registry resource, including permission grants and diagnostics.
+** Creates an Azure Service Bus resource, including permission grants and diagnostics.
 */
 
 // ========================================================================
@@ -65,7 +65,7 @@ type PrivateEndpointSettings = {
 */
 
 @description('The name of the primary resource.')
-@minLength(5)
+@minLength(6)
 @maxLength(50)
 param name string
 
@@ -89,11 +89,8 @@ param logAnalyticsWorkspaceId string = ''
 ** Settings
 */
 
-@description('Indicates whether admin user is enabled.')
-param adminUserEnabled bool = false
-
-@description('Indicates whether anonymous pull is enabled.')
-param anonymousPullEnabled bool = false
+@description('Indicates whether local authentication (SAS) is enabled.')
+param localAuthenticationEnabled bool = false
 
 @description('Specifies the SKU of the resource')
 @allowed([
@@ -114,21 +111,16 @@ param publicNetworkAccess string = 'Default'
 @description('If set, the private endpoint settings for this resource.')
 param privateEndpointSettings PrivateEndpointSettings?
 
-@allowed([
-  'AzureServices'
-  'None'
-])
-@description('Whether to allow trusted Azure services to access a network restricted registry.')
-param networkRuleBypassOptions string = 'AzureServices'
-
 @description('Whether or not zone redundancy is enabled for this container registry.')
 param zoneRedundancyEnabled bool = false
 
 @description('The name of logs that will be streamed.')
 @allowed([
   'allLogs'
-  'ContainerRegistryRepositoryEvents'
-  'ContainerRegistryLoginEvents'
+  'OperationalLogs'
+  'VNetAndIPFilteringLogs'
+  'RuntimeAuditLogs'
+  'ApplicationMetricsLogs'
 ])
 param diagnosticLogCategoriesToEnable array = [
   'allLogs'
@@ -142,29 +134,43 @@ param diagnosticMetricsToEnable array = [
   'AllMetrics'
 ]
 
-@description('The list of application identities to be granted owner access to the application resources.')
-param pushIdentities ApplicationIdentity[] = []
+@description('The list of application identities to be granted owner access to Service Bus data.')
+param dataOwnerIdentities ApplicationIdentity[] = []
 
-@description('The list of application identities to be granted pull access to the container registry.')
-param pullIdentities ApplicationIdentity[] = []
+@description('The list of application identities to be granted send access to Service Bus messages.')
+param dataSenderIdentities ApplicationIdentity[] = []
+
+@description('The list of application identities to be granted read access to Service Bus messages.')
+param dataReceiverIdentities ApplicationIdentity[] = []
+
+@description('The minimum TLS version required for Service Bus.')
+@allowed([
+  '1.0'
+  '1.1'
+  '1.2'
+])
+param minimumTlsVersion string = '1.2'
 
 // ========================================================================
 // VARIABLES
 // ========================================================================
 
-/* https://learn.microsoft.com/azure/container-registry/container-registry-roles */
+/* https://learn.microsoft.com/azure/service-bus-messaging/authenticate-application */
 
-// Allows push and pull access to Azure Container Registry images.
-var containerRegistryPushRoleId = '8311e382-0749-4cb8-b61a-304f252e45ec'
+// Allows all access to Service Bus data.
+var azureServiceBusDataOwnerRoleId = '090c5cfd-751d-490a-894a-3ce6f1109419'
 
-// Allows pull access to Azure Container Registry images.
-var containerRegistryPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
+// Allows sending messages to Service Bus queues and topics.
+var azureServiceBusDataSenderRoleRoleId = '69a216fc-b8fb-44d8-bc22-1f3c2cd27a39'
+
+// Allows getting messages from Service Bus queues and topics.
+var azureServiceBusDataReceiverRoleRoleId = '4f6d3b9b-027b-4f4c-9142-0e5a2a2247e0'
 
 // ========================================================================
 // AZURE RESOURCES
 // ========================================================================
 
-resource containerRegistry 'Microsoft.ContainerRegistry/registries@2022-02-01-preview' = {
+resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' = {
   name: name
   location: location
   tags: tags
@@ -172,38 +178,47 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2022-02-01-pr
     name: skuName
   }
   properties: {
-    adminUserEnabled: adminUserEnabled
-    anonymousPullEnabled: anonymousPullEnabled
-    networkRuleBypassOptions: networkRuleBypassOptions
     publicNetworkAccess: publicNetworkAccess != 'Default' ? publicNetworkAccess : privateEndpointSettings == null ? 'Enabled' : 'Disabled'
-    zoneRedundancy: skuName == 'Premium' ? zoneRedundancyEnabled ? 'Enabled' : 'Disabled' : 'Disabled'
+    zoneRedundant: skuName == 'Premium' ? zoneRedundancyEnabled : false
+    disableLocalAuth: !localAuthenticationEnabled
+    minimumTlsVersion:minimumTlsVersion
     // TODO : Private endpoint settings
   }
 }
 
-resource grantPushAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = [ for id in pushIdentities: if (!empty(id.principalId)) {
-  name: guid(containerRegistryPushRoleId, id.principalId, containerRegistry.id, resourceGroup().name)
-  scope: containerRegistry
+resource grantDataOwnerAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = [ for id in dataOwnerIdentities: if (!empty(id.principalId)) {
+  name: guid(azureServiceBusDataOwnerRoleId, id.principalId, serviceBusNamespace.id, resourceGroup().name)
+  scope: serviceBusNamespace
   properties: {
     principalType: id.principalType
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', containerRegistryPushRoleId)
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', azureServiceBusDataOwnerRoleId)
     principalId: id.principalId
   }
 }]
 
-resource grantPullAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = [ for id in pullIdentities: if (!empty(id.principalId)) {
-  name: guid(containerRegistryPullRoleId, id.principalId, containerRegistry.id, resourceGroup().name)
-  scope: containerRegistry
+resource grantDataReceiverAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = [ for id in dataReceiverIdentities: if (!empty(id.principalId)) {
+  name: guid(azureServiceBusDataReceiverRoleRoleId, id.principalId, serviceBusNamespace.id, resourceGroup().name)
+  scope: serviceBusNamespace
   properties: {
     principalType: id.principalType
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', containerRegistryPullRoleId)
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', azureServiceBusDataReceiverRoleRoleId)
     principalId: id.principalId
   }
 }]
 
-resource containerRegistryDiagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (diagnosticSettings != null && !empty(logAnalyticsWorkspaceId)) {
+resource grantDataSenderAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = [ for id in dataSenderIdentities: if (!empty(id.principalId)) {
+  name: guid(azureServiceBusDataSenderRoleRoleId, id.principalId, serviceBusNamespace.id, resourceGroup().name)
+  scope: serviceBusNamespace
+  properties: {
+    principalType: id.principalType
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', azureServiceBusDataSenderRoleRoleId)
+    principalId: id.principalId
+  }
+}]
+
+resource serviceBusDiagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (diagnosticSettings != null && !empty(logAnalyticsWorkspaceId)) {
   name: '${name}-diagnostics'
-  scope: containerRegistry
+  scope: serviceBusNamespace
   properties: {
     workspaceId: logAnalyticsWorkspaceId
     logs: contains(diagnosticLogCategoriesToEnable, 'allLogs') ? [
@@ -226,11 +241,8 @@ resource containerRegistryDiagnosticSettings 'Microsoft.Insights/diagnosticSetti
 // OUTPUTS
 // ========================================================================
 
-@description('The ID of the Azure container registry.')
-output id string = containerRegistry.id
+@description('The ID of the Service Bus namespace.')
+output id string = serviceBusNamespace.id
 
-@description('The Name of the Azure container registry.')
-output name string = containerRegistry.name
-
-@description('The reference to the Azure container registry.')
-output loginServer string = containerRegistry.properties.loginServer
+@description('The Service Bus namespace host endpoint.')
+output endpoint string = serviceBusNamespace.properties.serviceBusEndpoint

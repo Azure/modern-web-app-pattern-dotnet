@@ -60,7 +60,7 @@
     // "redisPrivateEndpoint": "",
     // "renderingServiceContainerApp": "",
     // "resourceGroup": "",
-    // "serviceBus": "",
+    // "serviceBusNamespace": "",
     // "storageAccount": "",
     // "storageAccountContainer": "",
     // "sqlDatabase": "",

@@ -19,13 +19,13 @@ targetScope = 'subscription'
 type DeploymentSettings = {
   @description('If \'true\', then two regional deployments will be performed.')
   isMultiLocationDeployment: bool
-  
+
   @description('If \'true\', use production SKUs and settings.')
   isProduction: bool
 
   @description('If \'true\', isolate the workload in a virtual network.')
   isNetworkIsolated: bool
-  
+
   @description('If \'false\', then this is a multi-location deployment for the second location.')
   isPrimaryLocation: bool
 
@@ -138,7 +138,7 @@ var defaultResourceNames = {
   redis: 'redis-${resourceToken}'
   redisPrivateEndpoint: 'pep-redis-${resourceToken}'
   renderingServiceContainerApp: 'aca-renderer-${resourceToken}'
-  serviceBus: 'sb-${resourceToken}'
+  serviceBusNamespace: 'sb-${resourceToken}'
   storageAccount: 'st${deploymentSettings.stage}${resourceToken}'
   storageAccountPrivateEndpoint: 'pep-st-${resourceToken}'
   storageAccountContainer: 'tickets'
@@ -218,7 +218,7 @@ output resourceNames object = {
   redisPrivateEndpoint: contains(overrides, 'redisPrivateEndpoint') && !empty(overrides.redisPrivateEndpoint) ? overrides.redisPrivateEndpoint : defaultResourceNames.redisPrivateEndpoint
   renderingServiceContainerApp: contains(overrides, 'renderingServiceContainerApp') && !empty(overrides.renderingServiceContainerApp) ? overrides.renderingServiceContainerApp : defaultResourceNames.renderingServiceContainerApp
   resourceGroup: contains(overrides, 'resourceGroup') && !empty(overrides.resourceGroup) ? overrides.resourceGroup : defaultResourceNames.resourceGroup
-  serviceBus: contains(overrides, 'serviceBus') && !empty(overrides.serviceBus) ? overrides.serviceBus : defaultResourceNames.serviceBus
+  serviceBusNamespace: contains(overrides, 'serviceBusNamespace') && !empty(overrides.serviceBusNamespace) ? overrides.serviceBusNamespace : defaultResourceNames.serviceBusNamespace
   storageAccount: contains(overrides, 'storageAccount') && !empty(overrides.storageAccount) ? overrides.storageAccount : defaultResourceNames.storageAccount
   storageAccountPrivateEndpoint: contains(overrides, 'storageAccountPrivateEndpoint') && !empty(overrides.storageAccountPrivateEndpoint) ? overrides.storageAccountPrivateEndpoint : defaultResourceNames.storageAccountPrivateEndpoint
   storageAccountContainer: contains(overrides, 'storageAccountContainer') && !empty(overrides.storageAccountContainer) ? overrides.storageAccountContainer : defaultResourceNames.storageAccountContainer
