@@ -599,9 +599,10 @@ module serviceBusNamespace '../core/messaging/service-bus-namespace.bicep' = {
 module renderingQueues '../core/messaging/service-bus-queue.bicep' = [ for queueName in renderingQueueNames: {
   name: 'application-service-bus-queue-${queueName}'
   scope: resourceGroup
+
   params: {
     name: queueName
-    serviceBusNamespaceName: serviceBusNamespace.name
+    serviceBusNamespaceName: serviceBusNamespace.outputs.name
   }
 }]
 
