@@ -215,6 +215,7 @@ module naming './modules/naming.bicep' = {
     deploymentSettings: primaryNamingDeployment
     differentiator: differentiator != 'none' ? differentiator : ''
     overrides: loadJsonContent('./naming.overrides.jsonc')
+    primaryLocation: location
   }
 }
 
@@ -224,6 +225,7 @@ module naming2 './modules/naming.bicep' = {
     deploymentSettings: secondaryNamingDeployment
     differentiator: differentiator != 'none' ? '${differentiator}2' : '2'
     overrides: loadJsonContent('./naming.overrides.jsonc')
+    primaryLocation: location
   }
 }
 
