@@ -512,7 +512,7 @@ module storageAccountContainer '../core/storage/storage-account-blob.bicep' = {
   }
 }
 
-module approveFrontDoorPrivateLinks '../core/security/front-door-route-approval.bicep' = if (deploymentSettings.isNetworkIsolated) {
+module approveFrontDoorPrivateLinks '../core/security/front-door-route-approval.bicep' = if (deploymentSettings.isNetworkIsolated && deploymentSettings.isPrimaryLocation) {
   name: 'approve-front-door-routes'
   scope: resourceGroup
   params: {
