@@ -563,6 +563,12 @@ module containerRegistry '../core/containers/container-registry.bicep' = {
     pullIdentities: [
       { principalId: appManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
     ]
+    privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
+      dnsResourceGroupName: dnsResourceGroupName
+      name: resourceNames.containerRegistryPrivateEndpoint
+      resourceGroupName: resourceNames.spokeResourceGroup
+      subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+    } : null
   }
 }
 
@@ -593,6 +599,12 @@ module serviceBusNamespace '../core/messaging/service-bus-namespace.bicep' = {
     dataSenderIdentities: [
       { principalId: appManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
     ]
+    privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
+      dnsResourceGroupName: dnsResourceGroupName
+      name: resourceNames.serviceBusNamespacePrivateEndpoint
+      resourceGroupName: resourceNames.spokeResourceGroup
+      subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+    } : null
   }
 }
 

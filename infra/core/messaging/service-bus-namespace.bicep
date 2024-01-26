@@ -182,7 +182,6 @@ resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-01-preview
     zoneRedundant: skuName == 'Premium' ? zoneRedundancyEnabled : false
     disableLocalAuth: !localAuthenticationEnabled
     minimumTlsVersion:minimumTlsVersion
-    // TODO : Private endpoint settings
   }
 }
 
@@ -215,6 +214,26 @@ resource grantDataSenderAccess 'Microsoft.Authorization/roleAssignments@2022-04-
     principalId: id.principalId
   }
 }]
+
+module privateEndpoint '../network/private-endpoint.bicep' = if (privateEndpointSettings != null) {
+  name: '${name}-private-endpoint'
+  scope: resourceGroup(privateEndpointSettings != null ? privateEndpointSettings!.resourceGroupName : resourceGroup().name)
+  params: {
+    name: privateEndpointSettings != null ? privateEndpointSettings!.name : 'pep-${name}'
+    location: location
+    tags: tags
+    dnsRsourceGroupName: privateEndpointSettings == null ? resourceGroup().name : privateEndpointSettings!.dnsResourceGroupName
+
+    // Dependencies
+    linkServiceId: serviceBusNamespace.id
+    linkServiceName: serviceBusNamespace.name
+    subnetId: privateEndpointSettings != null ? privateEndpointSettings!.subnetId : ''
+
+    // Settings
+    dnsZoneName: 'privatelink.azconfig.io'
+    groupIds: [ 'configurationStores' ]
+  }
+}
 
 resource serviceBusDiagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (diagnosticSettings != null && !empty(logAnalyticsWorkspaceId)) {
   name: '${name}-diagnostics'

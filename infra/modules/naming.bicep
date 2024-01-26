@@ -119,7 +119,6 @@ var defaultResourceNames = {
   logAnalyticsWorkspace: 'log-${resourceToken}'
   keyVault: 'kv-${resourceToken}'
   keyVaultPrivateEndpoint: 'pep-kv-${resourceToken}'
-  containerRegistry: 'acr${resourceToken}'
 
   // Application resources
   apiAppService: 'app-api-${resourceToken}'
@@ -131,6 +130,8 @@ var defaultResourceNames = {
   budget: 'budget-${deploymentSettings.name}-${deploymentSettings.stage}-${deploymentSettings.location}${diffPrefix}'
   commonAppServicePlan: 'asp-common-${resourceToken}'
   commonContainerAppEnvironment: 'acae-common-${resourceToken}'
+  containerRegistry: 'acr${resourceToken}'
+  containerRegistryPrivateEndpoint: 'pep-acr${resourceToken}'
   frontDoorEndpoint: 'fde-${resourceToken}'
   frontDoorProfile: 'afd-${resourceToken}'
   ownerManagedIdentity: 'id-owner-${resourceToken}'
@@ -139,6 +140,7 @@ var defaultResourceNames = {
   redisPrivateEndpoint: 'pep-redis-${resourceToken}'
   renderingServiceContainerApp: 'aca-renderer-${resourceToken}'
   serviceBusNamespace: 'sb-${resourceToken}'
+  serviceBusNamespacePrivateEndpoint: 'pep-sb-${resourceToken}'
   storageAccount: 'st${deploymentSettings.stage}${resourceToken}'
   storageAccountPrivateEndpoint: 'pep-st-${resourceToken}'
   storageAccountContainer: 'tickets'
@@ -197,7 +199,6 @@ output resourceNames object = {
   applicationInsights: contains(overrides, 'applicationInsights') && !empty(overrides.applicationInsights) ? overrides.applicationInsights : defaultResourceNames.applicationInsights
   buildAgent: contains(overrides, 'buildAgent') && !empty(overrides.buildAgent) ? overrides.buildAgent : defaultResourceNames.buildAgent
   logAnalyticsWorkspace: contains(overrides, 'logAnalyticsWorkspace') && !empty(overrides.logAnalyticsWorkspace) ? overrides.logAnalyticsWorkspace : defaultResourceNames.logAnalyticsWorkspace
-  containerRegistry: contains(overrides, 'containerRegistry') && !empty(overrides.containerRegistry) ? overrides.containerRegistry : defaultResourceNames.containerRegistry
 
   // Application resources
   apiAppService: contains(overrides, 'apiAppService') && !empty(overrides.apiAppService) ? overrides.apiAppService : defaultResourceNames.apiAppService
@@ -209,6 +210,8 @@ output resourceNames object = {
   budget: contains(overrides, 'budget') && !empty(overrides.budget) ? overrides.budget : defaultResourceNames.budget
   commonAppServicePlan: contains(overrides, 'commonAppServicePlan') && !empty(overrides.commonAppServicePlan) ? overrides.commonAppServicePlan : defaultResourceNames.commonAppServicePlan
   commonContainerAppEnvironment: contains(overrides, 'commonContainerAppEnvironment') && !empty(overrides.commonContainerAppEnvironment) ? overrides.commonContainerAppEnvironment : defaultResourceNames.commonContainerAppEnvironment
+  containerRegistry: contains(overrides, 'containerRegistry') && !empty(overrides.containerRegistry) ? overrides.containerRegistry : defaultResourceNames.containerRegistry
+  containerRegistryPrivateEndpoint: contains(overrides, 'containerRegistryPrivateEndpoint') && !empty(overrides.containerRegistryPrivateEndpoint) ? overrides.containerRegistryPrivateEndpoint : defaultResourceNames.containerRegistryPrivateEndpoint
   frontDoorEndpoint: contains(overrides, 'frontDoorEndpoint') && !empty(overrides.frontDoorEndpoint) ? overrides.frontDoorEndpoint : defaultResourceNames.frontDoorEndpoint
   frontDoorProfile: contains(overrides, 'frontDoorProfile') && !empty(overrides.frontDoorProfile) ? overrides.frontDoorProfile : defaultResourceNames.frontDoorProfile
   keyVault: contains(overrides, 'keyVault') && !empty(overrides.keyVault) ? overrides.keyVault : defaultResourceNames.keyVault
@@ -219,6 +222,7 @@ output resourceNames object = {
   renderingServiceContainerApp: contains(overrides, 'renderingServiceContainerApp') && !empty(overrides.renderingServiceContainerApp) ? overrides.renderingServiceContainerApp : defaultResourceNames.renderingServiceContainerApp
   resourceGroup: contains(overrides, 'resourceGroup') && !empty(overrides.resourceGroup) ? overrides.resourceGroup : defaultResourceNames.resourceGroup
   serviceBusNamespace: contains(overrides, 'serviceBusNamespace') && !empty(overrides.serviceBusNamespace) ? overrides.serviceBusNamespace : defaultResourceNames.serviceBusNamespace
+  serviceBusNamespacePrivateEndpoint: contains(overrides, 'serviceBusNamespacePrivateEndpoint') && !empty(overrides.serviceBusNamespacePrivateEndpoint) ? overrides.serviceBusNamespacePrivateEndpoint : defaultResourceNames.serviceBusNamespacePrivateEndpoint
   storageAccount: contains(overrides, 'storageAccount') && !empty(overrides.storageAccount) ? overrides.storageAccount : defaultResourceNames.storageAccount
   storageAccountPrivateEndpoint: contains(overrides, 'storageAccountPrivateEndpoint') && !empty(overrides.storageAccountPrivateEndpoint) ? overrides.storageAccountPrivateEndpoint : defaultResourceNames.storageAccountPrivateEndpoint
   storageAccountContainer: contains(overrides, 'storageAccountContainer') && !empty(overrides.storageAccountContainer) ? overrides.storageAccountContainer : defaultResourceNames.storageAccountContainer
