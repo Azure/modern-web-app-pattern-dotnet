@@ -136,7 +136,7 @@ if ($SecondarySpokeResourceGroup) {
 if ($HubResourceGroup) {
     $rgHub = $HubResourceGroup
 } elseif ($rgHub -eq '') {
-    $rgHub = "$rgPrefix-hub"
+    $rgHub = "$rgPrefix-$location-hub"
 }
 
 # Gets an access token for accessing Azure Resource Manager APIs
