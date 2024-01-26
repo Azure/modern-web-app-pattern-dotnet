@@ -27,7 +27,7 @@ type DeploymentSettings = {
   @description('If \'false\', then this is a multi-location deployment for the second location.')
   isPrimaryLocation: bool
 
-  @description('The primary Azure region to host resources')
+  @description('The Azure region to host resources')
   location: string
 
   @description('The name of the workload.')
@@ -516,13 +516,20 @@ module storageAccountContainer '../core/storage/storage-account-blob.bicep' = {
   }
 }
 
-module approveFrontDoorPrivateLinks '../core/security/front-door-route-approval.bicep' = if (deploymentSettings.isNetworkIsolated) {
+module approveFrontDoorPrivateLinks '../core/security/front-door-route-approval.bicep' = if (deploymentSettings.isNetworkIsolated && deploymentSettings.isPrimaryLocation) {
   name: 'approve-front-door-routes'
   scope: resourceGroup
   params: {
     location: deploymentSettings.location
     managedIdentityName: ownerManagedIdentityRoleAssignment.outputs.identity_name
   }
+  // private endpoint approval between front door and web app depends on both resources
+  dependsOn: [
+    webService
+    webServiceFrontDoorRoute
+    webFrontend
+    webFrontendFrontDoorRoute
+  ]
 }
 
 module applicationBudget '../core/cost-management/budget.bicep' = {
