@@ -17,18 +17,21 @@ targetScope = 'subscription'
 type DeploymentSettings = {
   @description('If \'true\', then two regional deployments will be performed.')
   isMultiLocationDeployment: bool
-  
+
   @description('If \'true\', use production SKUs and settings.')
   isProduction: bool
 
   @description('If \'true\', isolate the workload in a virtual network.')
   isNetworkIsolated: bool
-  
-  @description('If \'false\', then this is a multi-location deployment for the second location.')
-  isPrimaryLocation: bool
 
   @description('The Azure region to host resources')
   location: string
+
+  @description('The Azure region to host primary resources. In a multi-region deployment, this will match \'location\' while deploying the primary region\'s resources.')
+  primaryLocation: string
+
+  @description('The secondary Azure region in a multi-region deployment. This will match \'location\' while deploying the secondary region\'s resources during a multi-region deployment.')
+  secondaryLocation: string
 
   @description('The name of the workload.')
   name: string
@@ -333,7 +336,7 @@ module commonAppServicePlan '../core/hosting/app-service-plan.bicep' = if (useCo
     name: resourceNames.commonAppServicePlan
     location: deploymentSettings.location
     tags: moduleTags
-    
+
     // Dependencies
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
 
@@ -353,7 +356,7 @@ module webService './application-appservice.bicep' = {
     diagnosticSettings: diagnosticSettings
     // mapping code projects to web apps by tags matching names from azure.yaml
     tags: moduleTags
-    
+
     // Dependencies
     appConfigurationName: appConfiguration.outputs.name
     applicationInsightsId: applicationInsightsId
@@ -405,7 +408,7 @@ module webFrontend './application-appservice.bicep' = {
     diagnosticSettings: diagnosticSettings
     // mapping code projects to web apps by tags matching names from azure.yaml
     tags: moduleTags
-    
+
     // Dependencies
     appConfigurationName: appConfiguration.outputs.name
     applicationInsightsId: applicationInsightsId
@@ -463,7 +466,7 @@ module redis '../core/database/azure-cache-for-redis.bicep' = {
     redisCacheSku : deploymentSettings.isProduction ? 'Standard' : 'Basic'
     redisCacheFamily : 'C'
     redisCacheCapacity: deploymentSettings.isProduction ? 1 : 0
-    
+
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
       dnsResourceGroupName: dnsResourceGroupName
       name: resourceNames.redisPrivateEndpoint
