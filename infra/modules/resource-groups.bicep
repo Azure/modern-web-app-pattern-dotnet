@@ -71,7 +71,7 @@ param deployHubNetwork bool
 // VARIABLES
 // ========================================================================
 
-var createHub = deployHubNetwork && resourceNames.hubResourceGroup != resourceNames.resourceGroup && deploymentSettings.isPrimaryLocation
+var createHub = deployHubNetwork && resourceNames.hubResourceGroup != resourceNames.resourceGroup && (deploymentSettings.location == deploymentSettings.primaryLocation)
 var createSpoke = deploymentSettings.isNetworkIsolated && resourceNames.spokeResourceGroup != resourceNames.resourceGroup
 
 // ========================================================================
