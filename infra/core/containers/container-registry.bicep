@@ -216,7 +216,7 @@ module privateEndpoint '../network/private-endpoint.bicep' = if (privateEndpoint
 
     // Settings
     dnsZoneName: 'privatelink.azconfig.io'
-    groupIds: [ 'configurationStores' ]
+    groupIds: [ 'registry' ]
   }
 }
 
