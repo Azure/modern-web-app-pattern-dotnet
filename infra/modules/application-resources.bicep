@@ -103,6 +103,9 @@ param applicationInsightsId string = ''
 @description('When deploying a hub, the private endpoints will need this parameter to specify the resource group that holds the Private DNS zones')
 param dnsResourceGroupName string = ''
 
+@description('The name of the DNS zone that is used for private endpoints.')
+param dnsZoneName string = 'privatelink.azconfig.io'
+
 @description('The ID of the Log Analytics workspace to use for diagnostics and logging.')
 param logAnalyticsWorkspaceId string = ''
 
@@ -162,6 +165,15 @@ var renderingQueueNames = [ 'ticket-render-requests', 'ticket-render-completions
 
 // Built-in Azure Contributor role
 var contributorRole = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
+
+// Allows push and pull access to Azure Container Registry images.
+var containerRegistryPushRoleId = '8311e382-0749-4cb8-b61a-304f252e45ec'
+
+// Allows pull access to Azure Container Registry images.
+var containerRegistryPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
+
+// DNS zone ID for private endpoints
+var dnsZoneId = resourceId(dnsResourceGroupName, 'Microsoft.Network/privateDnsZones', dnsZoneName)
 
 // ========================================================================
 // EXISTING RESOURCES
@@ -545,37 +557,60 @@ module applicationBudget '../core/cost-management/budget.bicep' = {
   }
 }
 
-module containerRegistry '../core/containers/container-registry.bicep' = {
+module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' = if (isPrimaryLocation) {
   name: 'application-container-registry'
   scope: resourceGroup
   params: {
     name: resourceNames.containerRegistry
     location: deploymentSettings.location
     tags: moduleTags
+    acrSku: (deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated) ? 'Premium' :  'Basic'
 
-    // Dependencies
-    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
+    diagnosticSettings: [
+      {
+        workspaceResourceId: logAnalyticsWorkspaceId
+      }
+    ]
 
     // Settings
-    diagnosticSettings: diagnosticSettings
-    adminUserEnabled: false
+    acrAdminUserEnabled: false
     anonymousPullEnabled: false
-    zoneRedundancyEnabled: deploymentSettings.isProduction
-    publicNetworkAccess: 'Default'
-    skuName: (deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated) ? 'Premium' :  'Basic'
-    pushIdentities: [
-      { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
-      { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
+    exportPolicyStatus: 'disabled'
+    zoneRedundancy: deploymentSettings.isProduction ? 'Enabled' : 'Disabled'
+    publicNetworkAccess: (deploymentSettings.isProduction && deploymentSettings.isNetworkIsolated) ? 'Disabled' : 'Enabled'
+    replications: deploymentSettings.isMultiLocationDeployment ? [
+      {
+        name: '${resourceNames.containerRegistry}/${deploymentSettings.secondaryLocation}'
+        location: deploymentSettings.secondaryLocation
+        zoneRedundancy: deploymentSettings.isProduction ? 'Enabled' : 'Disabled'
+        tags: moduleTags
+      }
+    ] : null
+    privateEndpoints: deploymentSettings.isNetworkIsolated ? [
+      {
+        privateDnsZoneResourceIds: [
+          dnsZoneId
+        ]
+        subnetResourceId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+      }
+    ] : null
+    roleAssignments: [
+      {
+        principalId: deploymentSettings.principalId
+        principalType: deploymentSettings.principalType
+        roleDefinitionIdOrName: containerRegistryPushRoleId
+      }
+      {
+        principalId: ownerManagedIdentity.outputs.principal_id
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: containerRegistryPushRoleId
+      }
+      {
+        principalId: appManagedIdentity.outputs.principal_id
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: containerRegistryPullRoleId
+      }
     ]
-    pullIdentities: [
-      { principalId: appManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
-    ]
-    privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
-      dnsResourceGroupName: dnsResourceGroupName
-      name: resourceNames.containerRegistryPrivateEndpoint
-      resourceGroupName: resourceNames.spokeResourceGroup
-      subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
-    } : null
   }
 }
 
