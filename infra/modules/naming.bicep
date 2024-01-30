@@ -26,11 +26,14 @@ type DeploymentSettings = {
   @description('If \'true\', isolate the workload in a virtual network.')
   isNetworkIsolated: bool
 
-  @description('If \'false\', then this is a multi-location deployment for the second location.')
-  isPrimaryLocation: bool
-
   @description('The Azure region to host resources')
   location: string
+
+  @description('The Azure region to host primary resources. In a multi-region deployment, this will match \'location\' while deploying the primary region\'s resources.')
+  primaryLocation: string
+
+  @description('The secondary Azure region in a multi-region deployment. This will match \'location\' while deploying the secondary region\'s resources during a multi-region deployment.')
+  secondaryLocation: string
 
   @description('The name of the workload.')
   name: string
@@ -61,9 +64,6 @@ param deploymentSettings DeploymentSettings
 @description('A differentiator for the environment.  Set this to a build number or date to ensure that the resource groups and resources are unique.')
 param differentiator string = ''
 
-@description('The primary Azure location to deploy resources and the location of the hub.')
-param primaryLocation string
-
 @description('The overrides for the naming scheme.  Load this from the naming.overrides.jsonc file.')
 param overrides object = {}
 
@@ -77,7 +77,7 @@ var resourceToken = uniqueString(subscription().id, deploymentSettings.name, dep
 
 // The prefix for resource groups
 var diffPrefix = !empty(differentiator) ? '-${differentiator}' : ''
-var hubResourceGroupPrefix = 'rg-${deploymentSettings.name}-${deploymentSettings.stage}-${primaryLocation}'
+var hubResourceGroupPrefix = 'rg-${deploymentSettings.name}-${deploymentSettings.stage}-${deploymentSettings.primaryLocation}'
 var resourceGroupPrefix = 'rg-${deploymentSettings.name}-${deploymentSettings.stage}-${deploymentSettings.location}${diffPrefix}'
 
 // The list of resource names that are used in the deployment.  The default

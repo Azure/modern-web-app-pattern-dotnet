@@ -24,11 +24,14 @@ type DeploymentSettings = {
   @description('If \'true\', isolate the workload in a virtual network.')
   isNetworkIsolated: bool
 
-  @description('If \'false\', then this is a multi-location deployment for the second location.')
-  isPrimaryLocation: bool
-
   @description('The Azure region to host resources')
   location: string
+
+  @description('The Azure region to host primary resources. In a multi-region deployment, this will match \'location\' while deploying the primary region\'s resources.')
+  primaryLocation: string
+
+  @description('The secondary Azure region in a multi-region deployment. This will match \'location\' while deploying the secondary region\'s resources during a multi-region deployment.')
+  secondaryLocation: string
 
   @description('The name of the workload.')
   name: string
@@ -140,6 +143,9 @@ param useCommonAppServicePlan bool
 // The tags to apply to all resources in this workload
 var moduleTags = union(deploymentSettings.tags, deploymentSettings.workloadTags)
 
+// True if deploying into the primary region in a multi-region deployment, otherwise false
+var isPrimaryLocation = deploymentSettings.location == deploymentSettings.primaryLocation
+
 // If the sqlResourceGroup != the application resource group, don't create a server.
 var createSqlServer = resourceNames.sqlResourceGroup == resourceNames.resourceGroup
 
@@ -154,7 +160,7 @@ var budget = {
 }
 var budgetAmount = reduce(map(items(budget), (obj) => obj.value), 0, (total, amount) => total + amount)
 
-var redisConnectionSecretName= deploymentSettings.isPrimaryLocation ? 'App--RedisCache--ConnectionString-Primary' : 'App--RedisCache--ConnectionString-Secondary'
+var redisConnectionSecretName= isPrimaryLocation ? 'App--RedisCache--ConnectionString-Primary' : 'App--RedisCache--ConnectionString-Secondary'
 
 // describes the Azure Storage container where ticket images will be stored after they are rendered during purchase
 var ticketContainerName = 'tickets'
@@ -394,7 +400,7 @@ module webService './application-appservice.bicep' = {
   }
 }
 
-module webServiceFrontDoorRoute '../core/security/front-door-route.bicep' = if (deploymentSettings.isPrimaryLocation) {
+module webServiceFrontDoorRoute '../core/security/front-door-route.bicep' = if (isPrimaryLocation) {
   name: 'web-service-front-door-route'
   scope: resourceGroup
   params: {
@@ -444,7 +450,7 @@ module webFrontend './application-appservice.bicep' = {
   }
 }
 
-module webFrontendFrontDoorRoute '../core/security/front-door-route.bicep' = if (deploymentSettings.isPrimaryLocation) {
+module webFrontendFrontDoorRoute '../core/security/front-door-route.bicep' = if (isPrimaryLocation) {
   name: 'web-frontend-front-door-route'
   scope: resourceGroup
   params: {
@@ -528,7 +534,7 @@ module storageAccountContainer '../core/storage/storage-account-blob.bicep' = {
   }
 }
 
-module approveFrontDoorPrivateLinks '../core/security/front-door-route-approval.bicep' = if (deploymentSettings.isNetworkIsolated && deploymentSettings.isPrimaryLocation) {
+module approveFrontDoorPrivateLinks '../core/security/front-door-route-approval.bicep' = if (deploymentSettings.isNetworkIsolated && isPrimaryLocation) {
   name: 'approve-front-door-routes'
   scope: resourceGroup
   params: {
@@ -678,8 +684,8 @@ output service_managed_identities object[] = [
   { principalId: appManagedIdentity.outputs.principal_id,   principalType: 'ServicePrincipal', role: 'application' }
 ]
 
-output service_web_endpoints string[] = [ deploymentSettings.isPrimaryLocation ? webFrontendFrontDoorRoute.outputs.endpoint : webFrontend.outputs.app_service_uri ]
-output web_uri string = deploymentSettings.isPrimaryLocation ? webFrontendFrontDoorRoute.outputs.uri : webFrontend.outputs.app_service_uri
+output service_web_endpoints string[] = [ isPrimaryLocation ? webFrontendFrontDoorRoute.outputs.endpoint : webFrontend.outputs.app_service_uri ]
+output web_uri string = isPrimaryLocation ? webFrontendFrontDoorRoute.outputs.uri : webFrontend.outputs.app_service_uri
 
 output sql_server_name string = sqlServer.outputs.name
 output sql_database_name string = sqlDatabase.outputs.name

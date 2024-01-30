@@ -133,8 +133,9 @@ var defaultDeploymentSettings = {
   isMultiLocationDeployment: isMultiLocationDeployment
   isProduction: isProduction
   isNetworkIsolated: isNetworkIsolated
-  isPrimaryLocation: true
   location: location
+  primaryLocation: location
+  secondaryLocation: secondaryAzureLocation
   name: environmentName
   principalId: principalId
   principalType: principalType
@@ -157,7 +158,6 @@ var defaultDeploymentSettings = {
 
 var primaryNamingDeployment = defaultDeploymentSettings
 var secondaryNamingDeployment = union(defaultDeploymentSettings, {
-  isPrimaryLocation: false
   location: secondaryAzureLocation
 })
 
@@ -175,7 +175,6 @@ var primaryDeploymentSettings = union(defaultDeploymentSettings, primaryDeployme
 
 var secondDeployment = {
   location: secondaryAzureLocation
-  isPrimaryLocation: false
   workloadTags: {
     HubGroupName: isNetworkIsolated ? naming.outputs.resourceNames.hubResourceGroup : ''
     IsPrimaryLocation: 'false'
@@ -215,7 +214,6 @@ module naming './modules/naming.bicep' = {
     deploymentSettings: primaryNamingDeployment
     differentiator: differentiator != 'none' ? differentiator : ''
     overrides: loadJsonContent('./naming.overrides.jsonc')
-    primaryLocation: location
   }
 }
 
@@ -225,7 +223,6 @@ module naming2 './modules/naming.bicep' = {
     deploymentSettings: secondaryNamingDeployment
     differentiator: differentiator != 'none' ? '${differentiator}2' : '2'
     overrides: loadJsonContent('./naming.overrides.jsonc')
-    primaryLocation: location
   }
 }
 
@@ -234,8 +231,8 @@ module naming2 './modules/naming.bicep' = {
 **
 **  hubResourceGroup      - contains the hub network resources
 **  spokeResourceGroup    - contains the spoke network resources
-**  applicationResourceGroup - contains the application resources 
-** 
+**  applicationResourceGroup - contains the application resources
+**
 ** Not all of the resource groups are necessarily available - it
 ** depends on the settings.
 */
@@ -278,7 +275,7 @@ module azureMonitor './modules/azure-monitor.bicep' = {
 }
 
 /*
-** Create the hub network, if requested. 
+** Create the hub network, if requested.
 **
 ** The hub network consists of the following resources
 **

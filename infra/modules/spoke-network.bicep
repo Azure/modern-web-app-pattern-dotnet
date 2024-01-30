@@ -20,18 +20,21 @@ targetScope = 'subscription'
 type DeploymentSettings = {
   @description('If \'true\', then two regional deployments will be performed.')
   isMultiLocationDeployment: bool
-  
+
   @description('If \'true\', use production SKUs and settings.')
   isProduction: bool
 
   @description('If \'true\', isolate the workload in a virtual network.')
   isNetworkIsolated: bool
-  
-  @description('If \'false\', then this is a multi-location deployment for the second location.')
-  isPrimaryLocation: bool
 
   @description('The Azure region to host resources')
   location: string
+
+  @description('The Azure region to host primary resources. In a multi-region deployment, this will match \'location\' while deploying the primary region\'s resources.')
+  primaryLocation: string
+
+  @description('The secondary Azure region in a multi-region deployment. This will match \'location\' while deploying the secondary region\'s resources during a multi-region deployment.')
+  secondaryLocation: string
 
   @description('The name of the workload.')
   name: string
@@ -193,6 +196,9 @@ var devopsSubnet = createDevopsSubnet ? [{
   }
 }] : []
 
+// True if deploying into the primary region in a multi-region deployment, otherwise false
+var isPrimaryLocation = deploymentSettings.location == deploymentSettings.primaryLocation
+
 // ========================================================================
 // AZURE MODULES
 // ========================================================================
@@ -202,7 +208,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing 
 }
 
 module apiInboundNSG '../core/network/network-security-group.bicep' = {
-  name: deploymentSettings.isPrimaryLocation ? 'spoke-api-inbound-nsg-0' : 'spoke-api-inbound-nsg-1'
+  name: isPrimaryLocation ? 'spoke-api-inbound-nsg-0' : 'spoke-api-inbound-nsg-1'
   scope: resourceGroup
   params: {
     name: resourceNames.spokeApiInboundNSG
@@ -222,7 +228,7 @@ module apiInboundNSG '../core/network/network-security-group.bicep' = {
 }
 
 module apiOutboundNSG '../core/network/network-security-group.bicep' = {
-  name: deploymentSettings.isPrimaryLocation ? 'spoke-api-outbound-nsg-0' : 'spoke-api-outbound-nsg-1'
+  name: isPrimaryLocation ? 'spoke-api-outbound-nsg-0' : 'spoke-api-outbound-nsg-1'
   scope: resourceGroup
   params: {
     name: resourceNames.spokeApiOutboundNSG
@@ -241,7 +247,7 @@ module apiOutboundNSG '../core/network/network-security-group.bicep' = {
 }
 
 module privateEndpointNSG '../core/network/network-security-group.bicep' = {
-  name: deploymentSettings.isPrimaryLocation ? 'spoke-pep-nsg-0' : 'spoke-pep-nsg-0'
+  name: isPrimaryLocation ? 'spoke-pep-nsg-0' : 'spoke-pep-nsg-0'
   scope: resourceGroup
   params: {
     name: resourceNames.spokePrivateEndpointNSG
@@ -262,7 +268,7 @@ module privateEndpointNSG '../core/network/network-security-group.bicep' = {
 }
 
 module webInboundNSG '../core/network/network-security-group.bicep' = {
-  name: deploymentSettings.isPrimaryLocation ? 'spoke-web-inbound-nsg-0' : 'spoke-web-inbound-nsg-1'
+  name: isPrimaryLocation ? 'spoke-web-inbound-nsg-0' : 'spoke-web-inbound-nsg-1'
   scope: resourceGroup
   params: {
     name: resourceNames.spokeWebInboundNSG
@@ -282,7 +288,7 @@ module webInboundNSG '../core/network/network-security-group.bicep' = {
 }
 
 module webOutboundNSG '../core/network/network-security-group.bicep' = {
-  name: deploymentSettings.isPrimaryLocation ? 'spoke-web-outbound-nsg-0' : 'spoke-web-outbound-nsg-1'
+  name: isPrimaryLocation ? 'spoke-web-outbound-nsg-0' : 'spoke-web-outbound-nsg-1'
   scope: resourceGroup
   params: {
     name: resourceNames.spokeWebOutboundNSG
@@ -301,7 +307,7 @@ module webOutboundNSG '../core/network/network-security-group.bicep' = {
 }
 
 module virtualNetwork '../core/network/virtual-network.bicep' = {
-  name: deploymentSettings.isPrimaryLocation ? 'spoke-virtual-network-0' : 'spoke-virtual-network-1'
+  name: isPrimaryLocation ? 'spoke-virtual-network-0' : 'spoke-virtual-network-1'
   scope: resourceGroup
   params: {
     name: resourceNames.spokeVirtualNetwork
@@ -361,7 +367,7 @@ module virtualNetwork '../core/network/virtual-network.bicep' = {
 }
 
 module routeTable '../core/network/route-table.bicep' = if (enableFirewall) {
-  name: deploymentSettings.isPrimaryLocation ? 'spoke-route-table-0' : 'spoke-route-table-1'
+  name: isPrimaryLocation ? 'spoke-route-table-0' : 'spoke-route-table-1'
   scope: resourceGroup
   params: {
     name: resourceNames.spokeRouteTable
@@ -383,7 +389,7 @@ module routeTable '../core/network/route-table.bicep' = if (enableFirewall) {
 }
 
 module jumphost '../core/compute/windows-jumphost.bicep' = if (enableJumpHost) {
-  name: deploymentSettings.isPrimaryLocation ? 'hub-jumphost-0' : 'hub-jumphost-1'
+  name: isPrimaryLocation ? 'hub-jumphost-0' : 'hub-jumphost-1'
   scope: resourceGroup
   params: {
     name: resourceNames.hubJumphost
@@ -398,7 +404,7 @@ module jumphost '../core/compute/windows-jumphost.bicep' = if (enableJumpHost) {
     administratorPassword: administratorPassword
     administratorUsername: administratorUsername
     diagnosticSettings: diagnosticSettings
-    
+
   }
 }
 
@@ -411,7 +417,7 @@ var virtualNetworkLinks = [
 ]
 
 module privateDnsZones './private-dns-zones.bicep' = {
-  name: deploymentSettings.isPrimaryLocation ? 'spoke-prvt-0-dns-zone-deploy' : 'spoke-prvt-1-dns-zone-deploy'
+  name: isPrimaryLocation ? 'spoke-prvt-0-dns-zone-deploy' : 'spoke-prvt-1-dns-zone-deploy'
   params:{
     createDnsZone: false //we are reusing the existing DNS zone and linking a vnet
     deploymentSettings: deploymentSettings

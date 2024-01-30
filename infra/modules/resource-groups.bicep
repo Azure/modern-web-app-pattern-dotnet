@@ -1,7 +1,7 @@
 targetScope = 'subscription'
 
 /*
-** Resource Groups 
+** Resource Groups
 ** Copyright (C) 2023 Microsoft, Inc.
 ** All Rights Reserved
 **
@@ -19,18 +19,21 @@ targetScope = 'subscription'
 type DeploymentSettings = {
   @description('If \'true\', then two regional deployments will be performed.')
   isMultiLocationDeployment: bool
-  
+
   @description('If \'true\', use production SKUs and settings.')
   isProduction: bool
 
   @description('If \'true\', isolate the workload in a virtual network.')
   isNetworkIsolated: bool
-  
-  @description('If \'false\', then this is a multi-location deployment for the second location.')
-  isPrimaryLocation: bool
 
   @description('The Azure region to host resources')
   location: string
+
+  @description('The Azure region to host primary resources. In a multi-region deployment, this will match \'location\' while deploying the primary region\'s resources.')
+  primaryLocation: string
+
+  @description('The secondary Azure region in a multi-region deployment. This will match \'location\' while deploying the secondary region\'s resources during a multi-region deployment.')
+  secondaryLocation: string
 
   @description('The name of the workload.')
   name: string
@@ -68,7 +71,7 @@ param deployHubNetwork bool
 // VARIABLES
 // ========================================================================
 
-var createHub = deployHubNetwork && resourceNames.hubResourceGroup != resourceNames.resourceGroup && deploymentSettings.isPrimaryLocation
+var createHub = deployHubNetwork && resourceNames.hubResourceGroup != resourceNames.resourceGroup && (deploymentSettings.location == deploymentSettings.primaryLocation)
 var createSpoke = deploymentSettings.isNetworkIsolated && resourceNames.spokeResourceGroup != resourceNames.resourceGroup
 
 // ========================================================================
