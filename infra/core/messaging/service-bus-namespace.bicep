@@ -230,7 +230,7 @@ module privateEndpoint '../network/private-endpoint.bicep' = if (privateEndpoint
     subnetId: privateEndpointSettings != null ? privateEndpointSettings!.subnetId : ''
 
     // Settings
-    dnsZoneName: 'privatelink.azconfig.io'
+    dnsZoneName: 'privatelink.servicebus.windows.net'
     groupIds: [ 'namespace' ]
   }
 }

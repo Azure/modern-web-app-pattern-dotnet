@@ -106,9 +106,6 @@ param applicationInsightsId string = ''
 @description('When deploying a hub, the private endpoints will need this parameter to specify the resource group that holds the Private DNS zones')
 param dnsResourceGroupName string = ''
 
-@description('The name of the DNS zone that is used for private endpoints.')
-param dnsZoneName string = 'privatelink.azconfig.io'
-
 @description('The ID of the Log Analytics workspace to use for diagnostics and logging.')
 param logAnalyticsWorkspaceId string = ''
 
@@ -178,8 +175,14 @@ var containerRegistryPushRoleId = '8311e382-0749-4cb8-b61a-304f252e45ec'
 // Allows pull access to Azure Container Registry images.
 var containerRegistryPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 
-// DNS zone ID for private endpoints
-var dnsZoneId = resourceId(dnsResourceGroupName, 'Microsoft.Network/privateDnsZones', dnsZoneName)
+// Allows all operations on a Service Bus namespace.
+var serviceBusDataOwnerRoleId = '090c5cfd-751d-490a-894a-3ce6f1109419'
+
+// Allows sending messages to a Service Bus namespace's queues and topics.
+var serviceBusDataSenderRoleId = '69a216fc-b8fb-44d8-bc22-1f3c2cd27a39'
+
+// Allows receiving messages to a Service Bus namespace's queues and topics.
+var serviceBusDataReceiverRoleId = '4f6d3b9b-027b-4f4c-9142-0e5a2a2247e0'
 
 // ========================================================================
 // EXISTING RESOURCES
@@ -595,7 +598,7 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
     privateEndpoints: deploymentSettings.isNetworkIsolated ? [
       {
         privateDnsZoneResourceIds: [
-          dnsZoneId
+          resourceId(dnsResourceGroupName, 'Microsoft.Network/privateDnsZones', 'privatelink.azurecr.io')
         ]
         subnetResourceId: subnets[resourceNames.spokePrivateEndpointSubnet].id
       }
@@ -620,51 +623,83 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
   }
 }
 
-module serviceBusNamespace '../core/messaging/service-bus-namespace.bicep' = {
+module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
   name: 'application-service-bus-namespace'
   scope: resourceGroup
   params: {
     name: resourceNames.serviceBusNamespace
     location: deploymentSettings.location
     tags: moduleTags
+    skuObject: {
+      name: (deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated) ? 'Premium' : 'Basic'
+      capacity: 1
+    }
 
-    // Dependencies
-    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
+    diagnosticSettings:[
+      {
+        workspaceResourceId: logAnalyticsWorkspaceId
+      }
+    ]
 
     // Settings
-    diagnosticSettings: diagnosticSettings
-    localAuthenticationEnabled: false
-    publicNetworkAccess: 'Default'
-    skuName: (deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated) ? 'Premium' : 'Basic'
-    zoneRedundancyEnabled: deploymentSettings.isProduction
-    dataOwnerIdentities: [
-      { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
-      { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
-    ]
-    dataReceiverIdentities: [
-      { principalId: appManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
-    ]
-    dataSenderIdentities: [
-      { principalId: appManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
-    ]
-    privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
-      dnsResourceGroupName: dnsResourceGroupName
-      name: resourceNames.serviceBusNamespacePrivateEndpoint
-      resourceGroupName: resourceNames.spokeResourceGroup
-      subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+    disableLocalAuth: true
+    minimumTlsVersion: '1.2'
+    publicNetworkAccess: deploymentSettings.isNetworkIsolated ? 'Disabled' : 'Enabled'
+    zoneRedundant: deploymentSettings.isProduction
+    networkRuleSets: deploymentSettings.isNetworkIsolated ? {
+      defaultAction: 'Deny'
+      trustedServiceAccessEnabled: true
     } : null
+
+    // This is a workaround for a bug in the service bus module https://github.com/Azure/ResourceModules/issues/2867
+    // Authorization rules should be optional and not required when using RBAC roles, but due to the bug, we need to
+    // provide an empty array explicitly.
+    authorizationRules:[]
+
+    privateEndpoints: deploymentSettings.isNetworkIsolated ?  [
+      {
+        service: 'namespace'
+        privateDnsZoneResourceIds: [
+          resourceId(dnsResourceGroupName, 'Microsoft.Network/privateDnsZones', 'privatelink.servicebus.windows.net')
+        ]
+        subnetResourceId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+      }
+    ] : null
+
+    roleAssignments: [
+      {
+        principalId: deploymentSettings.principalId
+        principalType: deploymentSettings.principalType
+        roleDefinitionIdOrName: serviceBusDataOwnerRoleId
+      }
+      {
+        principalId: ownerManagedIdentity.outputs.principal_id
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: serviceBusDataOwnerRoleId
+      }
+      {
+        principalId: appManagedIdentity.outputs.principal_id
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: serviceBusDataSenderRoleId
+      }
+      {
+        principalId: appManagedIdentity.outputs.principal_id
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: serviceBusDataReceiverRoleId
+      }
+    ]
+
+    queues: [ for queueName in renderingQueueNames: {
+        name: queueName
+
+        // This is a workaround for a bug in the service bus module https://github.com/Azure/ResourceModules/issues/2867
+        // Authorization rules should be optional and not required when using RBAC roles, but due to the bug, we need to
+        // provide an empty array explicitly.
+        authorizationRules:[]
+      }
+    ]
   }
 }
-
-module renderingQueues '../core/messaging/service-bus-queue.bicep' = [ for queueName in renderingQueueNames: {
-  name: 'application-service-bus-queue-${queueName}'
-  scope: resourceGroup
-
-  params: {
-    name: queueName
-    serviceBusNamespaceName: serviceBusNamespace.outputs.name
-  }
-}]
 
 // ========================================================================
 // OUTPUTS
@@ -674,7 +709,7 @@ output app_config_uri string = appConfiguration.outputs.app_config_uri
 output key_vault_name string = deploymentSettings.isNetworkIsolated ? resourceNames.keyVault : keyVault.outputs.name
 output redis_cache_name string = redis.outputs.name
 output containerRegistry_loginServer string = containerRegistry.outputs.loginServer
-output service_bus_endpoint string = serviceBusNamespace.outputs.endpoint
+output service_bus_name string = serviceBusNamespace.outputs.name
 
 output owner_managed_identity_id string = ownerManagedIdentity.outputs.id
 output app_managed_identity_id string = appManagedIdentity.outputs.id

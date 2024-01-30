@@ -215,7 +215,7 @@ module privateEndpoint '../network/private-endpoint.bicep' = if (privateEndpoint
     subnetId: privateEndpointSettings != null ? privateEndpointSettings!.subnetId : ''
 
     // Settings
-    dnsZoneName: 'privatelink.azconfig.io'
+    dnsZoneName: 'privatelink.azurecr.io'
     groupIds: [ 'registry' ]
   }
 }

@@ -65,12 +65,14 @@ param deploymentSettings DeploymentSettings
 
 @description('The list of private DNS zones to create in this virtual network.')
 param privateDnsZones array = [
-  'privatelink.vaultcore.azure.net'
   'privatelink${az.environment().suffixes.sqlServerHostname}'
-  'privatelink.azurewebsites.net'
-  'privatelink.redis.cache.windows.net'
   'privatelink.azconfig.io'
+  'privatelink.azurecr.io'
+  'privatelink.azurewebsites.net'
   'privatelink.blob.${environment().suffixes.storage}'
+  'privatelink.redis.cache.windows.net'
+  'privatelink.servicebus.windows.net'
+  'privatelink.vaultcore.azure.net'
 ]
 
 @description('The hub resource group name.')

@@ -159,7 +159,26 @@ function Get-RedisCacheKeyName {
 
     # matches hard coded value in application-post-config.bicep module
     return "App--RedisCache--ConnectionString-Secondary"
+}
 
+function Get-WorkloadServiceBus {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ResourceGroupName
+    )
+    Write-Host "`tGetting Service Bus namespace for $highlightColor'$ResourceGroupName'$defaultColor"
+
+    $group = Get-AzResourceGroup -Name $ResourceGroupName
+
+    # The group contains tags that explain what the default name of the Service Bus namespace should be.
+    $serviceBusName = "sb-$($group.Tags["ResourceToken"])"
+
+    # If the Service Bus namespace is not formed correctly (because resource token is unavailable), throw an error.
+    if ($serviceBusName.Length -lt 4) {
+        throw "Resource token not found in $group.ResourceGroupName"
+    }
+
+    return Get-AzServiceBusNamespace -Name $serviceBusName -ResourceGroupName $group.ResourceGroupName
 }
 
 # Working around https://github.com/Azure/azure-powershell/issues/17773
@@ -192,11 +211,9 @@ $defaultKeyVaultUri = (Get-WorkloadKeyVault -ResourceGroupName $ResourceGroupNam
 $defaultRedisCacheKeyName = (Get-RedisCacheKeyName -ResourceGroupName $ResourceGroupName) # workloads use independent redis caches and a shared vault to store the connection string
 $defaultTicketRenderRequestQueueName = "ticket-render-requests" # matches the default defined in application-resources.bicep file
 $defaultTicketRenderCompleteQueueName = "ticket-render-completions" # matches the default defined in application-resources.bicep file
+$defaultAzureServiceBusNamespace = (Get-WorkloadServiceBus -ResourceGroupName $ResourceGroupName).Name # the name of the Service Bus namespace
 
-# Bicep templates don't yet deploy the Service Bus namespace used to communicate with the ticket rendering service, so we use a placeholder value
-# here to satisfy the app configuration validation. We also default using distributed ticket rendering to false.
-# Once the Service Bus namespace is deployed, we will update the app configuration to use the correct value and enable distributed ticket rendering by default.
-$defaultAzureServiceBusNamespace = "placeholder" # (Get-WorkloadServiceBus -ResourceGroupName $ResourceGroupName).Namespace
+# Until the standalone rendering service is available, we will disable distributed ticket rendering by default
 $defaultUseDistributedTicketRenderingResponse = "n"
 
 # prompt to confirm settings
