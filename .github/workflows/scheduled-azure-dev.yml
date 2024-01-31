@@ -25,11 +25,8 @@ jobs:
       AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}
       IS_RUN_AS_SERVICEPRINCIPAL: true
     steps:
-      - name: Install jq tool
-        run: |
-          sudo apt-get update
-          sudo apt-get install jq
-      - name: Checkout
+      - name: 'Setup jq'
+        uses: dcarbone/install-jq-action@v2
         uses: actions/checkout@v3
       - uses: actions/setup-dotnet@v3
         with:
