@@ -1,19 +1,10 @@
 name: "MWA- Daily Build"
 on:
   workflow_dispatch:
-    inputs:
-      run_tear_down:
-        description: 'When true, resources will be deleted after a run'
-        required: false
-        default: true
-        type: boolean
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
   schedule:
     - cron: '0 12 * * *'
-      inputs:
-        run_tear_down:
-          default: true
 
 # https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Clinux#set-up-azure-login-with-openid-connect-authentication
 permissions:
@@ -26,7 +17,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/azure-dev-cli-apps:1.5.0
+      image: mcr.microsoft.com/azure-dev-cli-apps:1.5.1
     env:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -82,15 +73,14 @@ jobs:
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
 
       - name: QA - Validate Deployment
-        run: ./infra/devOpsScripts/validateDeployment.sh -g ${{ secrets.AZURE_ENV_NAME }}-rg
+        run: ./infra/scripts/validateDeployment.sh -g ${{ secrets.AZURE_ENV_NAME }}-rg
 
 
   teardown:
-    if: ${{ inputs.run_tear_down }}
     needs: [build]
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/azure-dev-cli-apps:1.5.0
+      image: mcr.microsoft.com/azure-dev-cli-apps:1.5.1
     env:
         AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}daily2
         AZURE_LOCATION: ${{ secrets.AZURE_LOCATION2 }}
