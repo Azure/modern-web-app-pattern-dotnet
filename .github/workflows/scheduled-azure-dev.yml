@@ -71,7 +71,7 @@ jobs:
             subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: QA - Validate Deployment
-        run: ./testscripts/validate-deployment.sh -g $resourceGroupName
+        run: ./testscripts/call-validate-deployment.sh -g $resourceGroupName
 
 
   teardown:
