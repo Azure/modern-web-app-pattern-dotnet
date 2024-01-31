@@ -55,19 +55,19 @@ jobs:
             --tenant-id "$Env:AZURE_TENANT_ID" `
         shell: pwsh
 
-      - name: 'Az CLI login'
-        uses: azure/login@v1
-        with:
-            client-id: ${{ secrets.AZURE_CLIENT_ID }}
-            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
         # AZD deploy uses an AZD hook to execute the load test tool that will upload load test files
         # uploading the AZD load test requires a CLI login to authenticate
       - name: Azure Dev Deploy
         run: azd deploy --no-prompt
         env:
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: QA - Validate Deployment
         run: ./infra/scripts/validate-deployment.sh -g ${{ secrets.AZURE_ENV_NAME }}-rg
