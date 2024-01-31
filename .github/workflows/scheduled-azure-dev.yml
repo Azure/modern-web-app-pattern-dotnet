@@ -80,7 +80,7 @@ jobs:
     container:
       image: mcr.microsoft.com/azure-dev-cli-apps:1.5.1
     env:
-        AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}daily2
+        AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}
         AZURE_LOCATION: ${{ secrets.AZURE_LOCATION2 }}
         AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         IS_RUN_AS_SERVICEPRINCIPAL: true
@@ -96,9 +96,3 @@ jobs:
 
       - name: Azure Dev Down
         run: azd down --force --purge --no-prompt
-        env:
-          AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}daily2
-          AZURE_LOCATION: ${{ secrets.AZURE_LOCATION2 }}
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-
