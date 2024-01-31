@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# This script is used by the DevOps flow to validate settings of resources
+# that were deployed by the azd command. This script is not intended to be
+# run manually by a developer.
+
 POSITIONAL_ARGS=()
 
 while [[ $# -gt 0 ]]; do
