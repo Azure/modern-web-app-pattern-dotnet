@@ -71,9 +71,7 @@ jobs:
             subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: QA - Validate Deployment
-        run: |
-          resourceGroupName=$((azd env get-values --output json) | jq -r .AZURE_RESOURCE_GROUP)
-          ./testscripts/validate-deployment.sh -g $resourceGroupName
+        run: ./testscripts/validate-deployment.sh -g $resourceGroupName
 
 
   teardown:
