@@ -589,7 +589,7 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
     publicNetworkAccess: (deploymentSettings.isProduction && deploymentSettings.isNetworkIsolated) ? 'Disabled' : 'Enabled'
     replications: deploymentSettings.isMultiLocationDeployment ? [
       {
-        name: '${resourceNames.containerRegistry}/${deploymentSettings.secondaryLocation}'
+        name: deploymentSettings.secondaryLocation
         location: deploymentSettings.secondaryLocation
         zoneRedundancy: deploymentSettings.isProduction ? 'Enabled' : 'Disabled'
         tags: moduleTags
@@ -598,9 +598,10 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
     privateEndpoints: deploymentSettings.isNetworkIsolated ? [
       {
         privateDnsZoneResourceIds: [
-          resourceId(dnsResourceGroupName, 'Microsoft.Network/privateDnsZones', 'privatelink.azurecr.io')
+          resourceId(subscription().subscriptionId, dnsResourceGroupName, 'Microsoft.Network/privateDnsZones', 'privatelink.azurecr.io')
         ]
         subnetResourceId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+        service: 'registry'
       }
     ] : null
     roleAssignments: [
@@ -647,7 +648,6 @@ module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
     publicNetworkAccess: deploymentSettings.isNetworkIsolated ? 'Disabled' : 'Enabled'
     zoneRedundant: deploymentSettings.isProduction
     networkRuleSets: deploymentSettings.isNetworkIsolated ? {
-      defaultAction: 'Deny'
       trustedServiceAccessEnabled: true
     } : null
 
@@ -660,7 +660,7 @@ module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
       {
         service: 'namespace'
         privateDnsZoneResourceIds: [
-          resourceId(dnsResourceGroupName, 'Microsoft.Network/privateDnsZones', 'privatelink.servicebus.windows.net')
+          resourceId(subscription().subscriptionId, dnsResourceGroupName, 'Microsoft.Network/privateDnsZones', 'privatelink.servicebus.windows.net')
         ]
         subnetResourceId: subnets[resourceNames.spokePrivateEndpointSubnet].id
       }
@@ -708,7 +708,7 @@ module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
 output app_config_uri string = appConfiguration.outputs.app_config_uri
 output key_vault_name string = deploymentSettings.isNetworkIsolated ? resourceNames.keyVault : keyVault.outputs.name
 output redis_cache_name string = redis.outputs.name
-output containerRegistry_loginServer string = containerRegistry.outputs.loginServer
+output container_registry_login_server string = isPrimaryLocation ? containerRegistry.outputs.loginServer : ''
 output service_bus_name string = serviceBusNamespace.outputs.name
 
 output owner_managed_identity_id string = ownerManagedIdentity.outputs.id
