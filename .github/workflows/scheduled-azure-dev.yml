@@ -45,6 +45,7 @@ jobs:
         run: azd provision --no-prompt
         env:
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+          AZURE_PRINCIPAL_TYPE: ServicePrincipal
 
       - name: Log in with Azure (Federated Credentials)
         if: ${{ env.AZURE_CLIENT_ID != '' }}
