@@ -1,4 +1,6 @@
-# Functions
+# This script is run by azd pre-down hook and is part of the deployment lifecycle run when deploying the code for the Relecloud web app.
+
+# Function definitions
 
 # Gets an access token for accessing Azure Resource Manager APIs
 function Get-AzAccessToken {
@@ -42,7 +44,6 @@ function Test-ResourceGroupExists($resourceGroupName) {
 
 # end of functions
 
-# This script is run by azd pre-down hook and is part of the deployment lifecycle run when deploying the code for the Relecloud web app.
 $hubGroupName = ((azd env get-values --output json) | ConvertFrom-Json).hub_group_name
 
 if (-not $hubGroupName) {
@@ -51,6 +52,16 @@ if (-not $hubGroupName) {
 else {
     Write-Host "Removing budgets for resource group $hubGroupName"
     Remove-ConsumptionBudgetForResourceGroup -ResourceGroupName $hubGroupName
+}
+
+$resourceGroupName = ((azd env get-values --output json) | ConvertFrom-Json).AZURE_RESOURCE_GROUP
+
+if (-not $resourceGroupName) {
+    Write-Host "Azure hub group name not found in environment variables. No cleanup needed. Exiting..."
+}
+else {
+    Write-Host "Removing budgets for resource group $resourceGroupName"
+    Remove-ConsumptionBudgetForResourceGroup -ResourceGroupName $resourceGroupName
 }
 
 # todo - remove diagnostic settings
