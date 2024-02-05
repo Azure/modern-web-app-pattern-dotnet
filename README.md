@@ -213,6 +213,7 @@ azd down
 - [Plan the implementation](plan-the-implementation.md)
 - [Apply the pattern](apply-the-pattern.md)
 - [Known issues](known-issues.md)
+- [Troubleshooting](troubleshooting.md)
 - [Developer patterns](simulate-patterns.md)
 - [Find additional resources](additional-resources.md)
 - [Report security concerns](SECURITY.md)
