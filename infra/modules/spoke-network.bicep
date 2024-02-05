@@ -137,6 +137,16 @@ var appServiceDelegation = [
   }
 ]
 
+// When creating the virtual network, we need to set up a service delegation for container apps.
+var containerAppDelegation = [
+  {
+    name: 'ServiceDelegation'
+    properties: {
+      serviceName: 'Microsoft.App/environments'
+    }
+  }
+]
+
 // Network security group rules
 var allowHttpsInbound = {
   name: 'Allow-HTTPS-Inbound'
@@ -177,8 +187,89 @@ var denyAllInbound = {
     destinationPortRange: '*'
     direction: 'Inbound'
     priority: 1000
+    protocol: 'Any'
+    sourceAddressPrefix: '*'
+    sourcePortRange: '*'
+  }
+}
+
+// ACAE Inbound rules
+// https://learn.microsoft.com/azure/container-apps/firewall-integration
+
+var containerAppsAllowHttpInbound = {
+  name: 'Allow-Container-Apps-HTTP-Inbound'
+  properties: {
+    access: 'Allow'
+    description: 'Allow HTTP inbound traffic'
+    destinationAddressPrefix: '*'
+    destinationPortRange: '80,31080,443,31443'
+    direction: 'Inbound'
+    priority: 120
     protocol: 'Tcp'
     sourceAddressPrefix: '*'
+    sourcePortRange: '*'
+  }
+}
+
+var allowAzureLoadBalancer = {
+  name: 'Allow-Azure-Load-Balancer'
+  properties: {
+    access: 'Allow'
+    description: 'Allow Azure Load Balancer traffic'
+    destinationAddressPrefix: '*'
+    destinationPortRange: '30000-32676'
+    direction: 'Inbound'
+    priority: 130
+    protocol: '*'
+    sourceAddressPrefix: 'AzureLoadBalancer'
+    sourcePortRange: '*'
+  }
+}
+
+// ACAE Outbound rules
+
+var allowContainerRegistryOutbound = {
+  name: 'Allow-Container-Registry-Outbound'
+  properties: {
+    access: 'Allow'
+    description: 'Allow Container Registry outbound traffic'
+    destinationAddressPrefix: 'MicrosoftContainerRegistry'
+    destinationPortRange: '443'
+    direction: 'Outbound'
+    priority: 140
+    protocol: 'Tcp'
+    sourceAddressPrefix: 'VirtualNetwork'
+    sourcePortRange: '*'
+  }
+}
+
+// Dependency of the container registry service tag
+var allowFrontDoorOutbound = {
+  name: 'Allow-FrontDoor-Outbound'
+  properties: {
+    access: 'Allow'
+    description: 'Allow Front Door first party outbound traffic (dependency of the container registry service tag)'
+    destinationAddressPrefix: 'AzureFrontDoor.FirstParty'
+    destinationPortRange: '443'
+    direction: 'Outbound'
+    priority: 150
+    protocol: 'Tcp'
+    sourceAddressPrefix: 'VirtualNetwork'
+    sourcePortRange: '*'
+  }
+}
+
+var allowEntraIdOutbound = {
+  name: 'Allow-EntraId-Outbound'
+  properties: {
+    access: 'Allow'
+    description: 'Allow EntraId outbound traffic'
+    destinationAddressPrefix: 'AzureActiveDirectory'
+    destinationPortRange: '443'
+    direction: 'Outbound'
+    priority: 160
+    protocol: 'Tcp'
+    sourceAddressPrefix: 'VirtualNetwork'
     sourcePortRange: '*'
   }
 }
@@ -306,6 +397,30 @@ module webOutboundNSG '../core/network/network-security-group.bicep' = {
   }
 }
 
+module containerAppsEnvironmentNSG '../core/network/network-security-group.bicep' = {
+  name: isPrimaryLocation ? 'spoke-container-apps-environment-nsg-0' : 'spoke-container-apps-environment-nsg-1'
+  scope: resourceGroup
+  params: {
+    name: resourceNames.spokeContainerAppsEnvironmentNSG
+    location: deploymentSettings.location
+    tags: moduleTags
+
+    // Dependencies
+    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
+
+    // Settings
+    diagnosticSettings: diagnosticSettings
+    securityRules: [
+      containerAppsAllowHttpInbound
+      allowAzureLoadBalancer
+      allowContainerRegistryOutbound
+      allowFrontDoorOutbound
+      allowEntraIdOutbound
+      denyAllInbound
+    ]
+  }
+}
+
 module virtualNetwork '../core/network/virtual-network.bicep' = {
   name: isPrimaryLocation ? 'spoke-virtual-network-0' : 'spoke-virtual-network-1'
   scope: resourceGroup
@@ -362,7 +477,17 @@ module virtualNetwork '../core/network/virtual-network.bicep' = {
           networkSecurityGroup: { id: webOutboundNSG.outputs.id }
           privateEndpointNetworkPolicies: 'Enabled'
         }, routeTableSettings)
-      }], devopsSubnet)
+      }
+      {
+        name: resourceNames.spokeContainerAppsEnvironmentSubnet
+        properties: union({
+          addressPrefix: subnetPrefixes[5]
+          delegations: containerAppDelegation
+          networkSecurityGroup: { id: containerAppsEnvironmentNSG.outputs.id }
+          privateEndpointNetworkPolicies: 'Enabled'
+        }, routeTableSettings)
+      }
+    ], devopsSubnet)
   }
 }
 

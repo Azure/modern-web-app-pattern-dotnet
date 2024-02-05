@@ -566,63 +566,9 @@ module applicationBudget '../core/cost-management/budget.bicep' = {
   }
 }
 
-module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' = if (isPrimaryLocation) {
-  name: 'application-container-registry'
-  scope: resourceGroup
-  params: {
-    name: resourceNames.containerRegistry
-    location: deploymentSettings.location
-    tags: moduleTags
-    acrSku: (deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated) ? 'Premium' :  'Basic'
-
-    diagnosticSettings: [
-      {
-        workspaceResourceId: logAnalyticsWorkspaceId
-      }
-    ]
-
-    // Settings
-    acrAdminUserEnabled: false
-    anonymousPullEnabled: false
-    exportPolicyStatus: 'disabled'
-    zoneRedundancy: deploymentSettings.isProduction ? 'Enabled' : 'Disabled'
-    publicNetworkAccess: (deploymentSettings.isProduction && deploymentSettings.isNetworkIsolated) ? 'Disabled' : 'Enabled'
-    replications: deploymentSettings.isMultiLocationDeployment ? [
-      {
-        name: deploymentSettings.secondaryLocation
-        location: deploymentSettings.secondaryLocation
-        zoneRedundancy: deploymentSettings.isProduction ? 'Enabled' : 'Disabled'
-        tags: moduleTags
-      }
-    ] : null
-    privateEndpoints: deploymentSettings.isNetworkIsolated ? [
-      {
-        privateDnsZoneResourceIds: [
-          resourceId(subscription().subscriptionId, dnsResourceGroupName, 'Microsoft.Network/privateDnsZones', 'privatelink.azurecr.io')
-        ]
-        subnetResourceId: subnets[resourceNames.spokePrivateEndpointSubnet].id
-        service: 'registry'
-      }
-    ] : null
-    roleAssignments: [
-      {
-        principalId: deploymentSettings.principalId
-        principalType: deploymentSettings.principalType
-        roleDefinitionIdOrName: containerRegistryPushRoleId
-      }
-      {
-        principalId: ownerManagedIdentity.outputs.principal_id
-        principalType: 'ServicePrincipal'
-        roleDefinitionIdOrName: containerRegistryPushRoleId
-      }
-      {
-        principalId: appManagedIdentity.outputs.principal_id
-        principalType: 'ServicePrincipal'
-        roleDefinitionIdOrName: containerRegistryPullRoleId
-      }
-    ]
-  }
-}
+/*
+** Azure Service Bus
+*/
 
 module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
   name: 'application-service-bus-namespace'
@@ -698,6 +644,171 @@ module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
         authorizationRules:[]
       }
     ]
+  }
+}
+
+
+/*
+** Azure Container Registry
+*/
+
+module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' = if (isPrimaryLocation) {
+  name: 'application-container-registry'
+  scope: resourceGroup
+  params: {
+    name: resourceNames.containerRegistry
+    location: deploymentSettings.location
+    tags: moduleTags
+    acrSku: (deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated) ? 'Premium' :  'Basic'
+
+    diagnosticSettings: [
+      {
+        workspaceResourceId: logAnalyticsWorkspaceId
+      }
+    ]
+
+    // Settings
+    acrAdminUserEnabled: false
+    anonymousPullEnabled: false
+    exportPolicyStatus: 'disabled'
+    zoneRedundancy: deploymentSettings.isProduction ? 'Enabled' : 'Disabled'
+    publicNetworkAccess: (deploymentSettings.isProduction && deploymentSettings.isNetworkIsolated) ? 'Disabled' : 'Enabled'
+    replications: deploymentSettings.isMultiLocationDeployment ? [
+      {
+        name: deploymentSettings.secondaryLocation
+        location: deploymentSettings.secondaryLocation
+        zoneRedundancy: deploymentSettings.isProduction ? 'Enabled' : 'Disabled'
+        tags: moduleTags
+      }
+    ] : null
+    privateEndpoints: deploymentSettings.isNetworkIsolated ? [
+      {
+        privateDnsZoneResourceIds: [
+          resourceId(subscription().subscriptionId, dnsResourceGroupName, 'Microsoft.Network/privateDnsZones', 'privatelink.azurecr.io')
+        ]
+        subnetResourceId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+        service: 'registry'
+      }
+    ] : null
+    roleAssignments: [
+      {
+        principalId: deploymentSettings.principalId
+        principalType: deploymentSettings.principalType
+        roleDefinitionIdOrName: containerRegistryPushRoleId
+      }
+      {
+        principalId: ownerManagedIdentity.outputs.principal_id
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: containerRegistryPushRoleId
+      }
+      {
+        principalId: appManagedIdentity.outputs.principal_id
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: containerRegistryPullRoleId
+      }
+    ]
+  }
+}
+
+/*
+** Azure Container Apps
+*/
+
+module containerAppsEnvironment 'br/public:avm/res/app/managed-environment:0.4.2' = {
+  name: 'application-container-apps-environment'
+  scope: resourceGroup
+  params: {
+    // Required and common parameters
+    name: resourceNames.commonContainerAppEnvironment
+    location: deploymentSettings.location
+    logAnalyticsWorkspaceResourceId: logAnalyticsWorkspaceId
+    tags: moduleTags
+
+    // Settings
+    infrastructureResourceGroupName: resourceGroup.name
+    infrastructureSubnetId: deploymentSettings.isNetworkIsolated ? subnets[resourceNames.spokeContainerAppsEnvironmentSubnet].id : null
+    internal: deploymentSettings.isNetworkIsolated
+    zoneRedundant: deploymentSettings.isProduction
+
+    workloadProfiles: [
+      {
+        // https://learn.microsoft.com/azure/container-apps/workload-profiles-overview#profile-types
+        name: 'Consumption'
+        workloadProfileType: 'Consumption'
+      }
+    ]
+  }
+}
+
+module renderingServiceContainerApp 'br/public:avm/res/app/container-app:0.1.0' = {
+  name: 'application-rendering-service-container-app'
+  scope: resourceGroup
+  params: {
+    name: resourceNames.renderingServiceContainerApp
+    environmentId: containerAppsEnvironment.outputs.resourceId
+    location: deploymentSettings.location
+    tags: union(moduleTags, {'azd-service-name': 'rendering-service'})
+
+    // Will be added during deployment
+    containers: [
+      {
+        name: 'rendering-service'
+
+        // A container image is required to deploy the ACA resource.
+        // Since the rendering service image is not available yet,
+        // we use a placeholder image for now.
+        image: 'mcr.microsoft.com/k8se/quickstart:latest'
+
+        env: [
+          {
+            name: 'App__AppConfig__Uri'
+            value: appConfiguration.outputs.app_config_uri
+          }
+          {
+            name: 'AZURE_CLIENT_ID'
+            value: appManagedIdentity.outputs.client_id
+          }
+          {
+            name: 'App__AzureCredentialType'
+            value: 'ManagedIdentity'
+          }
+        ]
+
+        resources: {
+          // Workaround bicep not supporting floating point numbers
+          // Related issue: https://github.com/Azure/bicep/issues/1386
+          cpu: json('0.25')
+          memory: '0.5Gi'
+        }
+      }
+    ]
+
+    // Setting ingressExternal to true will create an endpoint for the container app,
+    // but it will still be available only within the vnet if the managed environment
+    // has internal set to true.
+    ingressExternal: true
+    ingressAllowInsecure: false
+
+    managedIdentities: {
+      userAssignedResourceIds: [
+        appManagedIdentity.outputs.id
+      ]
+    }
+
+    registries: [
+      {
+        server: containerRegistry.outputs.loginServer
+        identity: appManagedIdentity.outputs.id
+      }
+    ]
+
+    scaleRules: [
+      // TODO: Add scale rules
+    ]
+    scaleMaxReplicas: 5
+    scaleMinReplicas: 0
+
+    workloadProfileName: 'Consumption'
   }
 }
 

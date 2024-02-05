@@ -100,16 +100,18 @@ var defaultResourceNames = {
   hubVirtualNetwork: 'vnet-hub-${resourceToken}'
 
   // Spoke network resources
-  spokeApiInboundSubnet: 'API-Inbound'
+  spokeApiInboundSubnet: 'API-Inbound-${resourceToken}'
   spokeApiInboundNSG: 'nsg-api-in-${resourceToken}'
-  spokeApiOutboundSubnet: 'API-Outbound'
+  spokeApiOutboundSubnet: 'API-Outbound-${resourceToken}'
   spokeApiOutboundNSG: 'nsg-api-out-${resourceToken}'
-  spokeDevopsSubnet: 'DevopsBuildAgents'
-  spokeDeploymentSubnet: 'Deployment'
+  spokeContainerAppsEnvironmentSubnet: 'ContainerApps-${resourceToken}'
+  spokeContainerAppsEnvironmentNSG: 'nsg-container-apps-${resourceToken}'
+  spokeDevopsSubnet: 'DevopsBuildAgents-${resourceToken}'
+  spokeDeploymentSubnet: 'Deployment-${resourceToken}'
   spokeResourceGroup: '${resourceGroupPrefix}-spoke'
   spokeRouteTable: 'rt-${resourceToken}'
   spokePrivateEndpointNSG: 'nsg-pep-${resourceToken}'
-  spokePrivateEndpointSubnet: 'Private-Endpoints'
+  spokePrivateEndpointSubnet: 'Private-Endpoints-${resourceToken}'
   spokeVirtualNetwork: 'vnet-spoke-${resourceToken}'
   spokeWebInboundSubnet: 'Web-Inbound-${resourceToken}'
   spokeWebInboundNSG: 'nsg-web-in-${resourceToken}'
@@ -186,6 +188,8 @@ output resourceNames object = {
   spokeApiInboundNSG: contains(overrides, 'spokeApiInboundNSG') && !empty(overrides.spokeApiInboundNSG) ? overrides.spokeApiInboundNSG : defaultResourceNames.spokeApiInboundNSG
   spokeApiOutboundSubnet: contains(overrides, 'spokeApiOutboundSubnet') && !empty(overrides.spokeApiOutboundSubnet) ? overrides.spokeApiOutboundSubnet : defaultResourceNames.spokeApiOutboundSubnet
   spokeApiOutboundNSG: contains(overrides, 'spokeApiOutboundNSG') && !empty(overrides.spokeApiOutboundNSG) ? overrides.spokeApiOutboundNSG : defaultResourceNames.spokeApiOutboundNSG
+  spokeContainerAppsEnvironmentSubnet: contains(overrides, 'spokeContainerAppsEnvironmentSubnet') && !empty(overrides.spokeContainerAppsEnvironmentSubnet) ? overrides.spokeContainerAppsEnvironmentSubnet : defaultResourceNames.spokeContainerAppsEnvironmentSubnet
+  spokeContainerAppsEnvironmentNSG: contains(overrides, 'spokeContainerAppsEnvironmentNSG') && !empty(overrides.spokeContainerAppsEnvironmentNSG) ? overrides.spokeContainerAppsEnvironmentNSG : defaultResourceNames.spokeContainerAppsEnvironmentNSG
   spokeDevopsSubnet: contains(overrides, 'spokeDevopsSubnet') && !empty(overrides.spokeDevopsSubnet) ? overrides.spokeDevopsSubnet : defaultResourceNames.spokeDevopsSubnet
   spokeDeploymentSubnet: contains(overrides, 'spokeDeploymentSubnet') && !empty(overrides.spokeDeploymentSubnet) ? overrides.spokeDeploymentSubnet : defaultResourceNames.spokeDeploymentSubnet
   spokeResourceGroup: contains(overrides, 'spokeResourceGroup') && !empty(overrides.spokeResourceGroup) ? overrides.spokeResourceGroup : defaultResourceNames.spokeResourceGroup
