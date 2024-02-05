@@ -533,6 +533,7 @@ module telemetry './modules/telemetry.bicep' = if (enableTelemetry) {
 // ========================================================================
 
 // Hub resources
+output hub_group_name string = naming.outputs.resourceNames.hubResourceGroup
 output bastion_hostname string = willDeployHubNetwork ? hubNetwork.outputs.bastion_hostname : ''
 output firewall_hostname string = willDeployHubNetwork ? hubNetwork.outputs.firewall_hostname : ''
 

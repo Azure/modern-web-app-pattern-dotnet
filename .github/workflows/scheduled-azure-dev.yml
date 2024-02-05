@@ -1,19 +1,10 @@
 name: "MWA- Daily Build"
 on:
   workflow_dispatch:
-    inputs:
-      run_tear_down:
-        description: 'When true, resources will be deleted after a run'
-        required: false
-        default: true
-        type: boolean
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
   schedule:
     - cron: '0 12 * * *'
-      inputs:
-        run_tear_down:
-          default: true
 
 # https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Clinux#set-up-azure-login-with-openid-connect-authentication
 permissions:
@@ -26,7 +17,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/azure-dev-cli-apps:1.5.0
+      image: mcr.microsoft.com/azure-dev-cli-apps:1.5.1
     env:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -34,11 +25,13 @@ jobs:
       AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}
       IS_RUN_AS_SERVICEPRINCIPAL: true
     steps:
+      - name: Install jq tool
+        uses: dcarbone/install-jq-action@v2
       - name: Checkout
         uses: actions/checkout@v3
       - uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0.x'
+          dotnet-version: '8.0.x'
       - name: Log in with Azure (Federated Credentials)
         if: ${{ env.AZURE_CLIENT_ID != '' }}
         run: |
@@ -52,6 +45,7 @@ jobs:
         run: azd provision --no-prompt
         env:
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+          AZURE_PRINCIPAL_TYPE: ServicePrincipal
 
       - name: Log in with Azure (Federated Credentials)
         if: ${{ env.AZURE_CLIENT_ID != '' }}
@@ -62,10 +56,12 @@ jobs:
             --tenant-id "$Env:AZURE_TENANT_ID" `
         shell: pwsh
 
-      - name: Set AZD resource group
-        # temporary work around for known issue with multiple resource groups
-        # https://github.com/Azure/azure-dev/issues/690
-        run: azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}-rg
+        # AZD deploy uses an AZD hook to execute the load test tool that will upload load test files
+        # uploading the AZD load test requires a CLI login to authenticate
+      - name: Azure Dev Deploy
+        run: azd deploy --no-prompt
+        env:
+          AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
 
       - name: 'Az CLI login'
         uses: azure/login@v1
@@ -74,25 +70,17 @@ jobs:
             tenant-id: ${{ secrets.AZURE_TENANT_ID }}
             subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-        # AZD deploy uses an AZD hook to execute the load test tool that will upload load test files
-        # uploading the AZD load test requires a CLI login to authenticate
-      - name: Azure Dev Deploy
-        run: azd deploy --no-prompt
-        env:
-          AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
-
       - name: QA - Validate Deployment
-        run: ./infra/devOpsScripts/validateDeployment.sh -g ${{ secrets.AZURE_ENV_NAME }}-rg
+        run: ./testscripts/call-validate-deployment.sh -g $resourceGroupName
 
 
   teardown:
-    if: ${{ inputs.run_tear_down }}
     needs: [build]
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/azure-dev-cli-apps:1.5.0
+      image: mcr.microsoft.com/azure-dev-cli-apps:1.5.1
     env:
-        AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}daily2
+        AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}
         AZURE_LOCATION: ${{ secrets.AZURE_LOCATION2 }}
         AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         IS_RUN_AS_SERVICEPRINCIPAL: true
@@ -108,9 +96,3 @@ jobs:
 
       - name: Azure Dev Down
         run: azd down --force --purge --no-prompt
-        env:
-          AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}daily2
-          AZURE_LOCATION: ${{ secrets.AZURE_LOCATION2 }}
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-
