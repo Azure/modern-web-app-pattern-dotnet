@@ -212,9 +212,7 @@ $defaultRedisCacheKeyName = (Get-RedisCacheKeyName -ResourceGroupName $ResourceG
 $defaultTicketRenderRequestQueueName = "ticket-render-requests" # matches the default defined in application-resources.bicep file
 $defaultTicketRenderCompleteQueueName = "ticket-render-completions" # matches the default defined in application-resources.bicep file
 $defaultAzureServiceBusHost = ([System.Uri](Get-WorkloadServiceBus -ResourceGroupName $ResourceGroupName).ServiceBusEndpoint).Host # the host of the Service Bus namespace
-
-# Until the standalone rendering service is available, we will disable distributed ticket rendering by default
-$defaultUseDistributedTicketRenderingResponse = "n"
+$defaultUseDistributedTicketRenderingResponse = "y"
 
 # prompt to confirm settings
 $azureStorageTicketContainerName = ""

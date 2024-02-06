@@ -515,6 +515,9 @@ module storageAccount '../core/storage/storage-account.bicep' = {
       { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
     ]
+    contributorIdentities: [
+      { principalId: appManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
+    ]
     privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
       dnsResourceGroupName: dnsResourceGroupName
       name: resourceNames.storageAccountPrivateEndpoint
@@ -759,6 +762,18 @@ module renderingServiceContainerApp 'br/public:avm/res/app/container-app:0.1.0' 
         // we use a placeholder image for now.
         image: 'mcr.microsoft.com/k8se/quickstart:latest'
 
+        probes: [
+          {
+            type: 'liveness'
+            httpGet: {
+              path: '/health'
+              port: 8080
+            }
+            initialDelaySeconds: 2
+            periodSeconds: 10
+          }
+        ]
+
         env: [
           {
             name: 'App__AppConfig__Uri'
@@ -788,6 +803,7 @@ module renderingServiceContainerApp 'br/public:avm/res/app/container-app:0.1.0' 
     // has internal set to true.
     ingressExternal: true
     ingressAllowInsecure: false
+    ingressTargetPort: 8080
 
     managedIdentities: {
       userAssignedResourceIds: [
@@ -803,10 +819,10 @@ module renderingServiceContainerApp 'br/public:avm/res/app/container-app:0.1.0' 
     ]
 
     scaleRules: [
-      // TODO: Add scale rules
+      // TODO: Add scale rules and update min replicas to 0
     ]
     scaleMaxReplicas: 5
-    scaleMinReplicas: 0
+    scaleMinReplicas: 1
 
     workloadProfileName: 'Consumption'
   }
