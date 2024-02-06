@@ -3,6 +3,4 @@ This document helps with troubleshooting and provides an introduction to the mos
 
 ## Data consistency for multi-regional deployments
 
-This sample includes a feature to deploy to two Azure regions. The feature is intended to support the high availability scenario by deploying resources in an active/passive configuration. The sample currently supports the ability to fail-over web-traffic so requests can be handled from a second region. However it does not support data synchronization between two regions. 
-
-This can result in users losing trust in the system when they observe that the system is online but their data is missing. The following issues represent the work remaining to address data synchronization.
+This sample includes a feature to deploy to two Azure regions. The feature is intended to support the high availability scenario by deploying resources in an active/passive configuration. The sample currently supports the ability to fail-over web-traffic so requests can be handled from a second region. However it does not support data synchronization between two regions.
