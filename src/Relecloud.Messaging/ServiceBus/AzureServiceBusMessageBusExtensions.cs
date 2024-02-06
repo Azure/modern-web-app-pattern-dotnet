@@ -43,7 +43,7 @@ public static class AzureServiceBusMessageBusExtensions
                 }
             };
 
-            return new ServiceBusClient(options.Namespace, azureCredential ?? new DefaultAzureCredential(), clientOptions);
+            return new ServiceBusClient(options.Host, azureCredential ?? new DefaultAzureCredential(), clientOptions);
         });
 
         return services;

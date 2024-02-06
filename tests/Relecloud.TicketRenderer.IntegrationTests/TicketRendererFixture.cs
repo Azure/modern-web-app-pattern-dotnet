@@ -32,7 +32,7 @@ public class TicketRendererFixture : WebApplicationFactory<Program>
             {
                 { "App:StorageAccount:Uri", "http://localhost" },
                 { "App:StorageAccount:Container", "test" },
-                { "App:ServiceBus:Namespace", "test-namespace" },
+                { "App:ServiceBus:Host", "test-namespace" },
                 { "App:ServiceBus:RenderRequestQueueName", "test-render-request-queue" },
                 { "App:ServiceBus:RenderCompleteQueueName", "test-rendered-ticket-queue" },
             });

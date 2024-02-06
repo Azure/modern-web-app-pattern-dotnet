@@ -45,7 +45,7 @@ builder.Services.AddHealthChecks()
         options.ContainerName = builder.Configuration.GetRequiredConfigurationValue("App:StorageAccount:Container");
     })
     .AddAzureServiceBusQueue(
-        builder.Configuration.GetRequiredConfigurationValue("App:ServiceBus:Namespace"),
+        builder.Configuration.GetRequiredConfigurationValue("App:ServiceBus:Host"),
         builder.Configuration.GetRequiredConfigurationValue("App:ServiceBus:RenderRequestQueueName"),
         azureCredentials);
 
