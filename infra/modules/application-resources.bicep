@@ -713,118 +713,23 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
   }
 }
 
-/*
-** Azure Container Apps
-*/
-
-module containerAppsEnvironment 'br/public:avm/res/app/managed-environment:0.4.2' = {
-  name: 'application-container-apps-environment'
+module containerAppEnvironment './application-container-apps.bicep' = {
+  name: 'application-container-apps'
   scope: resourceGroup
   params: {
-    // Required and common parameters
-    name: resourceNames.commonContainerAppEnvironment
-    location: deploymentSettings.location
-    logAnalyticsWorkspaceResourceId: logAnalyticsWorkspaceId
+    deploymentSettings: deploymentSettings
     tags: moduleTags
 
+    // Dependencies
+    appConfigurationName: appConfiguration.outputs.name
+    containerRegistryName: containerRegistry.outputs.name
+    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
+    managedIdentityName: appManagedIdentity.outputs.name
+
     // Settings
-    infrastructureResourceGroupName: resourceGroup.name
-    infrastructureSubnetId: deploymentSettings.isNetworkIsolated ? subnets[resourceNames.spokeContainerAppsEnvironmentSubnet].id : null
-    internal: deploymentSettings.isNetworkIsolated
-    zoneRedundant: deploymentSettings.isProduction
-
-    workloadProfiles: [
-      {
-        // https://learn.microsoft.com/azure/container-apps/workload-profiles-overview#profile-types
-        name: 'Consumption'
-        workloadProfileType: 'Consumption'
-      }
-    ]
-  }
-}
-
-module renderingServiceContainerApp 'br/public:avm/res/app/container-app:0.1.0' = {
-  name: 'application-rendering-service-container-app'
-  scope: resourceGroup
-  params: {
-    name: resourceNames.renderingServiceContainerApp
-    environmentId: containerAppsEnvironment.outputs.resourceId
-    location: deploymentSettings.location
-    tags: union(moduleTags, {'azd-service-name': 'rendering-service'})
-
-    // Will be added during deployment
-    containers: [
-      {
-        name: 'rendering-service'
-
-        // A container image is required to deploy the ACA resource.
-        // Since the rendering service image is not available yet,
-        // we use a placeholder image for now.
-        image: 'mcr.microsoft.com/k8se/quickstart:latest'
-
-        probes: [
-          {
-            type: 'liveness'
-            httpGet: {
-              path: '/health'
-              port: 8080
-            }
-            initialDelaySeconds: 2
-            periodSeconds: 10
-          }
-        ]
-
-        env: [
-          {
-            name: 'App__AppConfig__Uri'
-            value: appConfiguration.outputs.app_config_uri
-          }
-          {
-            name: 'AZURE_CLIENT_ID'
-            value: appManagedIdentity.outputs.client_id
-          }
-          {
-            name: 'App__AzureCredentialType'
-            value: 'ManagedIdentity'
-          }
-        ]
-
-        resources: {
-          // Workaround bicep not supporting floating point numbers
-          // Related issue: https://github.com/Azure/bicep/issues/1386
-          cpu: json('0.25')
-          memory: '0.5Gi'
-        }
-      }
-    ]
-
-    // Setting ingressExternal to true will create an endpoint for the container app,
-    // but it will still be available only within the vnet if the managed environment
-    // has internal set to true.
-    ingressExternal: true
-    ingressAllowInsecure: false
-    ingressTargetPort: 8080
-
-    managedIdentities: {
-      userAssignedResourceIds: [
-        appManagedIdentity.outputs.id
-      ]
-    }
-
-    registries: [
-      {
-        server: containerRegistry.outputs.loginServer
-        identity: appManagedIdentity.outputs.id
-      }
-    ]
-
-    scaleRules: [
-      // TODO: Add scale rules and update min replicas to 0
-    ]
-    scaleMaxReplicas: 5
-    scaleMinReplicas: 1
-
-    workloadProfileName: 'Consumption'
+    containerAppEnvironmentName: resourceNames.commonContainerAppEnvironment
+    renderingServiceContainerAppName: resourceNames.renderingServiceContainerApp
+    subnetId: deploymentSettings.isNetworkIsolated ? subnets[resourceNames.spokeContainerAppsEnvironmentSubnet].id : null
   }
 }
 
