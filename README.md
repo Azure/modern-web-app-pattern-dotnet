@@ -20,7 +20,7 @@ This project has a [companion article in the Azure Architecture Center](https://
 
 ## Architecture
 
-![Diagram showing the architecture of the reference implementation.](./assets/images/relecloud-solution-diagram.png)
+![Diagram showing the architecture of the reference implementation.](./assets/images/reliable-web-app-dotnet.svg)
 
 ## Workflow
 > ⚠️ Pending documentation of workflow - (Business reporting experience) covered by #1871276
