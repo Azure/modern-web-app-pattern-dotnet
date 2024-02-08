@@ -21,7 +21,7 @@ public class MessageBusOptionsTests
         var isValid = Validator.TryValidateObject(options, context, results, true);
 
         Assert.False(isValid);
-        Assert.Contains(results, r => r.MemberNames.Contains("Namespace"));
+        Assert.Contains(results, r => r.MemberNames.Contains("Host"));
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public class MessageBusOptionsTests
     {
         var options = new MessageBusOptions
         {
-            Namespace = "TestNamespace",
+            Host = "TestNamespace",
             RenderCompleteQueueName = "TestReponseQueue"
         };
 
@@ -46,7 +46,7 @@ public class MessageBusOptionsTests
     {
         var options = new MessageBusOptions
         {
-            Namespace = "TestNamespace",
+            Host = "TestNamespace",
             RenderRequestQueueName = "TestRequestQueue"
         };
 

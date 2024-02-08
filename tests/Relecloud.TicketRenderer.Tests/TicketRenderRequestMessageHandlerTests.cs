@@ -11,7 +11,7 @@ public class TicketRenderRequestMessageHandlerTests
         // Arrange
         var options = Options.Create(new MessageBusOptions
         {
-            Namespace = "test-namespace",
+            Host = "test-namespace",
             RenderRequestQueueName = null
         });
 
@@ -40,7 +40,7 @@ public class TicketRenderRequestMessageHandlerTests
         // Arrange
         var options = Options.Create(new MessageBusOptions
         {
-            Namespace = "test-namespace",
+            Host = "test-namespace",
             RenderRequestQueueName = "test-queue",
 
             // Use a response queue name to verify that the sender is instantiated
@@ -74,7 +74,7 @@ public class TicketRenderRequestMessageHandlerTests
         // Arrange
         var options = Options.Create(new MessageBusOptions
         {
-            Namespace = "test-namespace",
+            Host = "test-namespace",
             RenderRequestQueueName = "test-queue",
 
             // Use a response queue name to verify that the sender is instantiated
@@ -121,7 +121,7 @@ public class TicketRenderRequestMessageHandlerTests
         // Arrange
         var options = Options.Create(new MessageBusOptions
         {
-            Namespace = "test-namespace",
+            Host = "test-namespace",
             RenderRequestQueueName = "test-queue",
 
             // Use a response queue name to verify that the sender is instantiated
@@ -151,7 +151,7 @@ public class TicketRenderRequestMessageHandlerTests
         // Arrange
         var options = Options.Create(new MessageBusOptions
         {
-            Namespace = "test-namespace",
+            Host = "test-namespace",
             RenderRequestQueueName = "test-queue",
 
             // Use a response queue name to verify that the sender is instantiated

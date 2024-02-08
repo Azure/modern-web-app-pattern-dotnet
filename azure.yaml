@@ -29,3 +29,11 @@ services:
     project: src/Relecloud.Web.CallCenter
     language: csharp
     host: appservice
+  rendering-service:
+    project: src/Relecloud.TicketRenderer
+    language: dotnet
+    host: containerapp
+    docker:
+      # These paths are relative to the project directory
+      path: ./Dockerfile
+      context: ./../

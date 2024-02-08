@@ -8,7 +8,7 @@ namespace Relecloud.Messaging;
 public class MessageBusOptions
 {
     [Required]
-    public string? Namespace { get; set; }
+    public string? Host { get; set; }
 
     [Required]
     public string? RenderRequestQueueName { get; set; }

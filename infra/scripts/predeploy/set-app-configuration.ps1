@@ -211,10 +211,8 @@ $defaultKeyVaultUri = (Get-WorkloadKeyVault -ResourceGroupName $ResourceGroupNam
 $defaultRedisCacheKeyName = (Get-RedisCacheKeyName -ResourceGroupName $ResourceGroupName) # workloads use independent redis caches and a shared vault to store the connection string
 $defaultTicketRenderRequestQueueName = "ticket-render-requests" # matches the default defined in application-resources.bicep file
 $defaultTicketRenderCompleteQueueName = "ticket-render-completions" # matches the default defined in application-resources.bicep file
-$defaultAzureServiceBusNamespace = (Get-WorkloadServiceBus -ResourceGroupName $ResourceGroupName).Name # the name of the Service Bus namespace
-
-# Until the standalone rendering service is available, we will disable distributed ticket rendering by default
-$defaultUseDistributedTicketRenderingResponse = "n"
+$defaultAzureServiceBusHost = ([System.Uri](Get-WorkloadServiceBus -ResourceGroupName $ResourceGroupName).ServiceBusEndpoint).Host # the host of the Service Bus namespace
+$defaultUseDistributedTicketRenderingResponse = "y"
 
 # prompt to confirm settings
 $azureStorageTicketContainerName = ""
@@ -280,13 +278,13 @@ if ($redisCacheKeyName -eq "") {
     $redisCacheKeyName = $defaultRedisCacheKeyName
 }
 
-$azureServiceBusNamespace = ""
+$azureServiceBusHost = ""
 if (-not $NoPrompt) {
-    $azureServiceBusNamespace = Read-Host -Prompt "`nWhat is the namespace of the Service Bus instance for message queues? [default: $highlightColor$defaultAzureServiceBusNamespace$defaultColor]"
+    $azureServiceBusHost = Read-Host -Prompt "`nWhat is the host of the Service Bus namespace for message queues? [default: $highlightColor$defaultAzureServiceBusHost$defaultColor]"
 }
 
-if ($azureServiceBusNamespace -eq "") {
-    $azureServiceBusNamespace = $defaultAzureServiceBusNamespace
+if ($azureServiceBusHost -eq "") {
+    $azureServiceBusHost = $defaultAzureServiceBusHost
 }
 
 $ticketRenderRequestQueueName = ""
@@ -333,7 +331,7 @@ Write-Host "`tAzureStorageTicketUri: $highlightColor'$azureStorageTicketUri'$def
 Write-Host "`tAzureFrontDoorHostName: $highlightColor'$azureFrontDoorHostName'$defaultColor"
 Write-Host "`tRelecloudBaseUri: $highlightColor'$relecloudBaseUri'$defaultColor"
 Write-Host "`tRedisCacheKeyName: $highlightColor'$redisCacheKeyName'$defaultColor"
-Write-Host "`tAzureServiceBusNamespace: $highlightColor'$azureServiceBusNamespace'$defaultColor"
+Write-Host "`tAzureServiceBusHost: $highlightColor'$azureServiceBusHost'$defaultColor"
 Write-Host "`tRenderRequestQueueName: $highlightColor'$ticketRenderRequestQueueName'$defaultColor"
 Write-Host "`tRenderCompleteQueueName: $highlightColor'$ticketRenderCompleteQueueName'$defaultColor"
 Write-Host "`tDistributedTicketRendering: $highlightColor'$useDistributedTicketRendering'$defaultColor"
@@ -346,7 +344,7 @@ try {
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:SqlDatabase:ConnectionString -Value $sqlConnectionString > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:StorageAccount:Container -Value $azureStorageTicketContainerName > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:StorageAccount:Uri -Value $azureStorageTicketUri > $null
-    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:ServiceBus:Namespace -Value $azureServiceBusNamespace > $null
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:ServiceBus:Host -Value $azureServiceBusHost > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:ServiceBus:RenderRequestQueueName -Value $ticketRenderRequestQueueName > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:ServiceBus:RenderCompleteQueueName -Value $ticketRenderCompleteQueueName > $null
 

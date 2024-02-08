@@ -23,7 +23,7 @@ internal class TestContext
         ServiceBusOptions = options
             ?? Options.Create(new MessageBusOptions
             {
-                Namespace = "test-namespace",
+                Host = "test-namespace",
                 RenderRequestQueueName = "test-queue",
                 RenderCompleteQueueName = "test-response-queue"
             });
