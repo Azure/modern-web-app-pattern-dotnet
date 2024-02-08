@@ -25,6 +25,7 @@ This project has a [companion article in the Azure Architecture Center](https://
 This diagram describes the prod deployment which is described in the [prod deployment](./prod-deployment.md) file. The following steps below are for a [dev deployment](./assets/images/) which is a simplified version.
 
 ## Workflow
+> ⚠️ Pending documentation of workflow - (Business reporting experience) covered by #1871276
 
 - Azure Front Door routes traffic based on availability of the primary region. When the primary region is unavailable, it will route traffic to the secondary region.
 - When Front Door passes the request to the Web App, it will pass through the Azure Web Application Firewall. The Azure Web Application Firewall will evaluate the request and protect the web app against common security attacks.
