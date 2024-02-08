@@ -22,7 +22,7 @@ This project has a [companion article in the Azure Architecture Center](https://
 
 ![Diagram showing the architecture of the reference implementation.](./assets/images/reliable-web-app-dotnet.svg)
 
-This diagram describes the prod deployment which is described in the [prod-deployment.md](./prod-deployment.md) file. The following steps below are for a [dev deployment](./assets/images/) which is a simplified version.
+This diagram describes the prod deployment which is described in the [prod deployment](./prod-deployment.md) file. The following steps below are for a [dev deployment](./assets/images/) which is a simplified version.
 
 ## Workflow
 
@@ -129,7 +129,7 @@ azd env new dotnetwebapp
 
 You can substitute the environment name with your own value.
 
-By default, Azure resources are sized for a "development" mode. If doing a Production deployment, see use the [Isolated Deployment](./isolated-deployment.md) instructions for more detail.
+By default, Azure resources are sized for a "development" mode. If doing a Production deployment, see use the [Isolated Deployment](./prod-deployment.md) instructions for more detail.
 
 ### 4. Log in to Azure
 
