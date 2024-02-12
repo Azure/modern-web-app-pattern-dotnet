@@ -202,10 +202,10 @@ Use the following to find the URL for the Relecloud application that you have de
 
 ### 9. Teardown
 
-To tear down the deployment, run the following command:
+To tear down the deployment, run the following command. The `--purge` option makes sure that 'soft-delete' resources like Key Vault and App Configuration are fully removed.
 
 ```pwsh
-azd down
+azd down --purge --force
 ```
 
 ## Additional links
