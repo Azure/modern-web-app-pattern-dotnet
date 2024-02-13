@@ -381,6 +381,13 @@ module bastionHost '../core/network/bastion-host.bicep' = if (enableBastionHost)
 module sharedKeyVault '../core/security/key-vault.bicep' = {
   name: 'shared-key-vault'
   scope: resourceGroup
+
+  dependsOn: [
+    // Provisioning the Key Vault involves creating a private endpoint, which requires
+    // private DNS zones to be created and linked to the virtual network.
+    privateDnsZones
+  ]
+
   params: {
     name: resourceNames.keyVault
     location: deploymentSettings.location

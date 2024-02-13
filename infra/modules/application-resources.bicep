@@ -597,7 +597,9 @@ module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
     publicNetworkAccess: deploymentSettings.isNetworkIsolated ? 'Disabled' : 'Enabled'
     zoneRedundant: deploymentSettings.isProduction
     networkRuleSets: deploymentSettings.isNetworkIsolated ? {
-      trustedServiceAccessEnabled: true
+      publicNetworkAccess: 'Disabled'
+      defaultAction: 'Allow'
+      trustedServiceAccessEnabled: false
     } : null
 
     // This is a workaround for a bug in the service bus module https://github.com/Azure/ResourceModules/issues/2867
@@ -607,11 +609,14 @@ module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
 
     privateEndpoints: deploymentSettings.isNetworkIsolated ?  [
       {
+        name: resourceNames.serviceBusNamespacePrivateEndpoint
         service: 'namespace'
+        privateDnsZoneGroupName: dnsResourceGroupName
         privateDnsZoneResourceIds: [
           resourceId(subscription().subscriptionId, dnsResourceGroupName, 'Microsoft.Network/privateDnsZones', 'privatelink.servicebus.windows.net')
         ]
         subnetResourceId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+        tags: moduleTags
       }
     ] : null
 
@@ -686,11 +691,14 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
     ] : null
     privateEndpoints: deploymentSettings.isNetworkIsolated ? [
       {
+        name: resourceNames.containerRegistryPrivateEndpoint
+        privateDnsZoneGroupName: dnsResourceGroupName
         privateDnsZoneResourceIds: [
           resourceId(subscription().subscriptionId, dnsResourceGroupName, 'Microsoft.Network/privateDnsZones', 'privatelink.azurecr.io')
         ]
         subnetResourceId: subnets[resourceNames.spokePrivateEndpointSubnet].id
         service: 'registry'
+        tags: moduleTags
       }
     ] : null
     roleAssignments: [

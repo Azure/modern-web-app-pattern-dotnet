@@ -148,6 +148,21 @@ var containerAppDelegation = [
 ]
 
 // Network security group rules
+var allowHttpInbound = {
+  name: 'Allow-HTTP-Inbound'
+  properties: {
+    access: 'Allow'
+    description: 'Allow HTTPS inbound traffic'
+    destinationAddressPrefix: '*'
+    destinationPortRange: '80'
+    direction: 'Inbound'
+    priority: 100
+    protocol: 'Tcp'
+    sourceAddressPrefix: '*'
+    sourcePortRange: '*'
+  }
+}
+
 var allowHttpsInbound = {
   name: 'Allow-HTTPS-Inbound'
   properties: {
@@ -156,7 +171,7 @@ var allowHttpsInbound = {
     destinationAddressPrefix: '*'
     destinationPortRange: '443'
     direction: 'Inbound'
-    priority: 100
+    priority: 105
     protocol: 'Tcp'
     sourceAddressPrefix: '*'
     sourcePortRange: '*'
@@ -187,7 +202,7 @@ var denyAllInbound = {
     destinationPortRange: '*'
     direction: 'Inbound'
     priority: 1000
-    protocol: 'Any'
+    protocol: '*'
     sourceAddressPrefix: '*'
     sourcePortRange: '*'
   }
@@ -202,7 +217,7 @@ var containerAppsAllowHttpInbound = {
     access: 'Allow'
     description: 'Allow HTTP inbound traffic'
     destinationAddressPrefix: '*'
-    destinationPortRange: '80,31080,443,31443'
+    destinationPortRange: '31080'
     direction: 'Inbound'
     priority: 120
     protocol: 'Tcp'
@@ -211,7 +226,22 @@ var containerAppsAllowHttpInbound = {
   }
 }
 
-var allowAzureLoadBalancer = {
+var containerAppsAllowHttpsInbound = {
+  name: 'Allow-Container-Apps-HTTPS-Inbound'
+  properties: {
+    access: 'Allow'
+    description: 'Allow HTTP inbound traffic'
+    destinationAddressPrefix: '*'
+    destinationPortRange: '31443'
+    direction: 'Inbound'
+    priority: 125
+    protocol: 'Tcp'
+    sourceAddressPrefix: '*'
+    sourcePortRange: '*'
+  }
+}
+
+var allowAzureLoadBalancerInbound = {
   name: 'Allow-Azure-Load-Balancer'
   properties: {
     access: 'Allow'
@@ -411,12 +441,15 @@ module containerAppsEnvironmentNSG '../core/network/network-security-group.bicep
     // Settings
     diagnosticSettings: diagnosticSettings
     securityRules: [
+      allowHttpInbound
+      allowHttpsInbound
       containerAppsAllowHttpInbound
-      allowAzureLoadBalancer
+      containerAppsAllowHttpsInbound
+      allowAzureLoadBalancerInbound
+      denyAllInbound
       allowContainerRegistryOutbound
       allowFrontDoorOutbound
       allowEntraIdOutbound
-      denyAllInbound
     ]
   }
 }
