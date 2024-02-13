@@ -446,7 +446,6 @@ module containerAppsEnvironmentNSG '../core/network/network-security-group.bicep
       containerAppsAllowHttpInbound
       containerAppsAllowHttpsInbound
       allowAzureLoadBalancerInbound
-      denyAllInbound
       allowContainerRegistryOutbound
       allowFrontDoorOutbound
       allowEntraIdOutbound
