@@ -117,7 +117,6 @@ module containerAppsEnvironment 'br/public:avm/res/app/managed-environment:0.4.2
     tags: tags
 
     // Settings
-    infrastructureResourceGroupName: resourceGroup().name
     infrastructureSubnetId: subnetId
     internal: deploymentSettings.isNetworkIsolated
     zoneRedundant: deploymentSettings.isProduction
