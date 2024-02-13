@@ -133,6 +133,35 @@ From the jump host, launch Windows Terminal to setup required tools:
     dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org
     ```
 
+1. Install WSL2 (required for Docker)
+
+    ```shell
+    wsl --install
+    ```
+
+    To leave the Ubuntu shell that this command opens, type `exit` and press Enter.
+
+    ```shell
+    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+    wsl.exe --set-default-version 2
+    ```
+
+1. Install Docker Desktop
+
+    ```shell
+    powershell -ex AllSigned -c "Invoke-RestMethod 'https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe' -OutFile DockerDesktopInstaller.exe"
+    ```
+
+    ```shell
+    Start-Process 'DockerDesktopInstaller.exe' -Wait -ArgumentList 'install', '--accept-license'
+    ```
+
+    ```shell
+    Start-Process 'C:\Program Files\Docker\Docker\Docker Desktop.exe'
+    ```
+
+    Restart the shell so that Docker tools will be present on the path.
+
 ### Download the code
 
 Use the Windows Terminal to get the code:
@@ -174,6 +203,7 @@ azd env set AZURE_RESOURCE_GROUP <name of application resource group from from a
 azd env set AZURE_SUBSCRIPTION_ID "<Azure subscription ID>"
 Set-AzContext -Subscription "<Azure Subscription ID>"
 azd env set NETWORK_ISOLATION "true"
+azd env set AZURE_CONTAINER_REGISTRY_ENDPOINT <acr server name from azd environment>
 azd env set SECONDARY_RESOURCE_GROUP <name of secondary application resource group from azd environment>
 ```
 

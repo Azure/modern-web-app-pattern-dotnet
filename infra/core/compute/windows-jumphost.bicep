@@ -79,8 +79,8 @@ param computerWindowsName string?
 @description('If true, join the computer to the Microsoft Entra ID domain.')
 param joinToMicrosoftEntraId bool = true
 
-@description('The SKU for the virtual machine.')
-param sku string = 'Standard_B2ms'
+@description('The SKU for the virtual machine. Must support nested virtualization for building containerized services.')
+param sku string = 'Standard_D2s_v3'
 
 @description('If true, install the Azure CLI, SSMS, and git on the machine.')
 param installTools bool = true
