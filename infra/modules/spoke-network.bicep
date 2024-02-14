@@ -517,11 +517,6 @@ module virtualNetwork '../core/network/virtual-network.bicep' = {
           delegations: containerAppDelegation
           networkSecurityGroup: { id: containerAppsEnvironmentNSG.outputs.id }
           privateEndpointNetworkPolicies: 'Enabled'
-          serviceEndpoints: [
-            {
-              service: 'Microsoft.AzureActiveDirectory'
-            }
-          ]
         }, routeTableSettings)
       }
     ], devopsSubnet)
