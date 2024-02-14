@@ -47,5 +47,11 @@
         "*.azurewebsites.net",
         "edge.management.azure.com",
         "*.azurefd.net"
+    ],
+    "managedIdentityServices": [
+        "*.identity.azure.net",
+        "login.microsoftonline.com",
+        "*.login.microsoftonline.com",
+        "*.login.microsoft.com"
     ]
 }

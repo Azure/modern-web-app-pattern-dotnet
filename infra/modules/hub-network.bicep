@@ -210,6 +210,14 @@ var applicationRuleCollections = [
           sourceAddresses: internalAddressSpace
           targetFqdns: azureFqdns.certificateServices
         }
+        // Allow ACA access to managed identity services as per
+        // https://learn.microsoft.com/azure/container-apps/networking?tabs=workload-profiles-env%2Cazure-cli#application-rules
+        {
+          name: 'allow-managed-identity-services'
+          protocols: [ httpsProtocol ]
+          sourceAddresses: internalAddressSpace
+          targetFqdns: azureFqdns.managedIdentityServices
+        }
       ]
     }
   }
@@ -262,7 +270,34 @@ var networkRuleCollections = [
         }
       ]
     }
-  }]
+  }
+  // Allow ACA access to managed identity services as per
+  // https://learn.microsoft.com/azure/container-apps/networking?tabs=workload-profiles-env%2Cazure-cli#network-rules
+  {
+    name: 'Identity-Services'
+    properties: {
+      action: {
+        type: 'allow'
+      }
+      priority: 203
+      rules: [
+        {
+          name: 'allow-identity-services'
+          sourceAddresses: internalAddressSpace
+          protocols: [
+            'TCP'
+          ]
+          destinationAddresses: [
+            'AzureActiveDirectory'
+          ]
+          destinationPorts: [
+            '443'
+          ]
+        }
+      ]
+    }
+  }
+]
 // Our firewall does not use NAT rule collections, but you can set them up here.
 var natRuleCollections = []
 
