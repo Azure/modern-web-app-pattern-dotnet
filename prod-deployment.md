@@ -138,7 +138,7 @@ From the jump host, launch Windows Terminal to setup required tools:
     ```shell
     wsl --install
     ```
-    Restart the virtual machine to finish setup then reconnect using Bastion. Allow the installation to complete and create a WSL user account when prompted. To leave the Ubuntu shell that this command opens, type `exit` and press Enter.
+    Restart the virtual machine to finish setup then reconnect using Bastion. Wait for the installation to complete after restarting and create a WSL user account when prompted.
 
 1. Install Docker Desktop
 
@@ -150,7 +150,7 @@ From the jump host, launch Windows Terminal to setup required tools:
     Start-Process 'DockerDesktopInstaller.exe' -Wait -ArgumentList 'install', '--accept-license'
     ```
 
-    Restart the virtual machine, if prompted, and made sure Docker Desktop is running (`Start-Process 'C:\Program Files\Docker\Docker\Docker Desktop.exe'` from the Windows Terminal, if needed).
+    Restart the virtual machine when prompted. Docker Desktop should start automatically after restarting but, if needed, it can be started manually by running `Start-Process 'C:\Program Files\Docker\Docker\Docker Desktop.exe'` from the Windows Terminal or clicking the desktop shortcut. Click through the initial Docker Desktop UI ("Continue without signing in", "Skip survey", etc.) to fully start Docker.
 
 ### Download the code
 
