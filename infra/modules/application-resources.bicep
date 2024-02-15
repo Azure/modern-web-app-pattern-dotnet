@@ -164,7 +164,30 @@ var ticketContainerName = 'tickets'
 
 // Service Bus queues used for ticket rendering
 // Match the names in set-app-configuration.ps1
-var renderingQueueNames = [ 'ticket-render-requests', 'ticket-render-completions']
+var renderingQueues = [ 
+  {
+    name: 'ticket-render-requests'
+    authorizationRules: [
+      {
+        name: 'manage-render-queue-policy'
+        rights: [
+          'Listen'
+          'Manage'
+          'Send'
+        ]
+      }
+    ]
+  }
+  {
+    name: 'ticket-render-completions'
+
+    
+    // This is a workaround for a bug in the service bus module https://github.com/Azure/ResourceModules/issues/2867
+    // Authorization rules should be optional and not required when using RBAC roles, but due to the bug, we need to
+    // provide an empty array explicitly.
+    authorizationRules: []
+  } 
+]
 
 // Built-in Azure Contributor role
 var contributorRole = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
@@ -592,7 +615,6 @@ module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
     ]
 
     // Settings
-    disableLocalAuth: true
     minimumTlsVersion: '1.2'
     publicNetworkAccess: deploymentSettings.isNetworkIsolated ? 'Disabled' : 'Enabled'
     zoneRedundant: deploymentSettings.isProduction
@@ -600,6 +622,13 @@ module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
       publicNetworkAccess: 'Disabled'
       trustedServiceAccessEnabled: false
     } : null
+
+    // Ideally this would be disabled, but it is required for ACA scaling rules to be able to
+    // trigger based on Service Bus metrics.
+    // If, in the future, ACA scaling rules can authenticate with managed identity then this
+    // should be set to true.
+    // https://github.com/microsoft/azure-container-apps/issues/592
+    disableLocalAuth: false
 
     // This is a workaround for a bug in the service bus module https://github.com/Azure/ResourceModules/issues/2867
     // Authorization rules should be optional and not required when using RBAC roles, but due to the bug, we need to
@@ -642,13 +671,9 @@ module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
       }
     ]
 
-    queues: [ for queueName in renderingQueueNames: {
-        name: queueName
-
-        // This is a workaround for a bug in the service bus module https://github.com/Azure/ResourceModules/issues/2867
-        // Authorization rules should be optional and not required when using RBAC roles, but due to the bug, we need to
-        // provide an empty array explicitly.
-        authorizationRules:[]
+    queues: [ for queue in renderingQueues: {
+        name: queue.name
+        authorizationRules: queue.authorizationRules
       }
     ]
   }
