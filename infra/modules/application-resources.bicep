@@ -598,7 +598,6 @@ module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
     zoneRedundant: deploymentSettings.isProduction
     networkRuleSets: deploymentSettings.isNetworkIsolated ? {
       publicNetworkAccess: 'Disabled'
-      defaultAction: 'Allow'
       trustedServiceAccessEnabled: false
     } : null
 
