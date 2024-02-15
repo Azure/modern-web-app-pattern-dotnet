@@ -485,6 +485,8 @@ module applicationPostConfiguration './modules/application-post-config.bicep' = 
     resourceNames: naming.outputs.resourceNames
     applicationResourceGroupNamePrimary: resourceGroups.outputs.application_resource_group_name
     applicationResourceGroupNameSecondary: isMultiLocationDeployment ? resourceGroups2.outputs.application_resource_group_name : ''
+    serviceBusNamespacePrimary: application.outputs.service_bus_name
+    serviceBusNamespaceSecondary: isMultiLocationDeployment ? application2.outputs.service_bus_name : application.outputs.service_bus_name
   }
 }
 
