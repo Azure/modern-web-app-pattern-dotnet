@@ -757,6 +757,10 @@ module containerAppEnvironment './application-container-apps.bicep' = {
     containerRegistryName: containerRegistry.outputs.name
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
     managedIdentityName: appManagedIdentity.outputs.name
+    keyVaultName: deploymentSettings.isNetworkIsolated ? resourceNames.keyVault : keyVault.outputs.name
+    keyVaultResourceGroupName: deploymentSettings.isNetworkIsolated ? resourceNames.hubResourceGroup : resourceGroup.name
+    renderRequestServiceBusNamespace: serviceBusNamespace.outputs.name
+    renderRequestServiceBusQueueName: 'ticket-render-requests'
 
     // Settings
     containerAppEnvironmentName: resourceNames.commonContainerAppEnvironment

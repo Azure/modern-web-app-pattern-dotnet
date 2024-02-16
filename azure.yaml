@@ -13,6 +13,15 @@ hooks:
       interactive: true
       shell: pwsh
       run: ./infra/scripts/preprovision/validate-params.ps1 && ./infra/scripts/preprovision/whats-my-ip.ps1
+  predeploy:
+    posix:
+      interactive: true
+      shell: sh
+      run: ./infra/scripts/predeploy/call-configure-aca-secrets.sh
+    windows:
+      interactive: true
+      shell: pwsh
+      run: ./infra/scripts/predeploy/call-configure-aca-secrets.ps1
   predown:
     posix:
       interactive: true

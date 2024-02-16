@@ -133,7 +133,7 @@ var redisCacheSecretNameSecondary = 'App--RedisCache--ConnectionString-Secondary
 var serviceBusConnectionStringPrimary = 'App--ServiceBus--RenderRequestQueue--ConnectionString--Primary'
 var serviceBusConnectionStringSecondary = 'App--ServiceBus--RenderRequestQueue--ConnectionString--Secondary'
 
-var multiRegionalSecrets = deploymentSettings.isMultiLocationDeployment ? [redisCacheSecretNameSecondary] : []
+var multiRegionalSecrets = deploymentSettings.isMultiLocationDeployment ? [redisCacheSecretNameSecondary, serviceBusConnectionStringSecondary] : []
 
 var listOfAppConfigSecrets = [
   microsoftEntraIdApiClientId
@@ -151,6 +151,7 @@ var listOfAppConfigSecrets = [
 var listOfSecretNames = union(listOfAppConfigSecrets,
   [
     redisCacheSecretNamePrimary
+    serviceBusConnectionStringPrimary
   ], multiRegionalSecrets)
 
 // ========================================================================
@@ -289,7 +290,7 @@ module writeAppRegistrationSecrets '../core/security/key-vault-secrets.bicep' = 
 
 module grantSecretsUserAccessBySecretName './grant-secret-user.bicep' = [ for secretName in listOfSecretNames: {
   scope: existingKvResourceGroup
-  name: 'grant-kv-access-for-${secretName}'
+  name: take('grant-kv-access-for-${secretName}', 64)
   params: {
     keyVaultName: existingKeyVault.name
     readerIdentities: readerIdentities
