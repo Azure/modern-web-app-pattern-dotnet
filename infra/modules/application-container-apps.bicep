@@ -235,11 +235,10 @@ module renderingServiceContainerApp 'br/public:avm/res/app/container-app:0.1.0' 
 
     secrets: {
       secureList: [
-        {
-          name: 'render-request-queue-connection-string'
-          identity: managedIdentity.id
-          keyVaultUrl: '${keyVault.properties.vaultUri}secrets/${serviceBusConnectionStringSecretName}'
-        }
+        // Key Vault secrets are not populated yet when this template is deployed.
+        // Therefore, no secrets are added at this time. Instead, they are added
+        // by the pre-deployment 'call-configure-aca-secrets' that is executed
+        // as part of `azd deploy`.
       ]
     }
 
