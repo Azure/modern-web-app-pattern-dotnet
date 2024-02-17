@@ -188,10 +188,17 @@ Write-Host " `trenderRequestQueueAcaSecretName: $highlightColor$renderRequestQue
 Write-Host " `trenderRequestQueueKvSecretName: $highlightColor$renderRequestQueueKvSecretName$defaultColor"
 
 try {
-    $secret = New-AzContainerAppSecretObject -Name $renderRequestQueueAcaSecretName `
-                                             -KeyVaultUrl "$(keyVaultUri)secrets/$renderRequestQueueKvSecretName" `
+    $renderQueueSecretUri = $keyVaultUri + "secrets/$renderRequestQueueKvSecretName"
+    $renderQueueSecret = New-AzContainerAppSecretObject -Name $renderRequestQueueAcaSecretName `
+                                             -KeyVaultUrl $renderQueueSecretUri `
                                              -Identity $managedIdentityId
-    Set-AzContainerApp -ResourceGroupName $ResourceGroupName -Name $rendererAppName -Secret $secret
+
+    # Update-AzContainerApp overrides (rather than appending) secrets, so we should pass exisitng
+    # secrets to the update command along with new ones.
+    $existingSecrets = Get-AzContainerAppSecret -ContainerAppName $rendererAppName -ResourceGroupName $ResourceGroupName
+
+    $configuration = New-AzContainerAppConfigurationObject -Secret $existingSecrets,$renderQueueSecret
+    Update-AzContainerApp -ResourceGroupName $ResourceGroupName -Name $rendererAppName -Configuration $configuration
 }
 catch {
     "Failed to set app ACA secrets" | Write-Error

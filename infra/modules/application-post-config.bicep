@@ -130,8 +130,8 @@ var microsoftEntraIdSignedOutCallbackPath = 'MicrosoftEntraId--SignedOutCallback
 var microsoftEntraIdTenantId = 'MicrosoftEntraId--TenantId'
 var redisCacheSecretNamePrimary = 'App--RedisCache--ConnectionString-Primary'
 var redisCacheSecretNameSecondary = 'App--RedisCache--ConnectionString-Secondary'
-var serviceBusConnectionStringPrimary = 'App--ServiceBus--RenderRequestQueue--ConnectionString--Primary'
-var serviceBusConnectionStringSecondary = 'App--ServiceBus--RenderRequestQueue--ConnectionString--Secondary'
+var serviceBusConnectionStringPrimary = 'App--RenderRequestQueue--ConnectionString--Primary'
+var serviceBusConnectionStringSecondary = 'App--RenderRequestQueue--ConnectionString--Secondary'
 
 var multiRegionalSecrets = deploymentSettings.isMultiLocationDeployment ? [redisCacheSecretNameSecondary, serviceBusConnectionStringSecondary] : []
 
