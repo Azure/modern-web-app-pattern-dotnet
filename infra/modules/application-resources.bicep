@@ -164,7 +164,7 @@ var ticketContainerName = 'tickets'
 
 // Service Bus queues used for ticket rendering
 // Match the names in set-app-configuration.ps1
-var renderingQueues = [ 
+var renderingQueues = [
   {
     name: 'ticket-render-requests'
     authorizationRules: [
@@ -181,12 +181,12 @@ var renderingQueues = [
   {
     name: 'ticket-render-completions'
 
-    
+
     // This is a workaround for a bug in the service bus module https://github.com/Azure/ResourceModules/issues/2867
     // Authorization rules should be optional and not required when using RBAC roles, but due to the bug, we need to
     // provide an empty array explicitly.
     authorizationRules: []
-  } 
+  }
 ]
 
 // Built-in Azure Contributor role
@@ -684,7 +684,7 @@ module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
 ** Azure Container Registry
 */
 
-module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' = if (isPrimaryLocation) {
+module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' = {
   name: 'application-container-registry'
   scope: resourceGroup
   params: {
@@ -705,14 +705,6 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
     exportPolicyStatus: 'disabled'
     zoneRedundancy: deploymentSettings.isProduction ? 'Enabled' : 'Disabled'
     publicNetworkAccess: (deploymentSettings.isProduction && deploymentSettings.isNetworkIsolated) ? 'Disabled' : 'Enabled'
-    replications: deploymentSettings.isMultiLocationDeployment ? [
-      {
-        name: deploymentSettings.secondaryLocation
-        location: deploymentSettings.secondaryLocation
-        zoneRedundancy: deploymentSettings.isProduction ? 'Enabled' : 'Disabled'
-        tags: moduleTags
-      }
-    ] : null
     privateEndpoints: deploymentSettings.isNetworkIsolated ? [
       {
         name: resourceNames.containerRegistryPrivateEndpoint
@@ -754,7 +746,7 @@ module containerAppEnvironment './application-container-apps.bicep' = {
 
     // Dependencies
     appConfigurationName: appConfiguration.outputs.name
-    containerRegistryName: containerRegistry.outputs.name
+    containerRegistryLoginServer: containerRegistry.outputs.loginServer
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
     managedIdentityName: appManagedIdentity.outputs.name
     keyVaultName: deploymentSettings.isNetworkIsolated ? resourceNames.keyVault : keyVault.outputs.name

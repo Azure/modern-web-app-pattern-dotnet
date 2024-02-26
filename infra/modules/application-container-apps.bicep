@@ -69,8 +69,8 @@ param tags object = {}
 @description('The name of the App Configuration store to use for configuration.')
 param appConfigurationName string
 
-@description('The name of the container registry to use for the container image.')
-param containerRegistryName string
+@description('The container registry server to use for the container image.')
+param containerRegistryLoginServer string
 
 @description('The ID of the Log Analytics workspace to use for diagnostics and logging.')
 param logAnalyticsWorkspaceId string
@@ -122,10 +122,6 @@ resource appConfigurationStore 'Microsoft.AppConfiguration/configurationStores@2
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: managedIdentityName
-}
-
-resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-11-01-preview' existing = {
-  name: containerRegistryName
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
@@ -228,7 +224,7 @@ module renderingServiceContainerApp 'br/public:avm/res/app/container-app:0.1.0' 
 
     registries: [
       {
-        server: containerRegistry.properties.loginServer
+        server: containerRegistryLoginServer
         identity: managedIdentity.id
       }
     ]

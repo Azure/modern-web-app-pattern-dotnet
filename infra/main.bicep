@@ -549,6 +549,7 @@ output service_managed_identities object[] = application.outputs.service_managed
 output service_web_endpoints string[] = application.outputs.service_web_endpoints
 output AZURE_OPS_VAULT_NAME string = isNetworkIsolated ? hubNetwork.outputs.key_vault_name : application.outputs.key_vault_name
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = application.outputs.container_registry_login_server
+output AZURE_CONTAINER_REGISTRY_SECONDARY_ENDPOINT string = isMultiLocationDeployment ? application2.outputs.container_registry_login_server : 'not-deployed'
 
 // Local development values
 output APP_CONFIG_SERVICE_URI string = application.outputs.app_config_uri
