@@ -59,15 +59,6 @@ jobs:
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
           AZURE_PRINCIPAL_TYPE: ServicePrincipal
 
-      - name: Log in with Azure (Federated Credentials)
-        if: ${{ env.AZURE_CLIENT_ID != '' }}
-        run: |
-          azd auth login `
-            --client-id "$Env:AZURE_CLIENT_ID" `
-            --federated-credential-provider "github" `
-            --tenant-id "$Env:AZURE_TENANT_ID" `
-        shell: pwsh
-
         # AZD deploy uses an AZD hook to execute the load test tool that will upload load test files
         # uploading the AZD load test requires a CLI login to authenticate
       - name: Azure Dev Deploy
