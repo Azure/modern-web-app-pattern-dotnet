@@ -11,12 +11,13 @@ The modern web app pattern shows you how business goals influence incremental ch
 - [Architecture](#architecture)
 - [Workflow](#workflow)
 - [Steps to deploy the reference implementation](#steps-to-deploy-the-reference-implementation)
+- [Changes from Reliable Web App](./CHANGES.md)
 - [Additional links](#additional-links)
 - [Data Collection](#data-collection)
 
 ## Azure Architecture Center guidance
 
-This project has a [companion article in the Azure Architecture Center](https://aka.ms/eap/rwa/dotnet/doc) that describes design patterns and best practices for migrating to the cloud. We suggest you read it as it will give important context to the considerations applied in this implementation.
+This project has a [companion article in the Azure Architecture Center](https://aka.ms/eap/mwa/dotnet/doc) that describes design patterns and best practices for migrating to the cloud. We suggest you read it as it will give important context to the considerations applied in this implementation.
 
 ## Architecture
 
@@ -40,8 +41,11 @@ This diagram describes the production deployment which is described in the [prod
 - When the payment data is submitted for approval, the ticket will be purchased. Logic to handle this is located in the backend web API.
 - Prior to calling the API, the front-end web app requests a token from the MSAL library to call the backend web API app as an authenticated user.
 - When the front-end web app has a token, it will cache it in Azure Cache for Redis. If it does not have a token, it will request one from Microsoft Entra ID and then save it in Azure Cache for Redis.
-- Once the ticket purchase request is sent to the backend web API, the API will render the ticket image and save it to Azure storage.
-- After the ticket purchase is completed successfully, the user will be redirected to their tickets page where they can see a list of the tickets they have purchased. These tickets will be immediately available because rendering the ticket was part of the purchase request.
+- Once the ticket purchase request is sent to the backend web API, the API will queue a message in a Service Bus queue requesting the ticket image be rendered.
+- After the ticket purchase is completed successfully, the user will be redirected to their tickets page where they can see a list of the tickets they have purchased. These tickets will be available once rendering is completed. This is usually fast, but may vary depending on load on the ticket rendering service.
+- The ticket rendering service will listen to the Service Bus queue for requests to render tickets. When a request is received, the service will render the ticket and store it in Azure Blob Storage.
+- After rendering a ticket image, the ticket rendering service will queue a message into a different Service Bus queue to notify the backend web API that the ticket has been rendered.
+- The web API listenes for incoming messages on the rendering complete Service Bus queue. When it receives a message, it updates the location of the ticket image in the database. Once this happens, users will be able to view their tickets in the Relecloud app.
 - As information flows between services, the Azure network handles traffic routing.
   - Traffic travels between Azure resources across private endpoints by using Azure Private DNS to lookup the correct IP addresses. This enables the system to block public network traffic and use a single v-net to manage traffic between these systems.
   - Traffic into the App Service is only allowed from Azure Front Door. Traffic out of the App Service is sent through Azure Firewall for routing and controlled by subnet with Network security groups.
