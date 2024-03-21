@@ -1,6 +1,6 @@
 # Modern web app pattern for .NET changes
 
-The reference sample in this repository builds on the previous [Reliable Web App Pattern for .NET](https://github.com/Azure/reliable-web-app-pattern-dotnet). Whereas the Reliable Web App Pattern focused on re-platforming an existing web app into Azure App Service with minimal code changes while still realizing benefits of cloud deployment, the Modern Web App Pattern focuses on modernizing the web app to more fully take advantage of cloud-native features and services.
+The reference sample in this repository builds on the previous [Reliable Web App Pattern for .NET](https://aka.ms/eap/rwa/dotnet). Whereas the Reliable Web App Pattern focused on re-platforming an existing web app into Azure App Service with minimal code changes while still realizing benefits of cloud deployment, the Modern Web App Pattern focuses on modernizing the web app to more fully take advantage of cloud-native features and services.
 
 As part of the modernization of the pattern, several changes have been made to the sample source code and the Azure services used. In addition to the changes documented below, the sample has been updated to use the latest version of the .NET SDK (.NET 8) and to use include Docker support in the dev container for building containerized workloads.
 
