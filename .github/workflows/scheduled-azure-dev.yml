@@ -1,10 +1,13 @@
+# This file is part of our engineering process to build and maintain this file.
+# See the README markdown file for further details
 name: "MWA- Daily Build"
+
 on:
   workflow_dispatch:
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
   schedule:
-    - cron: '0 12 * * *'
+    - cron: '0 12 1 * *' # Run at 12:00 on the 1st day of the month
 
 # https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Clinux#set-up-azure-login-with-openid-connect-authentication
 permissions:
@@ -12,7 +15,7 @@ permissions:
   contents: read
 
 concurrency: integration_testing
-    
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,15 +24,13 @@ jobs:
     env:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}
-      IS_RUN_AS_SERVICEPRINCIPAL: true
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
     steps:
       - name: Install jq tool
         uses: dcarbone/install-jq-action@v2
       - name: Checkout
-        uses: actions/checkout@v3
-      - uses: actions/setup-dotnet@v3
+        uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
@@ -37,58 +38,58 @@ jobs:
         run: Install-Module -Name Az -Force -AllowClobber -Scope CurrentUser -Repository PSGallery
         shell: pwsh
 
-      - name: Log in with Azure (Federated Credentials)
-        if: ${{ env.AZURE_CLIENT_ID != '' }}
+      - name: Check configuration
+        if: ${{ env.AZURE_CREDENTIALS == '' }}
+        run: echo "AZURE_CREDENTIALS are not available."
+        
+      # login to run ado commands such provision, deploy, and down
+      - name: Log in with Azure (Client Credentials) for AZD
+        if: ${{ env.AZURE_CREDENTIALS != '' }}
         run: |
-          azd auth login `
-            --client-id "$Env:AZURE_CLIENT_ID" `
-            --federated-credential-provider "github" `
-            --tenant-id "$Env:AZURE_TENANT_ID" `
+          $info = $Env:AZURE_CREDENTIALS | ConvertFrom-Json -AsHashtable;
+          Write-Host "::add-mask::$($info.clientSecret)"
+
+          azd login `
+            --client-id "$($info.clientId)" `
+            --client-secret "$($info.clientSecret)" `
+            --tenant-id "$($info.tenantId)"
         shell: pwsh
-      - name: 'Az CLI login'
-        uses: azure/login@v1
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # login to run azd hooks and the QA validation script
+      - name: Log in with Azure CLI
+        if: ${{ env.AZURE_CREDENTIALS != '' }}
+        uses: Azure/login@v1.6.1
         with:
-            client-id: ${{ secrets.AZURE_CLIENT_ID }}
-            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-            enable-AzPSSession: true
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
 
-      - name: Azure Dev Provision
-        run: azd provision --no-prompt
-        env:
-          AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
-          AZURE_PRINCIPAL_TYPE: ServicePrincipal
+      - name: Set the environment
+        if: ${{ env.AZURE_CREDENTIALS != '' }}
+        run : azd env new ${{ secrets.AZURE_ENV_NAME }}
 
-        # AZD deploy uses an AZD hook to execute the load test tool that will upload load test files
-        # uploading the AZD load test requires a CLI login to authenticate
-      - name: Azure Dev Deploy
-        run: azd deploy --no-prompt
-        env:
-          AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+      - name: Set the subscription
+        if: ${{ env.AZURE_CREDENTIALS != '' }}
+        run : azd env set AZURE_SUBSCRIPTION_ID  ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set the location
+        if: ${{ env.AZURE_CREDENTIALS != '' }}
+        run : azd env set AZURE_LOCATION  ${{ secrets.AZURE_LOCATION }}
+
+      - name: Set the principal type
+        if: ${{ env.AZURE_CREDENTIALS != '' }}
+        run : azd env set AZURE_PRINCIPAL_TYPE ServicePrincipal
+
+      - name: Azure Deploy
+        if: ${{ env.AZURE_CREDENTIALS != '' }}
+        run : azd up
 
       - name: QA - Validate Deployment
-        run: ./testscripts/call-validate-deployment.sh -g $resourceGroupName
+        if: ${{ env.AZURE_CREDENTIALS != '' }}
+        run : ./testscripts/call-validate-deployment.sh
 
+      - name: Teardown Azure resources
+        if: ${{ env.AZURE_CREDENTIALS != '' }}
+        run : azd down --force --purge --no-prompt
 
-  teardown:
-    needs: [build]
-    runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/azure-dev-cli-apps:1.5.1
-    env:
-        AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}
-        AZURE_LOCATION: ${{ secrets.AZURE_LOCATION2 }}
-        AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        IS_RUN_AS_SERVICEPRINCIPAL: true
-
-    steps:
-
-      - name: Checkout
-        uses: actions/checkout@v2
-        
-      - name: Log in with azd (Federated Credentials)
-        run: |
-          azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
-
-      - name: Azure Dev Down
-        run: azd down --force --purge --no-prompt

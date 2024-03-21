@@ -22,21 +22,18 @@ targetScope = 'subscription'
 type DeploymentSettings = {
   @description('If \'true\', then two regional deployments will be performed.')
   isMultiLocationDeployment: bool
-
+  
   @description('If \'true\', use production SKUs and settings.')
   isProduction: bool
 
   @description('If \'true\', isolate the workload in a virtual network.')
   isNetworkIsolated: bool
 
+  @description('If \'false\', then this is a multi-location deployment for the second location.')
+  isPrimaryLocation: bool
+
   @description('The Azure region to host resources')
   location: string
-
-  @description('The Azure region to host primary resources. In a multi-region deployment, this will match \'location\' while deploying the primary region\'s resources.')
-  primaryLocation: string
-
-  @description('The secondary Azure region in a multi-region deployment. This will match \'location\' while deploying the secondary region\'s resources during a multi-region deployment.')
-  secondaryLocation: string
 
   @description('The name of the workload.')
   name: string
@@ -46,6 +43,9 @@ type DeploymentSettings = {
 
   @description('The type of the \'principalId\' property.')
   principalType: 'ServicePrincipal' | 'User'
+
+  @description('The token to use for naming resources.  This should be unique to the deployment.')
+  resourceToken: string
 
   @description('The development stage for this application')
   stage: 'dev' | 'prod'
@@ -69,11 +69,11 @@ param deploymentSettings DeploymentSettings
 */
 @secure()
 @minLength(12)
-@description('The password for the administrator account.  This will be used for the jump host, SQL server, and anywhere else a password is needed for creating a resource.')
+@description('The password for the administrator account.  This will be used for the jump box, SQL server, and anywhere else a password is needed for creating a resource.')
 param administratorPassword string = newGuid()
 
 @minLength(8)
-@description('The username for the administrator account on the jump host.')
+@description('The username for the administrator account on the jump box.')
 param administratorUsername string = 'adminuser'
 
 @secure()
@@ -99,10 +99,10 @@ param redisCacheNamePrimary string
 @description('Name of the second Azure Cache for Redis.')
 param redisCacheNameSecondary string
 
-@description('Name of the primary resource group containing application resources such as Azure Cache for Redis and Azure Service Bus.')
+@description('Name of the resource group containing Azure Cache for Redis.')
 param applicationResourceGroupNamePrimary string
 
-@description('Name of the secondary resource group containing application resources such as Azure Cache for Redis and Azure Service Bus.')
+@description('Name of the resource group containing Azure Cache for Redis.')
 param applicationResourceGroupNameSecondary string
 
 @description('Name of the primary Service Bus namespace.')
@@ -201,15 +201,15 @@ resource existingKeyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
 // AZURE MODULES
 // ========================================================================
 
-module writeJumpHostCredentialsToKeyVault '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isNetworkIsolated) {
-  name: 'hub-write-jumphost-credentials'
+module writeJumpBoxCredentialsToKeyVault '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isNetworkIsolated) {
+  name: 'hub-write-jumpbox-credentials-${deploymentSettings.resourceToken}'
   scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
     secrets: [
-      { key: 'Jumphost--AdministratorPassword', value: administratorPassword          }
-      { key: 'Jumphost--AdministratorUsername', value: administratorUsername          }
-      { key: 'Jumphost--ComputerName',          value: resourceNames.hubJumphost }
+      { key: 'Jumpbox--AdministratorPassword', value: administratorPassword          }
+      { key: 'Jumpbox--AdministratorUsername', value: administratorUsername          }
+      { key: 'Jumpbox--ComputerName',          value: resourceNames.hubJumpbox }
     ]
   }
 }
@@ -220,8 +220,8 @@ module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = 
   params: {
     name: existingKeyVault.name
     secrets: [
-      { key: 'Relecloud--SqlAdministratorUsername', value: administratorUsername }
-      { key: 'Relecloud--SqlAdministratorPassword', value: databasePassword }
+      { key: 'Application--SqlAdministratorUsername', value: administratorUsername }
+      { key: 'Application--SqlAdministratorPassword', value: databasePassword }
     ]
   }
 }

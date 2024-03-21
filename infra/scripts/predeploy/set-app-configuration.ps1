@@ -17,6 +17,8 @@ Param(
     [Alias("g")]
     [Parameter(Mandatory = $true, HelpMessage = "Name of the application resource group that was created by azd")]
     [String]$ResourceGroupName,
+    [Parameter(Mandatory = $true, HelpMessage = "URI used for OAuth with Microsoft Entra ID. This is the URI of the web app.")]
+    [String]$WebUri,
     [Parameter(Mandatory = $false, HelpMessage = "Use default values for all prompts")]
     [Switch]$NoPrompt
 )
@@ -101,26 +103,6 @@ function Get-WorkloadStorageAccount {
     return Get-AzStorageAccount -Name $storageAccountName -ResourceGroupName $group.ResourceGroupName
 }
 
-function Get-MyFrontDoor {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$ResourceGroupName
-    )
-
-    Write-Host "`tGetting front door profile for $highlightColor'$ResourceGroupName'$defaultColor"
-    return (Get-AzFrontDoorCdnProfile -ResourceGroupName $ResourceGroupName)
-}
-
-function Get-MyFrontDoorEndpoint {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$ResourceGroupName
-    )
-
-    $frontDoorProfile = (Get-MyFrontDoor -ResourceGroupName $ResourceGroupName)
-    return (Get-AzFrontDoorCdnEndpoint -ProfileName $frontDoorProfile.Name -ResourceGroupName $ResourceGroupName)
-}
-
 function Get-WorkloadKeyVault {
     param(
         [Parameter(Mandatory = $true)]
@@ -132,11 +114,11 @@ function Get-WorkloadKeyVault {
     $hubGroup = Get-AzResourceGroup -Name $group.Tags["HubGroupName"]
 
     # the group contains tags that explain what the default name of the kv should be
-    $keyVaultName = "kv-$($group.Tags["ResourceToken"])"
+    $keyVaultName = "kv-$($hubGroup.Tags["ResourceToken"])"
 
     # if key vault is not found, then throw an error
     if ($keyVaultName.Length -lt 4) {
-        throw "Key vault not found in resource group $group.ResourceGroupName"
+        throw "Key vault not found in resource group $hubGroup.ResourceGroupName"
     }
 
     return Get-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $hubGroup.ResourceGroupName
@@ -205,8 +187,8 @@ Write-Host "Configuring app settings for $highlightColor'$ResourceGroupName'$def
 $defaultAzureStorageTicketContainerName = "tickets" # matches the default defined in application-resources.bicep file
 $defaultSqlConnectionString = (Get-WorkloadSqlManagedIdentityConnectionString -ResourceGroupName $ResourceGroupName) # the connection string to the SQL database set with Managed Identity
 $defaultAzureStorageTicketUri = (Get-WorkloadStorageAccount -ResourceGroupName $ResourceGroupName).PrimaryEndpoints.Blob # the URI of the storage account container where tickets are stored
-$defaultAzureFrontDoorHostName = "$((Get-MyFrontDoorEndpoint -ResourceGroupName $ResourceGroupName).HostName)" # the hostname of the front door
-$defaultRelecloudBaseUri = "https://$((Get-MyFrontDoorEndpoint -ResourceGroupName $ResourceGroupName).HostName)/api" # used by the frontend to call the backend through the front door
+$defaultAzureFrontDoorHostName = $WebUri.Substring("https://".Length) # the hostname of the front door
+$defaultRelecloudBaseUri = "$WebUri/api" # used by the frontend to call the backend through the front door
 $defaultKeyVaultUri = (Get-WorkloadKeyVault -ResourceGroupName $ResourceGroupName).VaultUri # the URI of the key vault where secrets are stored
 $defaultRedisCacheKeyName = (Get-RedisCacheKeyName -ResourceGroupName $ResourceGroupName) # workloads use independent redis caches and a shared vault to store the connection string
 $defaultTicketRenderRequestQueueName = "ticket-render-requests" # matches the default defined in application-resources.bicep file
@@ -340,6 +322,8 @@ Write-Host "`tDistributedTicketRendering: $highlightColor'$useDistributedTicketR
 $configStore = Get-AzAppConfigurationStore -ResourceGroupName $resourceGroupName
 
 try {
+    Write-Host "`nSetting values in $highlightColor$($configStore.Endpoint)$defaultColor..."
+
     Write-Host "`nSet values for backend..."
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:SqlDatabase:ConnectionString -Value $sqlConnectionString > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:StorageAccount:Container -Value $azureStorageTicketContainerName > $null
@@ -347,7 +331,7 @@ try {
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:ServiceBus:Host -Value $azureServiceBusHost > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:ServiceBus:RenderRequestQueueName -Value $ticketRenderRequestQueueName > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:ServiceBus:RenderCompleteQueueName -Value $ticketRenderCompleteQueueName > $null
-
+    
     # Az.AppConfiguration does not support feature flags yet, so we use our own helper function
     # https://github.com/Azure/azure-powershell/issues/17773
     Set-AzAppConfiguration-FeatureFlag -Endpoint $configStore.Endpoint -FeatureFlagName "DistributedTicketRendering" -FeatureFlagDescription "Enable to render ticket images out-of-process" -FeatureFlagValue $useDistributedTicketRendering

@@ -2,7 +2,7 @@ targetScope = 'subscription'
 
 // ========================================================================
 //
-//  Relecloud Scenario of the Modern Web Application (MWA)
+//  Relecloud Scenario of the Reliable Web Application (RWA)
 //  Infrastructure description
 //  Copyright (C) 2023 Microsoft, Inc.
 //
@@ -45,17 +45,17 @@ param principalType string = 'ServicePrincipal'
 */
 @secure()
 @minLength(8)
-@description('The password for the SQL administrator account. This will be used for the jump host, SQL server, and anywhere else a password is needed for creating a resource.')
+@description('The password for the SQL administrator account. This will be used for the jump box, SQL server, and anywhere else a password is needed for creating a resource.')
 param databasePassword string
 
 @secure()
 @minLength(12)
-@description('The password for the jump host administrator account.')
-param jumphostAdministratorPassword string
+@description('The password for the jump box administrator account.')
+param jumpboxAdministratorPassword string
 
 
 @minLength(8)
-@description('The username for the administrator account.  This will be used for the jump host, SQL server, and anywhere else a password is needed for creating a resource.')
+@description('The username for the administrator account.  This will be used for the jump box, SQL server, and anywhere else a password is needed for creating a resource.')
 param administratorUsername string = 'azureadmin'
 
 /*
@@ -108,7 +108,7 @@ param networkIsolation string = 'auto'
 
 // Secondary Azure location - provides the name of the 2nd Azure region. Blank by default to represent a single region deployment.
 @description('Should specify an Azure region. If not set to empty string then deploy to single region, else trigger multiregional deployment. The second region should be different than the `location`. e.g. `westus3`')
-param secondaryAzureLocation string = ''
+param azureSecondaryLocation string = ''
 
 // Common App Service Plan - determines if a common app service plan should be deployed.
 //  auto = yes in dev, no in prod.
@@ -123,28 +123,34 @@ param useCommonAppServicePlan string = 'auto'
 var prefix = '${environmentName}-${environmentType}'
 
 // Boolean to indicate the various values for the deployment settings
-var isMultiLocationDeployment = secondaryAzureLocation == '' ? false : true
+var isMultiLocationDeployment = azureSecondaryLocation == '' ? false : true
 var isProduction = environmentType == 'prod'
 var isNetworkIsolated = networkIsolation == 'true' || (networkIsolation == 'auto' && isProduction)
-var willDeployHubNetwork = isNetworkIsolated && (deployHubNetwork == 'true' || (deployHubNetwork == 'auto' && !isProduction))
+var willDeployHubNetwork = isNetworkIsolated && (deployHubNetwork == 'true' || (deployHubNetwork == 'auto' && isProduction))
 var willDeployCommonAppServicePlan = useCommonAppServicePlan == 'true' || (useCommonAppServicePlan == 'auto' && !isProduction)
+
+// A unique token that is used as a differentiator for all resources.  All resources within the
+// same deployment will have the same token.
+var primaryResourceToken = uniqueString(subscription().id, environmentName, environmentType, location, differentiator)
+var secondaryResourceToken = uniqueString(subscription().id, environmentName, environmentType, azureSecondaryLocation, differentiator)
 
 var defaultDeploymentSettings = {
   isMultiLocationDeployment: isMultiLocationDeployment
   isProduction: isProduction
   isNetworkIsolated: isNetworkIsolated
+  isPrimaryLocation: true
   location: location
-  primaryLocation: location
-  secondaryLocation: secondaryAzureLocation
   name: environmentName
   principalId: principalId
   principalType: principalType
+  resourceToken: primaryResourceToken
   stage: environmentType
   tags: {
     'azd-env-name': environmentName
     'azd-env-type': environmentType
     'azd-owner-email': ownerEmail
     'azd-owner-name': ownerName
+    ResourceToken: primaryResourceToken
   }
   workloadTags: {
     WorkloadIdentifier: environmentName
@@ -158,7 +164,12 @@ var defaultDeploymentSettings = {
 
 var primaryNamingDeployment = defaultDeploymentSettings
 var secondaryNamingDeployment = union(defaultDeploymentSettings, {
-  location: secondaryAzureLocation
+  isPrimaryLocation: false
+  location: azureSecondaryLocation
+  resourceToken: secondaryResourceToken
+  tags: {
+    ResourceToken: secondaryResourceToken
+  }
 })
 
 var primaryDeployment = {
@@ -166,21 +177,24 @@ var primaryDeployment = {
     HubGroupName: isNetworkIsolated ? naming.outputs.resourceNames.hubResourceGroup : naming.outputs.resourceNames.resourceGroup
     IsPrimaryLocation: 'true'
     PrimaryLocation: location
-    ResourceToken: naming.outputs.resourceToken
-    SecondaryLocation: secondaryAzureLocation
+    SecondaryLocation: azureSecondaryLocation
   }
 }
 
 var primaryDeploymentSettings = union(defaultDeploymentSettings, primaryDeployment)
 
 var secondDeployment = {
-  location: secondaryAzureLocation
+  location: azureSecondaryLocation
+  isPrimaryLocation: false
+  resourceToken: secondaryResourceToken
+  tags: {
+    ResourceToken: secondaryResourceToken
+  }
   workloadTags: {
     HubGroupName: isNetworkIsolated ? naming.outputs.resourceNames.hubResourceGroup : ''
     IsPrimaryLocation: 'false'
     PrimaryLocation: location
-    ResourceToken: naming2.outputs.resourceToken
-    SecondaryLocation: secondaryAzureLocation
+    SecondaryLocation: azureSecondaryLocation
   }
 }
 
@@ -214,6 +228,7 @@ module naming './modules/naming.bicep' = {
     deploymentSettings: primaryNamingDeployment
     differentiator: differentiator != 'none' ? differentiator : ''
     overrides: loadJsonContent('./naming.overrides.jsonc')
+    primaryLocation: location
   }
 }
 
@@ -223,6 +238,7 @@ module naming2 './modules/naming.bicep' = {
     deploymentSettings: secondaryNamingDeployment
     differentiator: differentiator != 'none' ? '${differentiator}2' : '2'
     overrides: loadJsonContent('./naming.overrides.jsonc')
+    primaryLocation: location
   }
 }
 
@@ -231,8 +247,8 @@ module naming2 './modules/naming.bicep' = {
 **
 **  hubResourceGroup      - contains the hub network resources
 **  spokeResourceGroup    - contains the spoke network resources
-**  applicationResourceGroup - contains the application resources
-**
+**  applicationResourceGroup - contains the application resources 
+** 
 ** Not all of the resource groups are necessarily available - it
 ** depends on the settings.
 */
@@ -275,7 +291,7 @@ module azureMonitor './modules/azure-monitor.bicep' = {
 }
 
 /*
-** Create the hub network, if requested.
+** Create the hub network, if requested. 
 **
 ** The hub network consists of the following resources
 **
@@ -298,12 +314,16 @@ module hubNetwork './modules/hub-network.bicep' = if (willDeployHubNetwork) {
     logAnalyticsWorkspaceId: azureMonitor.outputs.log_analytics_workspace_id
 
     // Settings
+    administratorPassword: jumpboxAdministratorPassword
+    administratorUsername: administratorUsername
+    createDevopsSubnet: true
     enableBastionHost: true
-    enableDDoSProtection: primaryDeploymentSettings.isProduction
+    // DDoS protection is recommended for Production deployments
+    // however, for this sample we disable this feature because DDoS should be configured to protect multiple subscriptions, deployments, and resources
+    // learn more at https://learn.microsoft.com/azure/ddos-protection/ddos-protection-overview
+    enableDDoSProtection: false // primaryDeploymentSettings.isProduction
     enableFirewall: true
-    enableJumpHost: willDeployHubNetwork
-    spokeAddressPrefixPrimary: spokeAddressPrefixPrimary
-    spokeAddressPrefixSecondary: spokeAddressPrefixSecondary
+    enableJumpBox: true
   }
   dependsOn: [
     resourceGroups
@@ -332,10 +352,6 @@ module spokeNetwork './modules/spoke-network.bicep' = if (isNetworkIsolated) {
 
     // Settings
     addressPrefix: spokeAddressPrefixPrimary
-    administratorPassword: jumphostAdministratorPassword
-    administratorUsername: administratorUsername
-    createDevopsSubnet: isNetworkIsolated
-    enableJumpHost: true
   }
   dependsOn: [
     resourceGroups
@@ -355,10 +371,6 @@ module spokeNetwork2 './modules/spoke-network.bicep' = if (isNetworkIsolated && 
 
     // Settings
     addressPrefix: spokeAddressPrefixSecondary
-    administratorPassword: jumphostAdministratorPassword
-    administratorUsername: administratorUsername
-    createDevopsSubnet: true
-    enableJumpHost: true
   }
   dependsOn: [
     resourceGroups2
@@ -474,7 +486,7 @@ module applicationPostConfiguration './modules/application-post-config.bicep' = 
   name: '${prefix}-application-postconfig'
   params: {
     deploymentSettings: primaryDeploymentSettings
-    administratorPassword: jumphostAdministratorPassword
+    administratorPassword: jumpboxAdministratorPassword
     administratorUsername: administratorUsername
     databasePassword: databasePassword
     keyVaultName: isNetworkIsolated? hubNetwork.outputs.key_vault_name : application.outputs.key_vault_name
@@ -506,7 +518,7 @@ module buildAgent './modules/build-agent.bicep' = if (installBuildAgent) {
     subnets: isNetworkIsolated ? spokeNetwork.outputs.subnets : {}
 
     // Settings
-    administratorPassword: jumphostAdministratorPassword
+    administratorPassword: jumpboxAdministratorPassword
     administratorUsername: administratorUsername
     adoOrganizationUrl: adoOrganizationUrl
     adoToken: adoToken
@@ -535,12 +547,14 @@ module telemetry './modules/telemetry.bicep' = if (enableTelemetry) {
 // ========================================================================
 
 // Hub resources
-output hub_group_name string = naming.outputs.resourceNames.hubResourceGroup
+output BASTION_NAME string = willDeployHubNetwork ? hubNetwork.outputs.bastion_name : ''
+output BASTION_RESOURCE_GROUP string = willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : ''
 output bastion_hostname string = willDeployHubNetwork ? hubNetwork.outputs.bastion_hostname : ''
 output firewall_hostname string = willDeployHubNetwork ? hubNetwork.outputs.firewall_hostname : ''
 
 // Spoke resources
 output build_agent string = installBuildAgent ? buildAgent.outputs.build_agent_hostname : ''
+output JUMPBOX_RESOURCE_ID string = isNetworkIsolated ? hubNetwork.outputs.jumpbox_resource_id : ''
 
 // Application resources
 output AZURE_RESOURCE_GROUP string = resourceGroups.outputs.application_resource_group_name
@@ -552,6 +566,7 @@ output AZURE_CONTAINER_REGISTRY_ENDPOINT string = application.outputs.container_
 output AZURE_CONTAINER_REGISTRY_SECONDARY_ENDPOINT string = isMultiLocationDeployment ? application2.outputs.container_registry_login_server : 'not-deployed'
 
 // Local development values
+output AZURE_PRINCIPAL_TYPE string = principalType
 output APP_CONFIG_SERVICE_URI string = application.outputs.app_config_uri
 output WEB_URI string = application.outputs.web_uri
 output SQL_DATABASE_NAME string = application.outputs.sql_database_name

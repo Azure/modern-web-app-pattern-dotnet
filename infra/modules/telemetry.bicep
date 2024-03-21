@@ -18,7 +18,7 @@ targetScope = 'subscription'
 type DeploymentSettings = {
   @description('If \'true\', then two regional deployments will be performed.')
   isMultiLocationDeployment: bool
-
+  
   @description('If \'true\', use production SKUs and settings.')
   isProduction: bool
 
@@ -43,6 +43,9 @@ type DeploymentSettings = {
   @description('The type of the \'principalId\' property.')
   principalType: 'ServicePrincipal' | 'User'
 
+  @description('The token to use for naming resources.  This should be unique to the deployment.')
+  resourceToken: string
+
   @description('The development stage for this application')
   stage: 'dev' | 'prod'
 
@@ -60,9 +63,6 @@ type DeploymentSettings = {
 @description('The deployment settings to use for this deployment.')
 param deploymentSettings DeploymentSettings
 
-@description('The name of the application resource group')
-param resourceGroupName string
-
 // ========================================================================
 // VARIABLES
 // ========================================================================
@@ -76,27 +76,6 @@ var telemetryId = '2e1b35cf-c556-45fd-87d5-bfc08ac2e8ba'
 resource telemetrySubscription 'Microsoft.Resources/deployments@2021-04-01' = {
   name: '${telemetryId}-${deploymentSettings.location}'
   location: deploymentSettings.location
-  properties: {
-    mode: 'Incremental'
-    template: {
-      '$schema': 'https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#'
-      contentVersion: '1.0.0.0'
-      resources: {}
-    }
-  }
-}
-
-resource telemetryResourceGroup 'Microsoft.Resources/deployments@2021-04-01' = {
-  name: '${telemetryId}-${deploymentSettings.workloadTags.WorkloadName}'
-  resourceGroup: resourceGroupName
-  tags:{
-    isNetworkIsolated: deploymentSettings.isNetworkIsolated ? 'true' : 'false'
-    isProduction: deploymentSettings.isProduction ? 'true' : 'false'
-    location: deploymentSettings.location
-    name: deploymentSettings.name
-    principalType: deploymentSettings.principalType
-    stage: deploymentSettings.stage
-  }
   properties: {
     mode: 'Incremental'
     template: {

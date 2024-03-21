@@ -21,7 +21,7 @@ targetScope = 'subscription'
 type DeploymentSettings = {
   @description('If \'true\', then two regional deployments will be performed.')
   isMultiLocationDeployment: bool
-
+  
   @description('If \'true\', use production SKUs and settings.')
   isProduction: bool
 
@@ -45,6 +45,9 @@ type DeploymentSettings = {
 
   @description('The type of the \'principalId\' property.')
   principalType: 'ServicePrincipal' | 'User'
+
+  @description('The token to use for naming resources.  This should be unique to the deployment.')
+  resourceToken: string
 
   @description('The development stage for this application')
   stage: 'dev' | 'prod'
@@ -114,7 +117,7 @@ module createNewDnsZones '../core/network/private-dns-zone.bicep' = [ for dnsZon
 }]
 
 module updateVnetLinkForDnsZones '../core/network/private-dns-zone-link.bicep' = [ for dnsZoneName in !createDnsZone ? privateDnsZones : []: {
-  name: createDnsZone ? 'hub-vnet-link-for-dns-${dnsZoneName}' : (deploymentSettings.location == deploymentSettings.primaryLocation) ? 'spk-0-vnet-link-for-dns-${dnsZoneName}' : 'spk-1-link-for-dns-${dnsZoneName}'
+  name: createDnsZone ? 'hub-vnet-link-for-dns-${dnsZoneName}-${deploymentSettings.resourceToken}' : 'spk-0-vnet-link-for-dns-${dnsZoneName}-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: dnsZoneName
