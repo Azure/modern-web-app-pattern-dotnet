@@ -457,6 +457,13 @@ module sharedKeyVault '../core/security/key-vault.bicep' = {
 module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' = {
   name: 'application-container-registry'
   scope: resourceGroup
+
+  dependsOn: [
+    // Provisioning the Container Registry involves creating a private endpoint, which requires
+    // private DNS zones to be created and linked to the virtual network.
+    privateDnsZones
+  ]
+
   params: {
     name: resourceNames.containerRegistry
     location: deploymentSettings.location
@@ -482,7 +489,7 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
         privateDnsZoneResourceIds: [
           resourceId(subscription().subscriptionId, resourceGroup.name, 'Microsoft.Network/privateDnsZones', 'privatelink.azurecr.io')
         ]
-        subnetResourceId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+        subnetResourceId: virtualNetwork.outputs.subnets[privateEndpointSubnet.name].id
         service: 'registry'
         tags: moduleTags
       }
@@ -490,9 +497,11 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
     replications: deploymentSettings.isMultiLocationDeployment ? [
       {
         location: deploymentSettings.primaryLocation
+        name: '${resourceNames.containerRegistry}-primary'
       }
       {
         location: deploymentSettings.secondaryLocation
+        name: '${resourceNames.containerRegistry}-secondary'
       }
     ] : null
     roleAssignments: [
