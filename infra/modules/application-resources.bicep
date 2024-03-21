@@ -157,8 +157,6 @@ var budget = {
 }
 var budgetAmount = reduce(map(items(budget), (obj) => obj.value), 0, (total, amount) => total + amount)
 
-var redisConnectionSecretName= isPrimaryLocation ? 'App--RedisCache--ConnectionString-Primary' : 'App--RedisCache--ConnectionString-Secondary'
-
 // describes the Azure Storage container where ticket images will be stored after they are rendered during purchase
 var ticketContainerName = 'tickets'
 
@@ -763,8 +761,6 @@ module containerAppEnvironment './application-container-apps.bicep' = {
     containerRegistryLoginServer: containerRegistry.outputs.loginServer
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
     managedIdentityName: appManagedIdentity.outputs.name
-    keyVaultName: deploymentSettings.isNetworkIsolated ? resourceNames.keyVault : keyVault.outputs.name
-    keyVaultResourceGroupName: deploymentSettings.isNetworkIsolated ? resourceNames.hubResourceGroup : resourceGroup.name
     renderRequestServiceBusNamespace: serviceBusNamespace.outputs.name
     renderRequestServiceBusQueueName: 'ticket-render-requests'
 
