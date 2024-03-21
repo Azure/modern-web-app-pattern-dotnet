@@ -497,11 +497,11 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
     replications: deploymentSettings.isMultiLocationDeployment ? [
       {
         location: deploymentSettings.primaryLocation
-        name: '${resourceNames.containerRegistry}-primary'
+        name: take('primary${resourceNames.containerRegistry}', 50)
       }
       {
         location: deploymentSettings.secondaryLocation
-        name: '${resourceNames.containerRegistry}-secondary'
+        name: take('secondary${resourceNames.containerRegistry}', 50)
       }
     ] : null
     roleAssignments: [
