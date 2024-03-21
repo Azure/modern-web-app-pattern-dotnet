@@ -495,13 +495,11 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
       }
     ] : null
     replications: deploymentSettings.isMultiLocationDeployment ? [
-      {
-        location: deploymentSettings.primaryLocation
-        name: take('primary${resourceNames.containerRegistry}', 50)
-      }
+      // The primary region doesn't need to be listed in replicas. It will be deployed automatically.
+      // Replications only needs to list secondary regions.
       {
         location: deploymentSettings.secondaryLocation
-        name: take('secondary${resourceNames.containerRegistry}', 50)
+        name: deploymentSettings.secondaryLocation
       }
     ] : null
     roleAssignments: [
