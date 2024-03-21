@@ -129,6 +129,9 @@ var moduleTags = union(deploymentSettings.tags, {
   ServiceClass: deploymentSettings.isProduction ? 'Gold' : 'Dev'
 })
 
+// Allows push and pull access to Azure Container Registry images.
+var containerRegistryPushRoleId = '8311e382-0749-4cb8-b61a-304f252e45ec'
+
 // The subnet prefixes for the individual subnets inside the virtual network
 var subnetPrefixes = [ for i in range(0, 16): cidrSubnet(addressPrefix, 26, i)]
 
@@ -446,6 +449,62 @@ module sharedKeyVault '../core/security/key-vault.bicep' = {
   }
 }
 
+/*
+** Azure Container Registry
+** The registry is deployed with the hub in production scenarios but with application resources in dev scenarios.
+*/
+
+module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' = {
+  name: 'application-container-registry'
+  scope: resourceGroup
+  params: {
+    name: resourceNames.containerRegistry
+    location: deploymentSettings.location
+    tags: moduleTags
+    acrSku: (deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated) ? 'Premium' :  'Basic'
+
+    diagnosticSettings: [
+      {
+        workspaceResourceId: logAnalyticsWorkspaceId
+      }
+    ]
+
+    // Settings
+    acrAdminUserEnabled: false
+    anonymousPullEnabled: false
+    exportPolicyStatus: 'disabled'
+    zoneRedundancy: deploymentSettings.isProduction ? 'Enabled' : 'Disabled'
+    publicNetworkAccess: (deploymentSettings.isProduction && deploymentSettings.isNetworkIsolated) ? 'Disabled' : 'Enabled'
+    privateEndpoints: deploymentSettings.isNetworkIsolated ? [
+      {
+        name: resourceNames.containerRegistryPrivateEndpoint
+        privateDnsZoneGroupName: resourceGroup.name
+        privateDnsZoneResourceIds: [
+          resourceId(subscription().subscriptionId, resourceGroup.name, 'Microsoft.Network/privateDnsZones', 'privatelink.azurecr.io')
+        ]
+        subnetResourceId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+        service: 'registry'
+        tags: moduleTags
+      }
+    ] : null
+    replications: deploymentSettings.isMultiLocationDeployment ? [
+      {
+        location: deploymentSettings.primaryLocation
+      }
+      {
+        location: deploymentSettings.secondaryLocation
+      }
+    ] : null
+    roleAssignments: [
+      {
+        principalId: deploymentSettings.principalId
+        principalType: deploymentSettings.principalType
+        roleDefinitionIdOrName: containerRegistryPushRoleId
+      }
+    ]
+  }
+}
+
 module hubBudget '../core/cost-management/budget.bicep' = {
   name: 'hub-budget'
   scope: resourceGroup
@@ -488,3 +547,4 @@ output firewall_ip_address string = enableFirewall ? firewall.outputs.internal_i
 output virtual_network_id string = virtualNetwork.outputs.id
 output virtual_network_name string = virtualNetwork.outputs.name
 output key_vault_name string = enableJumpHost ? sharedKeyVault.outputs.name : ''
+output container_registry_login_server string = containerRegistry.outputs.loginServer

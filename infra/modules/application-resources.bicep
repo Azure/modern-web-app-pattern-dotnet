@@ -682,16 +682,17 @@ module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
 
 /*
 ** Azure Container Registry
+** The registry is deployed with the application when not using network isolation. When using network isolation, the registry is deployed with the hub.
 */
 
-module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' = {
+module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' = if (!deploymentSettings.isNetworkIsolated) {
   name: 'application-container-registry'
   scope: resourceGroup
   params: {
     name: resourceNames.containerRegistry
     location: deploymentSettings.location
     tags: moduleTags
-    acrSku: (deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated) ? 'Premium' :  'Basic'
+    acrSku: deploymentSettings.isProduction ? 'Premium' :  'Basic'
 
     diagnosticSettings: [
       {
@@ -704,19 +705,7 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
     anonymousPullEnabled: false
     exportPolicyStatus: 'disabled'
     zoneRedundancy: deploymentSettings.isProduction ? 'Enabled' : 'Disabled'
-    publicNetworkAccess: (deploymentSettings.isProduction && deploymentSettings.isNetworkIsolated) ? 'Disabled' : 'Enabled'
-    privateEndpoints: deploymentSettings.isNetworkIsolated ? [
-      {
-        name: resourceNames.containerRegistryPrivateEndpoint
-        privateDnsZoneGroupName: dnsResourceGroupName
-        privateDnsZoneResourceIds: [
-          resourceId(subscription().subscriptionId, dnsResourceGroupName, 'Microsoft.Network/privateDnsZones', 'privatelink.azurecr.io')
-        ]
-        subnetResourceId: subnets[resourceNames.spokePrivateEndpointSubnet].id
-        service: 'registry'
-        tags: moduleTags
-      }
-    ] : null
+    publicNetworkAccess: deploymentSettings.isProduction ? 'Disabled' : 'Enabled'
     roleAssignments: [
       {
         principalId: deploymentSettings.principalId
@@ -732,6 +721,31 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
         principalId: appManagedIdentity.outputs.principal_id
         principalType: 'ServicePrincipal'
         roleDefinitionIdOrName: containerRegistryPullRoleId
+      }
+    ]
+  }
+}
+
+/*
+** Azure Container Registry role assignments
+** If the container registry was created in the hub, assign roles for the application identities.
+*/
+
+module containerRegistryRoleAssignments '../core/identity/container-registry-role-assignments.bicep' = if (deploymentSettings.isNetworkIsolated) {
+  name: 'application-container-registry-role-assignments'
+  scope: az.resourceGroup(resourceNames.hubResourceGroup)
+  params: {
+    name: resourceNames.containerRegistry
+    pushIdentities: [
+      {
+        principalId: ownerManagedIdentity.outputs.principal_id
+        principalType: 'ServicePrincipal'
+      }
+    ]
+    pullIdentities: [
+      {
+        principalId: appManagedIdentity.outputs.principal_id
+        principalType: 'ServicePrincipal'
       }
     ]
   }
@@ -768,7 +782,7 @@ module containerAppEnvironment './application-container-apps.bicep' = {
 output app_config_uri string = appConfiguration.outputs.app_config_uri
 output key_vault_name string = deploymentSettings.isNetworkIsolated ? resourceNames.keyVault : keyVault.outputs.name
 output redis_cache_name string = redis.outputs.name
-output container_registry_login_server string = isPrimaryLocation ? containerRegistry.outputs.loginServer : ''
+output container_registry_login_server string = deploymentSettings.isNetworkIsolated ? '' : containerRegistry.outputs.loginServer
 output service_bus_name string = serviceBusNamespace.outputs.name
 
 output owner_managed_identity_id string = ownerManagedIdentity.outputs.id
