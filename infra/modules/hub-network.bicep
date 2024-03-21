@@ -455,7 +455,7 @@ module sharedKeyVault '../core/security/key-vault.bicep' = {
 */
 
 module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' = {
-  name: 'application-container-registry'
+  name: 'shared-application-container-registry'
   scope: resourceGroup
 
   dependsOn: [
@@ -484,13 +484,11 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
     publicNetworkAccess: (deploymentSettings.isProduction && deploymentSettings.isNetworkIsolated) ? 'Disabled' : 'Enabled'
     privateEndpoints: deploymentSettings.isNetworkIsolated ? [
       {
-        name: resourceNames.containerRegistryPrivateEndpoint
         privateDnsZoneGroupName: resourceGroup.name
         privateDnsZoneResourceIds: [
           resourceId(subscription().subscriptionId, resourceGroup.name, 'Microsoft.Network/privateDnsZones', 'privatelink.azurecr.io')
         ]
         subnetResourceId: virtualNetwork.outputs.subnets[privateEndpointSubnet.name].id
-        service: 'registry'
         tags: moduleTags
       }
     ] : null

@@ -749,6 +749,15 @@ module containerRegistryRoleAssignments '../core/identity/container-registry-rol
   }
 }
 
+/*
+** A reference to the shared container registry deployed in the hub in network-isolated scenarios.
+*/
+
+resource sharedRegistry 'Microsoft.ContainerRegistry/registries@2023-06-01-preview' existing = if (deploymentSettings.isNetworkIsolated) {
+  name: resourceNames.containerRegistry
+  scope: az.resourceGroup(resourceNames.hubResourceGroup)
+}
+
 module containerAppEnvironment './application-container-apps.bicep' = {
   name: 'application-container-apps'
   scope: resourceGroup
@@ -758,7 +767,7 @@ module containerAppEnvironment './application-container-apps.bicep' = {
 
     // Dependencies
     appConfigurationName: appConfiguration.outputs.name
-    containerRegistryLoginServer: containerRegistry.outputs.loginServer
+    containerRegistryLoginServer: deploymentSettings.isNetworkIsolated ? sharedRegistry.properties.loginServer : containerRegistry.outputs.loginServer
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
     managedIdentityName: appManagedIdentity.outputs.name
     renderRequestServiceBusNamespace: serviceBusNamespace.outputs.name
@@ -778,7 +787,7 @@ module containerAppEnvironment './application-container-apps.bicep' = {
 output app_config_uri string = appConfiguration.outputs.app_config_uri
 output key_vault_name string = deploymentSettings.isNetworkIsolated ? resourceNames.keyVault : keyVault.outputs.name
 output redis_cache_name string = redis.outputs.name
-output container_registry_login_server string = deploymentSettings.isNetworkIsolated ? '' : containerRegistry.outputs.loginServer
+output container_registry_login_server string = deploymentSettings.isNetworkIsolated ? sharedRegistry.properties.loginServer : containerRegistry.outputs.loginServer
 output service_bus_name string = serviceBusNamespace.outputs.name
 
 output owner_managed_identity_id string = ownerManagedIdentity.outputs.id
