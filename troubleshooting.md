@@ -1,5 +1,5 @@
 # Troubleshooting
-This document helps with troubleshooting RWA deployment challenges.
+This document helps with troubleshooting MWA deployment challenges.
 
 ## Error: no project exists; to create a new project, run 'azd init'
 This error is most often reported when users try to run `azd` commands before running the `cd` command to switch to the directory where the repo was cloned.

@@ -2,7 +2,7 @@ targetScope = 'subscription'
 
 // ========================================================================
 //
-//  Relecloud Scenario of the Reliable Web Application (RWA)
+//  Relecloud Scenario of the Modern Web Application (MWA)
 //  Infrastructure description
 //  Copyright (C) 2023 Microsoft, Inc.
 //

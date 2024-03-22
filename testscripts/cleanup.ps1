@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Cleans up the Azure resources for the Reliable Web App pattern for a given azd environment.
+    Cleans up the Azure resources for the Modern Web App pattern for a given azd environment.
 .DESCRIPTION
     There are times that azd down doesn't work well.  At time of writing, this includes complex
     environments with multiple resource groups and networking.  To remedy this, this script removes
