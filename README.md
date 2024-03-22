@@ -9,8 +9,13 @@ This project has [a companion article in the Azure Architecture Center](https://
 - [Architecture](#architecture)
 - [Workflow](#workflow)
 - [Steps to deploy the reference implementation](#steps-to-deploy-the-reference-implementation)
+- [Changes from Reliable Web App](./CHANGES.md)
 - [Additional links](#additional-links)
 - [Data Collection](#data-collection)
+
+## Azure Architecture Center guidance
+
+This project has a [companion article in the Azure Architecture Center](https://aka.ms/eap/mwa/dotnet/doc) that describes design patterns and best practices for migrating to the cloud. We suggest you read it as it will give important context to the considerations applied in this implementation.
 
 ## Architecture
 
@@ -35,7 +40,11 @@ This description details the workflow for Relecloud's concert ticketing applicat
 - User authentication: Microsoft Entra ID handles user authentication, suitable for environments where accounts are centrally managed, enhancing security and control.
 - API interaction and token management: The front-end web app uses the MSAL library to obtain tokens for authenticated API calls, caching them in Azure Cache for Redis to optimize performance and manageability.
 - Payment and checkout flow: While this example doesn't process real payments, the web app captures payment information during checkout, demonstrating how a web app can handle sensitive data.
-- Purchase and ticket generation: The backend API processes purchase requests and generates tickets that are immediately accessible to users.
+- Purchase and ticket generation: The backend API processes purchase requests and queue a message in a Service Bus queue requesting the ticket image be rendered.
+   - The ticket rendering service will listen to the Service Bus queue for requests to render tickets.
+   - When a request is received, the service will render the ticket and store it in Azure Blob Storage.
+   - After rendering a ticket image, the ticket rendering service will queue a message into a different Service Bus queue to notify the backend web API that the ticket has been rendered.
+   - The web API listenes for incoming messages on the rendering complete Service Bus queue. When it receives a message, it updates the location of the ticket image in the database. Once this happens, users will be able to view their tickets in the Relecloud app.
 - Networking and access control: Azure Private DNS, Network Security Groups, and Azure Firewall tightly control the flow of traffic within the app's network, maintaining security and isolation.
 - Monitoring and telemetry: Application Insights provides monitoring and telemetry capabilities, enabling performance tracking and proactive issue resolution.
 - Configuration and secrets management: Initial configuration and sensitive information are loaded from Azure App Configuration and Azure Key Vault into the app's memory upon startup, minimizing access to sensitive data thereafter.
