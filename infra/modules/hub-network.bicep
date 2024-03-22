@@ -552,4 +552,4 @@ output firewall_ip_address string = enableFirewall ? firewall.outputs.internal_i
 output virtual_network_id string = virtualNetwork.outputs.id
 output virtual_network_name string = virtualNetwork.outputs.name
 output key_vault_name string = enableJumpHost ? sharedKeyVault.outputs.name : ''
-output container_registry_login_server string = containerRegistry.outputs.loginServer
+output container_registry_name string = containerRegistry.outputs.name

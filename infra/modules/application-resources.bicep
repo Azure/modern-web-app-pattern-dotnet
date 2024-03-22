@@ -115,6 +115,9 @@ param subnets object = {}
 @description('The settings for a pre-configured Azure Front Door that provides WAF for App Services.')
 param frontDoorSettings FrontDoorSettings
 
+@description('The name of the shared Azure Container Registry used in network isolated scenarios.')
+param sharedAzureContainerRegistry string = ''
+
 /*
 ** Settings
 */
@@ -725,6 +728,15 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
 }
 
 /*
+** A reference to the shared container registry deployed in the hub in network-isolated scenarios.
+*/
+
+resource sharedRegistry 'Microsoft.ContainerRegistry/registries@2023-06-01-preview' existing = if (deploymentSettings.isNetworkIsolated) {
+  name: sharedAzureContainerRegistry
+  scope: az.resourceGroup(resourceNames.hubResourceGroup)
+}
+
+/*
 ** Azure Container Registry role assignments
 ** If the container registry was created in the hub, assign roles for the application identities.
 */
@@ -733,7 +745,7 @@ module containerRegistryRoleAssignments '../core/identity/container-registry-rol
   name: 'application-container-registry-role-assignments'
   scope: az.resourceGroup(resourceNames.hubResourceGroup)
   params: {
-    name: resourceNames.containerRegistry
+    name: sharedRegistry.name
     pushIdentities: [
       {
         principalId: ownerManagedIdentity.outputs.principal_id
@@ -750,13 +762,8 @@ module containerRegistryRoleAssignments '../core/identity/container-registry-rol
 }
 
 /*
-** A reference to the shared container registry deployed in the hub in network-isolated scenarios.
+** Azure Container Apps managed environment
 */
-
-resource sharedRegistry 'Microsoft.ContainerRegistry/registries@2023-06-01-preview' existing = if (deploymentSettings.isNetworkIsolated) {
-  name: resourceNames.containerRegistry
-  scope: az.resourceGroup(resourceNames.hubResourceGroup)
-}
 
 module containerAppEnvironment './application-container-apps.bicep' = {
   name: 'application-container-apps'

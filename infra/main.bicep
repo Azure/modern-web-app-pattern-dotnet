@@ -428,6 +428,7 @@ module application './modules/application-resources.bicep' = {
     dnsResourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : ''
     subnets: isNetworkIsolated ? spokeNetwork.outputs.subnets : {}
     frontDoorSettings: frontdoor.outputs.settings
+    sharedAzureContainerRegistry: willDeployHubNetwork ? hubNetwork.outputs.container_registry_name : ''
 
     // Settings
     administratorUsername: administratorUsername
@@ -454,6 +455,7 @@ module application2 './modules/application-resources.bicep' =  if (isMultiLocati
     dnsResourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : ''
     subnets: isNetworkIsolated && isMultiLocationDeployment? spokeNetwork2.outputs.subnets : {}
     frontDoorSettings: frontdoor.outputs.settings
+    sharedAzureContainerRegistry: willDeployHubNetwork ? hubNetwork.outputs.container_registry_name : ''
 
     // Settings
     administratorUsername: administratorUsername
@@ -548,7 +550,7 @@ output SECONDARY_RESOURCE_GROUP string = isMultiLocationDeployment ? resourceGro
 output service_managed_identities object[] = application.outputs.service_managed_identities
 output service_web_endpoints string[] = application.outputs.service_web_endpoints
 output AZURE_OPS_VAULT_NAME string = isNetworkIsolated ? hubNetwork.outputs.key_vault_name : application.outputs.key_vault_name
-output AZURE_CONTAINER_REGISTRY_ENDPOINT string = isNetworkIsolated ? hubNetwork.outputs.container_registry_login_server : application.outputs.container_registry_login_server
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = application.outputs.container_registry_login_server
 
 // Local development values
 output APP_CONFIG_SERVICE_URI string = application.outputs.app_config_uri
