@@ -21,7 +21,7 @@ This project has a [companion article in the Azure Architecture Center](https://
 
 Relecloud aligned to a hub and spoke network topology in the production deployment architecture to centralize common resources. This network topology provided cost savings, enhanced security, and facilitated network integration (platform and hybrid):
 
-![architecture diagram](./assets/icons/reliable-web-app-dotnet-1.1.svg)
+![architecture diagram](./assets/images/mwa-architecture.png)
 
 This diagram describes the production deployment which is described in the [prod-deployment.md](./prod-deployment.md) file. The following steps below are for a [development deployment](./assets/images/reliable-web-app-dotnet-dev.svg) which is a simplified version.
 
