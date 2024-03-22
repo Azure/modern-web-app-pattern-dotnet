@@ -745,7 +745,7 @@ module containerRegistryRoleAssignments '../core/identity/container-registry-rol
   name: 'application-container-registry-role-assignments'
   scope: az.resourceGroup(resourceNames.hubResourceGroup)
   params: {
-    name: sharedRegistry.name
+    acrName: sharedRegistry.name
     pushIdentities: [
       {
         principalId: ownerManagedIdentity.outputs.principal_id
@@ -768,6 +768,11 @@ module containerRegistryRoleAssignments '../core/identity/container-registry-rol
 module containerAppEnvironment './application-container-apps.bicep' = {
   name: 'application-container-apps'
   scope: resourceGroup
+
+  dependsOn : [
+    containerRegistryRoleAssignments
+  ]
+
   params: {
     deploymentSettings: deploymentSettings
     tags: moduleTags

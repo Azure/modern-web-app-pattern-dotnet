@@ -29,7 +29,7 @@ type ApplicationIdentity = {
 // ========================================================================
 
 @description('The name of the Azure Container Registry to add role assignments for.')
-param name string
+param acrName string
 
 @description('The list of application identities to be granted push access to the Azure Container Registry.')
 param pushIdentities ApplicationIdentity[] = []
@@ -52,14 +52,14 @@ var containerRegistryPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 // ========================================================================
 
 resource registry 'Microsoft.ContainerRegistry/registries@2023-06-01-preview' existing = {
-  name: name
+  name: acrName
 }
 
 resource ownerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = [ for id in pushIdentities: if (!empty(id.principalId)) {
   name: guid(containerRegistryPushRoleId, id.principalId, registry.id, resourceGroup().name)
   scope: registry
   properties: {
-    roleDefinitionId: containerRegistryPushRoleId
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', containerRegistryPushRoleId)
     principalId: id.principalId
     principalType: id.principalType
   }
@@ -69,7 +69,7 @@ resource appRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' 
   name: guid(containerRegistryPullRoleId, id.principalId, registry.id, resourceGroup().name)
   scope: registry
   properties: {
-    roleDefinitionId: containerRegistryPullRoleId
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', containerRegistryPullRoleId)
     principalId: id.principalId
     principalType: id.principalType
   }
