@@ -138,12 +138,13 @@ var defaultDeploymentSettings = {
   isMultiLocationDeployment: isMultiLocationDeployment
   isProduction: isProduction
   isNetworkIsolated: isNetworkIsolated
-  isPrimaryLocation: true
   location: location
   name: environmentName
+  primaryLocation: location
   principalId: principalId
   principalType: principalType
   resourceToken: primaryResourceToken
+  secondaryLocation: azureSecondaryLocation
   stage: environmentType
   tags: {
     'azd-env-name': environmentName
@@ -228,7 +229,6 @@ module naming './modules/naming.bicep' = {
     deploymentSettings: primaryNamingDeployment
     differentiator: differentiator != 'none' ? differentiator : ''
     overrides: loadJsonContent('./naming.overrides.jsonc')
-    primaryLocation: location
   }
 }
 
@@ -238,7 +238,6 @@ module naming2 './modules/naming.bicep' = {
     deploymentSettings: secondaryNamingDeployment
     differentiator: differentiator != 'none' ? '${differentiator}2' : '2'
     overrides: loadJsonContent('./naming.overrides.jsonc')
-    primaryLocation: location
   }
 }
 
@@ -537,7 +536,6 @@ param enableTelemetry bool = true
 module telemetry './modules/telemetry.bicep' = if (enableTelemetry) {
   name: '${prefix}-telemetry'
   params: {
-    resourceGroupName: resourceGroups.outputs.application_resource_group_name
     deploymentSettings: primaryDeploymentSettings
   }
 }
