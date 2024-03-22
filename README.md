@@ -1,13 +1,11 @@
 # Modern web app pattern for .NET
-This reference implementation provides a production-grade web application that uses best practices from our guidance and gives developers concrete examples to build their own modern web application in Azure.
 
-The modern web app pattern shows you how business goals influence incremental changes for web apps deployed to the cloud. It defines the implementation guidance you need to modernize web apps the right way. The modern web app pattern demonstrates how existing functionality changes, and is refactored, using the Strangler Fig pattern as business scenarios ask web apps to add new features and update non-functional requirements. It shows you how to use cloud design patterns in your code and choose managed services so that you can rapidly iterate in the cloud. Here's an outline of the contents in this readme:
+> :mega: **Got feedback?** Fill out [this survey](https://aka.ms/eap/mwa/dotnet/survey) to help us shape the future of Enterprise App Patterns and understand whether we're focusing on the business goals and features important to you. [Microsoft Privacy Statement](https://go.microsoft.com/fwlink/?LinkId=521839)
 
-<!-- content lives in GH until published-->
-- Guidance
-    - [Plan the implementation](./guide/plan-the-implementation.md)
-    - [Apply the pattern](./guide/apply-the-pattern.md)
-- [Azure Architecture Center guidance](#azure-architecture-center-guidance)
+The reference implementation provides a production-grade web application that uses best practices from our guidance and gives developers concrete examples to build their own Modern Web Application in Azure. This repository specifically demonstrates a concert ticketing application for the fictional company Relecloud, embodying the modern web app pattern with a focus on .NET technologies. It guides developers through a simulated migration from an on-premises ASP.NET application to Azure, detailing the architectural changes and enhancements that capitalize on the cloud's strengths during the initial adoption phase. 
+
+This project has [a companion article in the Azure Architecture Center](https://aka.ms/eap/mwa/dotnet/doc) that describes design patterns and best practices <!--and [a six-part video series (YouTube)](https://aka.ms/eap/mwa/dotnet/videos) that details the modern web app pattern for .NET web app -->. Here's an outline of the contents in this readme:
+
 - [Architecture](#architecture)
 - [Workflow](#workflow)
 - [Steps to deploy the reference implementation](#steps-to-deploy-the-reference-implementation)
@@ -21,78 +19,58 @@ This project has a [companion article in the Azure Architecture Center](https://
 
 ## Architecture
 
-![Diagram showing the architecture of the reference implementation.](./assets/images/reliable-web-app-dotnet.svg)
+Relecloud aligned to a hub and spoke network topology in the production deployment architecture to centralize common resources. This network topology provided cost savings, enhanced security, and facilitated network integration (platform and hybrid):
 
-This diagram describes the production deployment which is described in the [prod-deployment.md](./prod-deployment.md) file. The steps below deploy the simplified [development version](./assets/images/reliable-web-app-dotnet-dev.svg) of the application infrastructure.
+![architecture diagram](./assets/icons/modern-web-app-dotnet.svg)
+
+This diagram describes the production deployment which is described in the [prod-deployment.md](./prod-deployment.md) file. The following steps below are for a [development deployment](./assets/icons/modern-web-app-dotnet-dev.svg) which is a simplified version.
+
+-	Cost efficiency: The hub acts as a central point for shared resources, promoting cost-effective resource reuse. For instance, Azure Bastion is a shared service in the hub, providing secure and cost-effective remote access without the need for separate deployments for each application.
+-	Traffic control and security: Network traffic is managed and secured using Network Security Groups and Route tables in each subnet, creating secure boundaries for Azure resources. Private endpoints add an extra layer of security, and a jump box allows for deployment within these boundaries, maintaining local IP access to resources.
+-	Network integration: The topology supports network integrations for data transfer across applications and hybrid scenarios. While the reference architecture doesn't include ExpressRoute or Azure VPN Gateway, these should be considered for applications requiring hybrid network connections.
 
 ## Workflow
-> ⚠️ Pending documentation of workflow - (Business reporting experience) covered by #1871276
 
-- Azure Front Door routes traffic based on availability of the primary region. When the primary region is unavailable, it will route traffic to the secondary region.
-- When Front Door passes the request to the Web App, it will pass through the Azure Web Application Firewall. The Azure Web Application Firewall will evaluate the request and protect the web app against common security attacks.
-- Once the traffic reaches the front-end web app, users will be shown the home page. They can view these pages without authenticating.
-- Navigating to the Upcoming Concerts page on the front-end web app will trigger a request to the backend web API app for details about upcoming concerts.
-- The backend web API app will retrieve details about the upcoming concerts from the Azure SQL Database using a SQL query. The results will be formatted as a JSON response and returned to the front-end web app.
-- When the front-end web app receives results from the API, it will use the razor template engine to render the HTML page shown to the user requesting a list of concerts.
-- Once a user adds a concert ticket to their shopping cart, the front-end web app will start interacting with Azure Cache for Redis. When a concert ticket is added to the cart, the web app will save that information in Redis as part of a session object for the current user. Saving the session to an external datastore enables the web app to load balance traffic more evenly and handle horizontal scaling events without losing the customer's data.
-- As the user proceeds to check out, the front-end web app will require authentication with Microsoft Entra ID. This scenario is for a call center that places orders on behalf of customers, so the accounts in use are managed by Relecloud and are not self-managed.
-- After authenticating to Microsoft Entra ID, the front-end web app will receive a token that represents the current user.
-- As the user proceeds with checkout, the web app will collect payment data. Payment data is not sent anywhere for this sample.
-- When the payment data is submitted for approval, the ticket will be purchased. Logic to handle this is located in the backend web API.
-- Prior to calling the API, the front-end web app requests a token from the MSAL library to call the backend web API app as an authenticated user.
-- When the front-end web app has a token, it will cache it in Azure Cache for Redis. If it does not have a token, it will request one from Microsoft Entra ID and then save it in Azure Cache for Redis.
-- Once the ticket purchase request is sent to the backend web API, the API will queue a message in a Service Bus queue requesting the ticket image be rendered.
-- After the ticket purchase is completed successfully, the user will be redirected to their tickets page where they can see a list of the tickets they have purchased. These tickets will be available once rendering is completed. This is usually fast, but may vary depending on load on the ticket rendering service.
-- The ticket rendering service will listen to the Service Bus queue for requests to render tickets. When a request is received, the service will render the ticket and store it in Azure Blob Storage.
-- After rendering a ticket image, the ticket rendering service will queue a message into a different Service Bus queue to notify the backend web API that the ticket has been rendered.
-- The web API listenes for incoming messages on the rendering complete Service Bus queue. When it receives a message, it updates the location of the ticket image in the database. Once this happens, users will be able to view their tickets in the Relecloud app.
-- As information flows between services, the Azure network handles traffic routing.
-  - Traffic travels between Azure resources across private endpoints by using Azure Private DNS to lookup the correct IP addresses. This enables the system to block public network traffic and use a single v-net to manage traffic between these systems.
-  - Traffic into the App Service is only allowed from Azure Front Door. Traffic out of the App Service is sent through Azure Firewall for routing and controlled by subnet with Network security groups.
-  - A jump host VM and Azure Bastion are included to provide access to Azure resources that have enabled network isolation.
-  - As the front-end and backend web apps process requests, they send data to Application Insights to monitor information about processing web requests.
-  - When the web app is started for the first time, it loads configuration data from App Config Service and Azure Key Vault. This information is saved in the web app's memory and is not accessed afterwards.
-
-## Prerequisites
-
-We recommend that you use a Dev Container to deploy this application.  The requirements are as follows:
-
-- [Azure Subscription](https://azure.microsoft.com/pricing/member-offers/msdn-benefits-details/).
-- [Visual Studio Code](https://code.visualstudio.com/).
-- [Docker Desktop](https://www.docker.com/get-started/).
-- [Permissions to register an application in Microsoft Entra ID](https://learn.microsoft.com/azure/active-directory/develop/quickstart-register-app).
-- Visual Studio Code [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
-
-If you do not wish to use a Dev Container, please refer to the [prerequisites](prerequisites.md) for detailed information on how to set up your development system to build, run, and deploy the application.
+This description details the workflow for Relecloud's concert ticketing application. It highlights key components and functionality to help you emulate its design:
+ 
+- Global traffic routing: Azure Front Door acts as a global traffic manager, routing users to the primary region for optimal performance and failing over to a secondary region during outages for uninterrupted service.
+- Security inspection: Incoming traffic is inspected by Azure Web Application Firewall to protect against web vulnerabilities before reaching the web app.
+- Static and dynamic content delivery: Users receive static content, like the home page, immediately upon request. Dynamic content, such as 'Upcoming Concerts', is generated by making API calls to the backend, which fetches data from Azure SQL Database and returns it in a JSON format.
+- Session state management: User sessions, including shopping cart data, are managed by Azure Cache for Redis, ensuring persistence and consistency across scale-out events.
+- User authentication: Microsoft Entra ID handles user authentication, suitable for environments where accounts are centrally managed, enhancing security and control.
+- API interaction and token management: The front-end web app uses the MSAL library to obtain tokens for authenticated API calls, caching them in Azure Cache for Redis to optimize performance and manageability.
+- Payment and checkout flow: While this example doesn't process real payments, the web app captures payment information during checkout, demonstrating how a web app can handle sensitive data.
+- Purchase and ticket generation: The backend API processes purchase requests and queue a message in a Service Bus queue requesting the ticket image be rendered.
+   - The ticket rendering service will listen to the Service Bus queue for requests to render tickets.
+   - When a request is received, the service will render the ticket and store it in Azure Blob Storage.
+   - After rendering a ticket image, the ticket rendering service will queue a message into a different Service Bus queue to notify the backend web API that the ticket has been rendered.
+   - The web API listenes for incoming messages on the rendering complete Service Bus queue. When it receives a message, it updates the location of the ticket image in the database. Once this happens, users will be able to view their tickets in the Relecloud app.
+- Networking and access control: Azure Private DNS, Network Security Groups, and Azure Firewall tightly control the flow of traffic within the app's network, maintaining security and isolation.
+- Monitoring and telemetry: Application Insights provides monitoring and telemetry capabilities, enabling performance tracking and proactive issue resolution.
+- Configuration and secrets management: Initial configuration and sensitive information are loaded from Azure App Configuration and Azure Key Vault into the app's memory upon startup, minimizing access to sensitive data thereafter.
 
 ## Steps to deploy the reference implementation
 
-This section describes the deployment steps for the reference implementation of a modern web application pattern with .NET on Microsoft Azure. There are nine steps, including teardown.
-
-For users familiar with the deployment process, you can use the following list of the deployments commands as a quick reference. The commands assume you have logged into Azure through the Azure CLI and Azure Developer CLI and have selected a suitable subscription:
-
-```shell
-git clone https://github.com/Azure/modern-web-app-pattern-dotnet.git
-cd modern-web-app-pattern-dotnet
-azd env new dotnetwebapp
-azd env set AZURE_LOCATION westus3
-azd up
-```
-
 The following detailed deployment steps assume you are using a Dev Container inside Visual Studio Code.
+
+> For your convenience, we use Dev Containers with a fully-featured development environment. If you prefer to use Visual Studio, we recommend installing the necessary [dependencies](./prerequisites.md) and skip to the deployment instructions starting in [Step 3](#3-log-in-to-azure).
 
 ### 1. Clone the repo
 
-Clone the repository from GitHub:
+> For Windows users, we recommend using Windows Subsystem for Linux (WSL) to [improve Dev Container performance](https://code.visualstudio.com/remote/advancedcontainers/improve-performance).
+
+```pwsh
+wsl
+```
+
+Clone the repository from GitHub into the WSL 2 filesystem using the following command:
 
 ```shell
 git clone https://github.com/Azure/modern-web-app-pattern-dotnet.git
 cd modern-web-app-pattern-dotnet
 ```
 
-### 2. Open Dev Container in Visual Studio Code (optional)
-
-> For your convenience, we use DevContainers with a fully-featured development environment. If you prefer to use Visual Studio, we recommend installing the necessary [dependencies](./prerequisites.md) and following the deployment instructions below.
+### 2. Open Dev Container in Visual Studio Code
 
 If required, ensure Docker Desktop is started and enabled for your WSL terminal [more details](https://learn.microsoft.com/windows/wsl/tutorials/wsl-containers#install-docker-desktop). Open the repository folder in Visual Studio Code. You can do this from the command prompt:
 
@@ -114,34 +92,14 @@ Once the command palette is open, search for `Dev Containers: Rebuild and Reopen
 
 ![WSL Ubuntu](assets/images/vscode-reopen-in-container-command.png)
 
-### 3. Create a new environment
-
-Use the VS Code terminal to run the following commands to create a new environment.
-
-The environment name should be less than 18 characters and must be comprised of lower-case, numeric, and dash characters (for example, `dotnetwebapp`).  The environment name is used for resource group naming and specific resource naming. Also, select a password for the admin user of the database.
-
-If not using PowerShell 7+, run the following command:
-
-```shell
-pwsh
-```
-
-Run the following commands to set these values and create a new environment:
-
-```pwsh
-azd env new dotnetwebapp
-```
-
-You can substitute the environment name with your own value.
-
-By default, Azure resources are sized for a "development" mode. If doing a Production deployment, see use the [prod Deployment](./prod-deployment.md) instructions for more detail.
-
-### 4. Log in to Azure
+### 3. Log in to Azure
 
 Before deploying, you must be authenticated to Azure and have the appropriate subscription selected. Run the following command to authenticate:
 
-```pwsh
-azd auth login
+If you are not using PowerShell 7+, run the following command (you can use [$PSVersionTable.PSVersion](https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_powershell_editions) to check your version):
+
+```shell
+pwsh
 ```
 
 ```pwsh
@@ -152,87 +110,66 @@ Import-Module Az.Resources
 Connect-AzAccount
 ```
 
-Each command will open a browser allowing you to authenticate.  To list the subscriptions you have access to:
-
-```pwsh
-Get-AzSubscription
-```
-
-To set the active subscription:
+Set the subscription to the one you want to use (you can use [Get-AzSubscription](https://learn.microsoft.com/powershell/module/az.accounts/get-azsubscription?view=azps-11.3.0) to list available subscriptions):
 
 ```pwsh
 $AZURE_SUBSCRIPTION_ID="<your-subscription-id>"
-azd env set AZURE_SUBSCRIPTION_ID $AZURE_SUBSCRIPTION_ID
+```
+
+```pwsh
 Set-AzContext -SubscriptionId $AZURE_SUBSCRIPTION_ID
 ```
 
-### 5. Select a region for deployment
-
-The application can be deployed in either a single region or multi-region manner. You can find a list of available Azure regions by running the following Azure CLI command.
-
-> ```pwsh
-> (Get-AzLocation).Location
-> ```
-
-Set the `AZURE_LOCATION` to the primary region:
+Use the next command to login with the Azure Dev CLI (AZD) tool:
 
 ```pwsh
-azd env set AZURE_LOCATION westus3
+azd auth login
 ```
 
-### 6. Provision the application
 
-Run the following command to create the infrastructure (about 15-minutes to provision):
+### 4. Create a new environment
+
+Next we provide the AZD tool with variables that it uses to create the deployment. The first thing we initialize is the AZD environment with a name.
+
+The environment name should be less than 18 characters and must be comprised of lower-case, numeric, and dash characters (for example, `dotnetwebapp`).  The environment name is used for resource group naming and specific resource naming.
+
+By default, Azure resources are sized for a development deployment. If doing a production deployment, see the [production deployment](./prod-deployment.md) instructions for more detail.
 
 ```pwsh
-azd provision --no-prompt
+azd env new <pick_a_name>
 ```
 
-**Create App Registrations**
-
-Relecloud devs have automated the process of creating Azure
-AD resources that support the authentication features of the
-web app. They use the following command to create two new
-App Registrations within Microsoft Entra ID. The command is also
-responsible for saving configuration data to Key Vault and
-App Configuration so that the web app can read this data
-(about 3-minutes to register).
+Select the subscription that will be used for the deployment:
 
 ```pwsh
-./infra/scripts/postprovision/call-create-app-registrations.ps1
+azd env set AZURE_SUBSCRIPTION_ID $AZURE_SUBSCRIPTION_ID
 ```
 
-**Set Configuration**
-
-Relecloud devs have automated the process of configuring the environment.
+Set the `AZURE_LOCATION` (Run `(Get-AzLocation).Location` to see a list of locations):
 
 ```pwsh
-./infra/scripts/predeploy/call-set-app-configuration.ps1
+azd env set AZURE_LOCATION <pick_a_region>
 ```
 
-### 7. Deploy the application
+### 5. Create the Azure resources and deploy the code
 
-Run the following command to deploy the code to the created infrastructure (about 4-minutes to deploy):
+Run the following command to create the Azure resources and deploy the code (about 15-minutes to complete):
 
 ```pwsh
-azd deploy
+azd up
 ```
 
-The provisioning and deployment process can take anywhere from 20 minutes to over an hour, depending on system load and your bandwidth.
+### 6. Open and use the application
 
-### 8. Open and use the application
+Use the URL displayed in the console output to launch the web application that you have deployed:
 
-Use the following to find the URL for the Relecloud application that you have deployed:
+![screenshot of web app home page](assets/images/WebAppHomePage.png)
 
-```pwsh
-(azd env get-values --output json | ConvertFrom-Json).WEB_URI
-```
+You can learn more about the web app by reading the [Pattern Simulations](demo.md) documentation.
 
-![screenshot of Relecloud app home page](assets/images/WebAppHomePage.png)
+### 7. Tear down the deployment
 
-### 9. Teardown
-
-To tear down the deployment, run the following command. The `--purge` option makes sure that 'soft-delete' resources like Key Vault and App Configuration are fully removed.
+Run the following command to tear down the deployment:
 
 ```pwsh
 azd down --purge --force
@@ -240,15 +177,23 @@ azd down --purge --force
 
 ## Additional links
 
-- [Plan the implementation](plan-the-implementation.md)
-- [Apply the pattern](apply-the-pattern.md)
 - [Known issues](known-issues.md)
 - [Troubleshooting](troubleshooting.md)
-- [Developer patterns](simulate-patterns.md)
+- [Pattern Simulations](demo.md)
+- [Developer Experience](developer-experience.md)
+- [Calculating SLA](./assets/sla-calculation.md)
 - [Find additional resources](additional-resources.md)
 - [Report security concerns](SECURITY.md)
 - [Find Support](SUPPORT.md)
 - [Contributing](CONTRIBUTING.md)
+
+## Trademarks
+
+This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
+trademarks or logos is subject to and must follow 
+[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
+Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
+Any use of third-party trademarks or logos are subject to those third-party's policies.
 
 ## Data Collection
 
@@ -258,4 +203,4 @@ The software may collect information about you and your use of the software and 
 
 Telemetry collection is on by default.
 
-To opt out, run the following command `azd env set ENABLE_TELEMETRY` to `false` in your environment.
+To opt out, run the following command `azd env set ENABLE_TELEMETRY` to `false` in your AZD environment.

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All Rights Reserved.
+﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
 using Azure.Core;
@@ -66,6 +66,8 @@ namespace Relecloud.Web.Api
             // The ApplicationInitializer is injected in the Configure method with all its dependencies and will ensure
             // they are all properly initialized upon construction.
             services.AddScoped<ApplicationInitializer, ApplicationInitializer>();
+            
+            services.AddHealthChecks();
         }
 
         private void AddMicrosoftEntraIdServices(IServiceCollection services)
@@ -85,7 +87,7 @@ namespace Relecloud.Web.Api
             else
             {
                 services.AddScoped<ITicketManagementService, TicketManagementService>();
-
+                
                 // Reading a feature flag is an asynchronous operation, so it's not possible
                 // to register an ITicketRenderingService provider method directly. Instead,
                 // use a factory pattern to retrieve the service asynchronously.
@@ -218,6 +220,8 @@ namespace Relecloud.Web.Api
 
             app.UseAuthentication();
             app.UseAuthorization();
+            
+            app.MapHealthChecks("/healthz");
 
             app.MapGet("/", () => "Default Web API endpoint");
             app.MapControllers();

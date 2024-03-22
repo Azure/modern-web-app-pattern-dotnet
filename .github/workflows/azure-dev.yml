@@ -1,7 +1,6 @@
 # This file is part of the sample that  you can use to build your devOps automation.
 # See the README markdown file for further details
 
-name: MWA- Release
 on:
   workflow_dispatch:
 
@@ -9,88 +8,40 @@ on:
 #   pull_request:
 #     types: [opened, reopened]
 
-# https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Clinux#set-up-azure-login-with-openid-connect-authentication
-permissions:
-  id-token: write
-  contents: read
-
 jobs:
-  QA:
+  build:
     runs-on: ubuntu-latest
-    environment: QA
     container:
       image: mcr.microsoft.com/azure-dev-cli-apps:1.5.0
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         
-      - name: Log in with azd (Federated Credentials)
+      # login to run ado commands such provision, deploy, and down
+      - name: Log in with Azure (Client Credentials)
+        if: ${{ env.AZURE_CREDENTIALS != '' }}
         run: |
-          azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
+          $info = $Env:AZURE_CREDENTIALS | ConvertFrom-Json -AsHashtable;
+          Write-Host "::add-mask::$($info.clientSecret)"
 
-      - name: Azure QA Provision
+          azd login `
+            --client-id "$($info.clientId)" `
+            --client-secret "$($info.clientSecret)" `
+            --tenant-id "$($info.tenantId)"
+        shell: pwsh
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+          
+      - name: Azure Dev Provision
         run: azd provision --no-prompt
         env:
-          AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}qa
+          AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}dev
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          IS_RUN_AS_SERVICEPRINCIPAL: true
 
-      # Need to azd login again - token seems to expire or be wiped out by previous command.  gh issue: https://github.com/Azure/azure-dev/issues/1740
-      - name: Log in with azd (Federated Credentials)
-        run: |
-          azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
-
-      - name: Set AZD resource group
-        # temporary work around for known issue with multiple resource groups
-        run:  azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}qa-rg
-
-      - name: Azure QA Deploy
+      - name: Azure Dev Deploy
         run: azd deploy --no-prompt
         env:
-          AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}qa
-          AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Quality Assurance Review
-        run: echo 'TODO - perform test automation here'
-
-
-  PROD:
-    runs-on: ubuntu-latest
-    needs: QA
-    ## prod env should be configured to require reviewer approvals in github portal
-    environment: PROD
-    container:
-      image: mcr.microsoft.com/azure-dev-cli-apps:1.5.0
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Log in with azd (Federated Credentials)
-        run: |
-          azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
-
-      - name: Azure Prod Provision
-        run: azd provision --no-prompt
-        env:
-          AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}prod
-          AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          IS_RUN_AS_SERVICEPRINCIPAL: true
-
-      # Need to azd login again - token seems to expire or be wiped out by previous command. 
-      - name: Log in with azd (Federated Credentials)
-        run: |
-          azd login  --client-id ${{ secrets.AZURE_CLIENT_ID }}  --federated-credential-provider "github"  --tenant-id ${{ secrets.AZURE_TENANT_ID }}
-
-      - name: Set AZD resource group
-        # temporary work around for known issue with multiple resource groups
-        run:  azd env set AZURE_RESOURCE_GROUP ${{ secrets.AZURE_ENV_NAME }}prod-rg
-
-      - name: Azure Prod Deploy
-        run: azd deploy --no-prompt
-        env:
-          AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}prod
+          AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}dev
           AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}

@@ -22,7 +22,7 @@ targetScope = 'subscription'
 type DeploymentSettings = {
   @description('If \'true\', then two regional deployments will be performed.')
   isMultiLocationDeployment: bool
-
+  
   @description('If \'true\', use production SKUs and settings.')
   isProduction: bool
 
@@ -47,6 +47,9 @@ type DeploymentSettings = {
   @description('The type of the \'principalId\' property.')
   principalType: 'ServicePrincipal' | 'User'
 
+  @description('The token to use for naming resources.  This should be unique to the deployment.')
+  resourceToken: string
+
   @description('The development stage for this application')
   stage: 'dev' | 'prod'
 
@@ -69,11 +72,11 @@ param deploymentSettings DeploymentSettings
 */
 @secure()
 @minLength(12)
-@description('The password for the administrator account.  This will be used for the jump host, SQL server, and anywhere else a password is needed for creating a resource.')
+@description('The password for the administrator account.  This will be used for the jump box, SQL server, and anywhere else a password is needed for creating a resource.')
 param administratorPassword string = newGuid()
 
 @minLength(8)
-@description('The username for the administrator account on the jump host.')
+@description('The username for the administrator account on the jump box.')
 param administratorUsername string = 'adminuser'
 
 @secure()
@@ -99,10 +102,10 @@ param redisCacheNamePrimary string
 @description('Name of the second Azure Cache for Redis.')
 param redisCacheNameSecondary string
 
-@description('Name of the primary resource group containing application resources such as Azure Cache for Redis and Azure Service Bus.')
+@description('Name of the resource group containing Azure Cache for Redis.')
 param applicationResourceGroupNamePrimary string
 
-@description('Name of the secondary resource group containing application resources such as Azure Cache for Redis and Azure Service Bus.')
+@description('Name of the resource group containing Azure Cache for Redis.')
 param applicationResourceGroupNameSecondary string
 
 @description('Name of the primary Service Bus namespace.')
@@ -201,33 +204,33 @@ resource existingKeyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
 // AZURE MODULES
 // ========================================================================
 
-module writeJumpHostCredentialsToKeyVault '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isNetworkIsolated) {
-  name: 'hub-write-jumphost-credentials'
+module writeJumpBoxCredentialsToKeyVault '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isNetworkIsolated) {
+  name: 'hub-write-jumpbox-credentials-${deploymentSettings.resourceToken}'
   scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
     secrets: [
-      { key: 'Jumphost--AdministratorPassword', value: administratorPassword          }
-      { key: 'Jumphost--AdministratorUsername', value: administratorUsername          }
-      { key: 'Jumphost--ComputerName',          value: resourceNames.hubJumphost }
+      { key: 'Jumpbox--AdministratorPassword', value: administratorPassword          }
+      { key: 'Jumpbox--AdministratorUsername', value: administratorUsername          }
+      { key: 'Jumpbox--ComputerName',          value: resourceNames.hubJumpbox }
     ]
   }
 }
 
 module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = {
-  name: 'write-sql-admin-info-to-keyvault'
+  name: 'write-sql-admin-info-to-keyvault-${deploymentSettings.resourceToken}'
   scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
     secrets: [
-      { key: 'Relecloud--SqlAdministratorUsername', value: administratorUsername }
-      { key: 'Relecloud--SqlAdministratorPassword', value: databasePassword }
+      { key: 'Application--SqlAdministratorUsername', value: administratorUsername }
+      { key: 'Application--SqlAdministratorPassword', value: databasePassword }
     ]
   }
 }
 
 module writePrimaryRedisSecret '../core/security/key-vault-secrets.bicep' = {
-  name: 'write-primary-redis-secret-to-keyvault'
+  name: 'write-primary-redis-secret-to-keyvault-${deploymentSettings.resourceToken}'
   scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
@@ -238,7 +241,7 @@ module writePrimaryRedisSecret '../core/security/key-vault-secrets.bicep' = {
 }
 
 module writeSecondaryRedisSecret '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isMultiLocationDeployment) {
-  name: 'write-secondary-redis-secret-to-keyvault'
+  name: 'write-secondary-redis-secret-to-keyvault-${deploymentSettings.resourceToken}'
   scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
@@ -249,7 +252,7 @@ module writeSecondaryRedisSecret '../core/security/key-vault-secrets.bicep' = if
 }
 
 module writePrimaryRenderQueueConnectionString '../core/security/key-vault-secrets.bicep' = {
-  name: 'write-primary-render-queue-connection-string'
+  name: 'write-primary-render-queue-connection-string-${deploymentSettings.resourceToken}'
   scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
@@ -260,7 +263,7 @@ module writePrimaryRenderQueueConnectionString '../core/security/key-vault-secre
 }
 
 module writeSecondaryRenderQueueConnectionString '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isMultiLocationDeployment) {
-  name: 'write-secondary-render-queue-connection-string'
+  name: 'write-secondary-render-queue-connection-string-${deploymentSettings.resourceToken}'
   scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
@@ -273,8 +276,8 @@ module writeSecondaryRenderQueueConnectionString '../core/security/key-vault-sec
 // ======================================================================== //
 // Microsoft Entra Application Registration placeholders
 // ======================================================================== //
-module writeAppRegistrationSecrets '../core/security/key-vault-secrets.bicep' = [ for secretName in listOfAppConfigSecrets: {
-  name: 'write-temp-kv-secret-${secretName}'
+module writeAppRegistrationSecrets '../core/security/key-vault-secrets.bicep' = [ for (secretName, index) in listOfAppConfigSecrets: {
+  name: 'temp-kv-secret-${index}-${deploymentSettings.resourceToken}'
   scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
@@ -288,9 +291,9 @@ module writeAppRegistrationSecrets '../core/security/key-vault-secrets.bicep' = 
 // Grant reader permissions for the web apps to access the key vault
 // ======================================================================== //
 
-module grantSecretsUserAccessBySecretName './grant-secret-user.bicep' = [ for secretName in listOfSecretNames: {
+module grantSecretsUserAccessBySecretName './grant-secret-user.bicep' = [ for (secretName, index) in listOfSecretNames: {
   scope: existingKvResourceGroup
-  name: take('grant-kv-access-for-${secretName}', 64)
+  name: 'grant-kv-access-for-${index}-${deploymentSettings.resourceToken}'
   params: {
     keyVaultName: existingKeyVault.name
     readerIdentities: readerIdentities

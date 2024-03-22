@@ -20,7 +20,7 @@ targetScope = 'subscription'
 type DeploymentSettings = {
   @description('If \'true\', then two regional deployments will be performed.')
   isMultiLocationDeployment: bool
-
+  
   @description('If \'true\', use production SKUs and settings.')
   isProduction: bool
 
@@ -44,6 +44,9 @@ type DeploymentSettings = {
 
   @description('The type of the \'principalId\' property.')
   principalType: 'ServicePrincipal' | 'User'
+
+  @description('The token to use for naming resources.  This should be unique to the deployment.')
+  resourceToken: string
 
   @description('The development stage for this application')
   stage: 'dev' | 'prod'
@@ -96,23 +99,10 @@ param firewallInternalIpAddress string = ''
 /*
 ** Settings
 */
-@secure()
-@minLength(8)
-@description('The password for the administrator account on the jump host.')
-param administratorPassword string = newGuid()
-
-@minLength(8)
-@description('The username for the administrator account on the jump host.')
-param administratorUsername string = 'adminuser'
 
 @description('The CIDR block to use for the address prefix of this virtual network.')
 param addressPrefix string = '10.0.16.0/20'
 
-@description('If true, create a subnet for Devops resources')
-param createDevopsSubnet bool = false
-
-@description('If enabled, a Windows 11 jump host will be deployed.  Ensure you enable the bastion host as well.')
-param enableJumpHost bool = false
 
 
 // ========================================================================
@@ -309,16 +299,9 @@ var routeTableSettings = enableFirewall ? {
   routeTable: { id: routeTable.outputs.id }
 } : {}
 
-var devopsSubnet = createDevopsSubnet ? [{
-  name: resourceNames.spokeDevopsSubnet
-  properties: {
-    addressPrefix: subnetPrefixes[6]
-    privateEndpointNetworkPolicies: 'Disabled'
-  }
-}] : []
-
 // True if deploying into the primary region in a multi-region deployment, otherwise false
 var isPrimaryLocation = deploymentSettings.location == deploymentSettings.primaryLocation
+
 
 // ========================================================================
 // AZURE MODULES
@@ -329,7 +312,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing 
 }
 
 module apiInboundNSG '../core/network/network-security-group.bicep' = {
-  name: isPrimaryLocation ? 'spoke-api-inbound-nsg-0' : 'spoke-api-inbound-nsg-1'
+  name: 'spoke-api-inbound-nsg-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.spokeApiInboundNSG
@@ -349,7 +332,7 @@ module apiInboundNSG '../core/network/network-security-group.bicep' = {
 }
 
 module apiOutboundNSG '../core/network/network-security-group.bicep' = {
-  name: isPrimaryLocation ? 'spoke-api-outbound-nsg-0' : 'spoke-api-outbound-nsg-1'
+  name: 'spoke-api-outbound-nsg-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.spokeApiOutboundNSG
@@ -368,7 +351,7 @@ module apiOutboundNSG '../core/network/network-security-group.bicep' = {
 }
 
 module privateEndpointNSG '../core/network/network-security-group.bicep' = {
-  name: isPrimaryLocation ? 'spoke-pep-nsg-0' : 'spoke-pep-nsg-0'
+  name: 'spoke-pep-nsg-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.spokePrivateEndpointNSG
@@ -389,7 +372,7 @@ module privateEndpointNSG '../core/network/network-security-group.bicep' = {
 }
 
 module webInboundNSG '../core/network/network-security-group.bicep' = {
-  name: isPrimaryLocation ? 'spoke-web-inbound-nsg-0' : 'spoke-web-inbound-nsg-1'
+  name: 'spoke-web-inbound-nsg-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.spokeWebInboundNSG
@@ -409,7 +392,7 @@ module webInboundNSG '../core/network/network-security-group.bicep' = {
 }
 
 module webOutboundNSG '../core/network/network-security-group.bicep' = {
-  name: isPrimaryLocation ? 'spoke-web-outbound-nsg-0' : 'spoke-web-outbound-nsg-1'
+  name: 'spoke-web-outbound-nsg-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.spokeWebOutboundNSG
@@ -454,7 +437,7 @@ module containerAppsEnvironmentNSG '../core/network/network-security-group.bicep
 }
 
 module virtualNetwork '../core/network/virtual-network.bicep' = {
-  name: isPrimaryLocation ? 'spoke-virtual-network-0' : 'spoke-virtual-network-1'
+  name: 'spoke-virtual-network-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.spokeVirtualNetwork
@@ -467,7 +450,7 @@ module virtualNetwork '../core/network/virtual-network.bicep' = {
     // Settings
     addressPrefix: addressPrefix
     diagnosticSettings: diagnosticSettings
-    subnets: union([
+    subnets: [
       {
         name: resourceNames.spokePrivateEndpointSubnet
         properties: {
@@ -518,13 +501,12 @@ module virtualNetwork '../core/network/virtual-network.bicep' = {
           networkSecurityGroup: { id: containerAppsEnvironmentNSG.outputs.id }
           privateEndpointNetworkPolicies: 'Enabled'
         }, routeTableSettings)
-      }
-    ], devopsSubnet)
+      }]
   }
 }
 
 module routeTable '../core/network/route-table.bicep' = if (enableFirewall) {
-  name: isPrimaryLocation ? 'spoke-route-table-0' : 'spoke-route-table-1'
+  name: 'spoke-route-table-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.spokeRouteTable
@@ -545,25 +527,6 @@ module routeTable '../core/network/route-table.bicep' = if (enableFirewall) {
   }
 }
 
-module jumphost '../core/compute/windows-jumphost.bicep' = if (enableJumpHost) {
-  name: isPrimaryLocation ? 'hub-jumphost-0' : 'hub-jumphost-1'
-  scope: resourceGroup
-  params: {
-    name: resourceNames.hubJumphost
-    location: deploymentSettings.location
-    tags: moduleTags
-
-    // Dependencies
-    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
-    subnetId: virtualNetwork.outputs.subnets[resourceNames.spokeDevopsSubnet].id
-
-    // Settings
-    administratorPassword: administratorPassword
-    administratorUsername: administratorUsername
-    diagnosticSettings: diagnosticSettings
-
-  }
-}
 
 var virtualNetworkLinks = [
   {
@@ -574,7 +537,7 @@ var virtualNetworkLinks = [
 ]
 
 module privateDnsZones './private-dns-zones.bicep' = {
-  name: isPrimaryLocation ? 'spoke-prvt-0-dns-zone-deploy' : 'spoke-prvt-1-dns-zone-deploy'
+  name: 'spoke-prvt-dns-zone-deploy-${deploymentSettings.resourceToken}'
   params:{
     createDnsZone: false //we are reusing the existing DNS zone and linking a vnet
     deploymentSettings: deploymentSettings
@@ -590,4 +553,3 @@ module privateDnsZones './private-dns-zones.bicep' = {
 output virtual_network_id string = virtualNetwork.outputs.id
 output virtual_network_name string = virtualNetwork.outputs.name
 output subnets object = virtualNetwork.outputs.subnets
-output jumphost_computer_name string = enableJumpHost ? jumphost.outputs.computer_name : ''

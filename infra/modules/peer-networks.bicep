@@ -1,7 +1,7 @@
 targetScope = 'subscription'
 
 /*
-** Two way Virtual Network Peering
+** Two-way Virtual Network Peering
 ** Copyright (C) 2023 Microsoft, Inc.
 ** All Rights Reserved
 **

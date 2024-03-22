@@ -18,7 +18,7 @@ targetScope = 'resourceGroup'
 type DeploymentSettings = {
   @description('If \'true\', then two regional deployments will be performed.')
   isMultiLocationDeployment: bool
-
+  
   @description('If \'true\', use production SKUs and settings.')
   isProduction: bool
 
@@ -42,6 +42,9 @@ type DeploymentSettings = {
 
   @description('The type of the \'principalId\' property.')
   principalType: 'ServicePrincipal' | 'User'
+
+  @description('The token to use for naming resources.  This should be unique to the deployment.')
+  resourceToken: string
 
   @description('The development stage for this application')
   stage: 'dev' | 'prod'
@@ -109,9 +112,6 @@ param subnetId string?
 // True if deploying into the primary region in a multi-region deployment, otherwise false
 var isPrimaryLocation = deploymentSettings.location == deploymentSettings.primaryLocation
 
-// The name of the secret in the Key Vault containing the Service Bus connection string
-var serviceBusConnectionStringSecretName = 'App--RenderRequestQueue--ConnectionString--${isPrimaryLocation? 'Primary' : 'Secondary'}'
-
 // ========================================================================
 // AZURE RESOURCES
 // ========================================================================
@@ -124,10 +124,6 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
   name: managedIdentityName
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
-  name: keyVaultName
-  scope: resourceGroup(keyVaultResourceGroupName)
-}
 
 module containerAppsEnvironment 'br/public:avm/res/app/managed-environment:0.4.2' = {
   name: 'application-container-apps-environment'

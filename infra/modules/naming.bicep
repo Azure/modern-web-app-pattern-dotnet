@@ -19,7 +19,7 @@ targetScope = 'subscription'
 type DeploymentSettings = {
   @description('If \'true\', then two regional deployments will be performed.')
   isMultiLocationDeployment: bool
-
+  
   @description('If \'true\', use production SKUs and settings.')
   isProduction: bool
 
@@ -44,6 +44,9 @@ type DeploymentSettings = {
   @description('The type of the \'principalId\' property.')
   principalType: 'ServicePrincipal' | 'User'
 
+  @description('The token to use for naming resources.  This should be unique to the deployment.')
+  resourceToken: string
+
   @description('The development stage for this application')
   stage: 'dev' | 'prod'
 
@@ -64,6 +67,10 @@ param deploymentSettings DeploymentSettings
 @description('A differentiator for the environment.  Set this to a build number or date to ensure that the resource groups and resources are unique.')
 param differentiator string = ''
 
+var primaryLocation = deploymentSettings.primaryLocation
+
+var resourceToken = deploymentSettings.resourceToken
+
 @description('The overrides for the naming scheme.  Load this from the naming.overrides.jsonc file.')
 param overrides object = {}
 
@@ -71,13 +78,9 @@ param overrides object = {}
 // VARIABLES
 // ========================================================================
 
-// A unique token that is used as a differentiator for all resources.  All resources within the
-// same deployment will have the same token.
-var resourceToken = uniqueString(subscription().id, deploymentSettings.name, deploymentSettings.stage, deploymentSettings.location, differentiator)
-
 // The prefix for resource groups
 var diffPrefix = !empty(differentiator) ? '-${differentiator}' : ''
-var hubResourceGroupPrefix = 'rg-${deploymentSettings.name}-${deploymentSettings.stage}-${deploymentSettings.primaryLocation}'
+var hubResourceGroupPrefix = 'rg-${deploymentSettings.name}-${deploymentSettings.stage}-${primaryLocation}'
 var resourceGroupPrefix = 'rg-${deploymentSettings.name}-${deploymentSettings.stage}-${deploymentSettings.location}${diffPrefix}'
 
 // The list of resource names that are used in the deployment.  The default
@@ -91,11 +94,11 @@ var defaultResourceNames = {
   hubDDoSProtectionPlan: 'ddos-${resourceToken}'
   hubFirewall: 'afw-${resourceToken}'
   hubFirewallPublicIpAddress: 'pip-afw-${resourceToken}'
-  hubJumphost: 'vm-jump-${resourceToken}'
+  hubJumpbox: 'vm-jump-${resourceToken}'
   hubResourceGroup: '${hubResourceGroupPrefix}-hub'
   hubSubnetBastionHost: 'AzureBastionSubnet'
   hubSubnetFirewall: 'AzureFirewallSubnet'
-  hubSubnetJumphost: 'JumphostSubnet'
+  hubSubnetJumpbox: 'JumpboxSubnet-${resourceToken}'
   hubSubnetPrivateEndpoint: 'PrivateEndpointSubnet'
   hubVirtualNetwork: 'vnet-hub-${resourceToken}'
 
@@ -175,11 +178,11 @@ output resourceNames object = {
   hubDDoSProtectionPlan: contains(overrides, 'hubDDoSProtectionPlan') && !empty(overrides.hubDDoSProtectionPlan) ? overrides.hubDDoSProtectionPlan : defaultResourceNames.hubDDoSProtectionPlan
   hubFirewall: contains(overrides, 'hubFirewall') && !empty(overrides.hubFirewall) ? overrides.hubFirewall : defaultResourceNames.hubFirewall
   hubFirewallPublicIpAddress: contains(overrides, 'hubFirewallPublicIpAddress') && !empty(overrides.hubFirewallPublicIpAddress) ? overrides.hubFirewallPublicIpAddress : defaultResourceNames.hubFirewallPublicIpAddress
-  hubJumphost: contains(overrides, 'hubJumphost') && !empty(overrides.hubJumphost) ? overrides.hubJumphost : defaultResourceNames.hubJumphost
+  hubJumpbox: contains(overrides, 'hubJumpbox') && !empty(overrides.hubJumpbox) ? overrides.hubJumpbox : defaultResourceNames.hubJumpbox
   hubResourceGroup: contains(overrides, 'hubResourceGroup') && !empty(overrides.hubResourceGroup) ? overrides.hubResourceGroup : defaultResourceNames.hubResourceGroup
   hubSubnetBastionHost: contains(overrides, 'hubSubnetBastionHost') && !empty(overrides.hubSubnetBastionHost) ? overrides.hubSubnetBastionHost : defaultResourceNames.hubSubnetBastionHost
   hubSubnetFirewall: contains(overrides, 'hubSubnetFirewall') && !empty(overrides.hubSubnetFirewall) ? overrides.hubSubnetFirewall : defaultResourceNames.hubSubnetFirewall
-  hubSubnetJumphost: contains(overrides, 'hubSubnetJumphost') && !empty(overrides.hubSubnetJumphost) ? overrides.hubSubnetJumphost : defaultResourceNames.hubSubnetJumphost
+  hubSubnetJumpbox: contains(overrides, 'hubSubnetJumpbox') && !empty(overrides.hubSubnetJumpbox) ? overrides.hubSubnetJumpbox : defaultResourceNames.hubSubnetJumpbox
   hubSubnetPrivateEndpoint: contains(overrides, 'hubSubnetPrivateEndpoint') && !empty(overrides.hubSubnetPrivateEndpoint) ? overrides.hubSubnetPrivateEndpoint : defaultResourceNames.hubSubnetPrivateEndpoint
   hubVirtualNetwork: contains(overrides, 'hubVirtualNetwork') && !empty(overrides.hubVirtualNetwork) ? overrides.hubVirtualNetwork : defaultResourceNames.hubVirtualNetwork
 

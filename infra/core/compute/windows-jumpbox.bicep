@@ -1,14 +1,14 @@
 targetScope = 'resourceGroup'
 
 /*
-** Windows 11 Jumphost
+** Windows 11 Jumpbox
 ** Copyright (C) 2023 Microsoft, Inc.
 ** All Rights Reserved
 **
 ***************************************************************************
 **
 ** Creates a Windows 11 VM with appropriate capabilities to act as a
-** jumphost.  This includes the Windows CLI, git, and SSMS.
+** jumpbox.  This includes the Windows CLI, git, and SSMS.
 */
 
 // ========================================================================
@@ -64,11 +64,11 @@ param subnetId string
 */
 @secure()
 @minLength(8)
-@description('The password for the administrator account on the jump host.')
+@description('The password for the administrator account on the jump box.')
 param administratorPassword string
 
 @minLength(8)
-@description('The username for the administrator account on the jump host.')
+@description('The username for the administrator account on the jump box.')
 param administratorUsername string
 
 @minLength(3)
@@ -79,8 +79,8 @@ param computerWindowsName string?
 @description('If true, join the computer to the Microsoft Entra ID domain.')
 param joinToMicrosoftEntraId bool = true
 
-@description('The SKU for the virtual machine. Must support nested virtualization for building containerized services.')
-param sku string = 'Standard_D2s_v3'
+@description('The SKU for the virtual machine.')
+param sku string = 'Standard_B2ms'
 
 @description('If true, install the Azure CLI, SSMS, and git on the machine.')
 param installTools bool = true
