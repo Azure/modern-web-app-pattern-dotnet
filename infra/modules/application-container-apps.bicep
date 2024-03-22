@@ -112,9 +112,6 @@ param subnetId string?
 // True if deploying into the primary region in a multi-region deployment, otherwise false
 var isPrimaryLocation = deploymentSettings.location == deploymentSettings.primaryLocation
 
-// The name of the secret in the Key Vault containing the Service Bus connection string
-var serviceBusConnectionStringSecretName = 'App--RenderRequestQueue--ConnectionString--${isPrimaryLocation? 'Primary' : 'Secondary'}'
-
 // ========================================================================
 // AZURE RESOURCES
 // ========================================================================
@@ -127,10 +124,6 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
   name: managedIdentityName
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
-  name: keyVaultName
-  scope: resourceGroup(keyVaultResourceGroupName)
-}
 
 module containerAppsEnvironment 'br/public:avm/res/app/managed-environment:0.4.2' = {
   name: 'application-container-apps-environment'
