@@ -215,7 +215,7 @@ module writeJumpBoxCredentialsToKeyVault '../core/security/key-vault-secrets.bic
 }
 
 module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = {
-  name: 'write-sql-admin-info-to-keyvault'
+  name: 'write-sql-admin-info-to-keyvault-${deploymentSettings.resourceToken}'
   scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
@@ -227,7 +227,7 @@ module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = 
 }
 
 module writePrimaryRedisSecret '../core/security/key-vault-secrets.bicep' = {
-  name: 'write-primary-redis-secret-to-keyvault'
+  name: 'write-primary-redis-secret-to-keyvault-${deploymentSettings.resourceToken}'
   scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
@@ -238,7 +238,7 @@ module writePrimaryRedisSecret '../core/security/key-vault-secrets.bicep' = {
 }
 
 module writeSecondaryRedisSecret '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isMultiLocationDeployment) {
-  name: 'write-secondary-redis-secret-to-keyvault'
+  name: 'write-secondary-redis-secret-to-keyvault-${deploymentSettings.resourceToken}'
   scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
@@ -249,7 +249,7 @@ module writeSecondaryRedisSecret '../core/security/key-vault-secrets.bicep' = if
 }
 
 module writePrimaryRenderQueueConnectionString '../core/security/key-vault-secrets.bicep' = {
-  name: 'write-primary-render-queue-connection-string'
+  name: 'write-primary-render-queue-connection-string-${deploymentSettings.resourceToken}'
   scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
@@ -260,7 +260,7 @@ module writePrimaryRenderQueueConnectionString '../core/security/key-vault-secre
 }
 
 module writeSecondaryRenderQueueConnectionString '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isMultiLocationDeployment) {
-  name: 'write-secondary-render-queue-connection-string'
+  name: 'write-secondary-render-queue-connection-string-${deploymentSettings.resourceToken}'
   scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
@@ -274,7 +274,7 @@ module writeSecondaryRenderQueueConnectionString '../core/security/key-vault-sec
 // Microsoft Entra Application Registration placeholders
 // ======================================================================== //
 module writeAppRegistrationSecrets '../core/security/key-vault-secrets.bicep' = [ for secretName in listOfAppConfigSecrets: {
-  name: 'write-temp-kv-secret-${secretName}'
+  name: take('${deploymentSettings.resourceToken}-write-temp-kv-secret-${secretName}', 64)
   scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
@@ -290,7 +290,7 @@ module writeAppRegistrationSecrets '../core/security/key-vault-secrets.bicep' = 
 
 module grantSecretsUserAccessBySecretName './grant-secret-user.bicep' = [ for secretName in listOfSecretNames: {
   scope: existingKvResourceGroup
-  name: take('grant-kv-access-for-${secretName}', 64)
+  name: take('${deploymentSettings.resourceToken}-grant-kv-access-for-${secretName}', 64)
   params: {
     keyVaultName: existingKeyVault.name
     readerIdentities: readerIdentities
