@@ -107,7 +107,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing 
 }
 
 module createNewDnsZones '../core/network/private-dns-zone.bicep' = [ for dnsZoneName in createDnsZone ? privateDnsZones : []: {
-  name: 'create-new-dns-zone-${dnsZoneName}'
+  name: take('new-dns-zone-${deploymentSettings.resourceToken}-${dnsZoneName}', 64)
   scope: resourceGroup
   params: {
     name: dnsZoneName
@@ -117,7 +117,7 @@ module createNewDnsZones '../core/network/private-dns-zone.bicep' = [ for dnsZon
 }]
 
 module updateVnetLinkForDnsZones '../core/network/private-dns-zone-link.bicep' = [ for dnsZoneName in !createDnsZone ? privateDnsZones : []: {
-  name: createDnsZone ? 'hub-vnet-link-for-dns-${dnsZoneName}-${deploymentSettings.resourceToken}' : 'spk-0-vnet-link-for-dns-${dnsZoneName}-${deploymentSettings.resourceToken}'
+  name: createDnsZone ? take('hub-vnet-link-for-dns-${deploymentSettings.resourceToken}-${dnsZoneName}', 64) : take('spk-vnet-link-for-dns-${deploymentSettings.resourceToken}-${dnsZoneName}', 64)
   scope: resourceGroup
   params: {
     name: dnsZoneName
