@@ -277,7 +277,7 @@ module writeSecondaryRenderQueueConnectionString '../core/security/key-vault-sec
 // Microsoft Entra Application Registration placeholders
 // ======================================================================== //
 module writeAppRegistrationSecrets '../core/security/key-vault-secrets.bicep' = [ for secretName in listOfAppConfigSecrets: {
-  name: take('${deploymentSettings.resourceToken}-write-temp-kv-secret-${secretName}', 64)
+  name: '${deploymentSettings.resourceToken}-tmp-kv-secret-${secretName}'
   scope: existingKvResourceGroup
   params: {
     name: existingKeyVault.name
@@ -293,7 +293,7 @@ module writeAppRegistrationSecrets '../core/security/key-vault-secrets.bicep' = 
 
 module grantSecretsUserAccessBySecretName './grant-secret-user.bicep' = [ for secretName in listOfSecretNames: {
   scope: existingKvResourceGroup
-  name: take('${deploymentSettings.resourceToken}-grant-kv-access-for-${secretName}', 64)
+  name: '${deploymentSettings.resourceToken}-kv-access-${secretName}'
   params: {
     keyVaultName: existingKeyVault.name
     readerIdentities: readerIdentities
