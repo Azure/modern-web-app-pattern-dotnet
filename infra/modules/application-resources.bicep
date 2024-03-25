@@ -736,7 +736,7 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
 */
 
 resource sharedRegistry 'Microsoft.ContainerRegistry/registries@2023-06-01-preview' existing = if (deploymentSettings.isNetworkIsolated) {
-  name: sharedAzureContainerRegistry
+  name: resourceNames.containerRegistry
   scope: az.resourceGroup(resourceNames.hubResourceGroup)
 }
 
