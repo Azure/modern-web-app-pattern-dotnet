@@ -489,7 +489,7 @@ module sharedKeyVault '../core/security/key-vault.bicep' = {
 ** The registry is deployed with the hub in production scenarios but with application resources in dev scenarios.
 */
 
-module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' = {
+module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.1' = {
   name: 'shared-application-container-registry'
   scope: resourceGroup
 
