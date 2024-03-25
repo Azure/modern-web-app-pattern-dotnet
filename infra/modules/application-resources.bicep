@@ -742,7 +742,7 @@ resource sharedRegistry 'Microsoft.ContainerRegistry/registries@2023-06-01-previ
 */
 
 module containerRegistryRoleAssignments '../core/identity/container-registry-role-assignments.bicep' = if (deploymentSettings.isNetworkIsolated) {
-  name: 'application-container-registry-role-assignments'
+  name: 'acr-role-assignments-${deploymentSettings.location}'
   scope: az.resourceGroup(resourceNames.hubResourceGroup)
   params: {
     acrName: sharedRegistry.name
