@@ -81,12 +81,6 @@ param logAnalyticsWorkspaceId string
 @description('The managed identity to use as the identity of the Container Apps.')
 param managedIdentityName string
 
-@description('The name of the Key Vault to use for secrets.')
-param keyVaultName string
-
-@description('The name of the resource group containing the Key Vault.')
-param keyVaultResourceGroupName string
-
 @description('The name of the Service Bus namespace for ticket render requests which will be used to trigger scaling.')
 param renderRequestServiceBusNamespace string
 
@@ -106,13 +100,6 @@ param renderingServiceContainerAppName string
 param subnetId string?
 
 // ========================================================================
-// VARIABLES
-// ========================================================================
-
-// True if deploying into the primary region in a multi-region deployment, otherwise false
-var isPrimaryLocation = deploymentSettings.location == deploymentSettings.primaryLocation
-
-// ========================================================================
 // AZURE RESOURCES
 // ========================================================================
 
@@ -123,7 +110,6 @@ resource appConfigurationStore 'Microsoft.AppConfiguration/configurationStores@2
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: managedIdentityName
 }
-
 
 module containerAppsEnvironment 'br/public:avm/res/app/managed-environment:0.4.2' = {
   name: 'application-container-apps-environment'
