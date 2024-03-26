@@ -71,8 +71,8 @@ param ubuntuOSVersion string = 'Ubuntu-2204'
 @description('Location for all resources.')
 param location string = resourceGroup().location
 
-@description('The size of the VM')
-param vmSize string = 'Standard_B2ms'
+@description('The SKU for the virtual machine. Must support nested virtualization for building containerized services.')
+param vmSize string = 'Standard_D2s_v3'
 
 @description('The tags to associate with this resource.')
 param tags object = {}
