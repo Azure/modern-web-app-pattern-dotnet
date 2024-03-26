@@ -496,9 +496,9 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.1' =
   dependsOn: [
     // Provisioning the Container Registry involves creating a private endpoint, which requires
     // private DNS zones to be created and linked to the virtual network.
-    // The AVM assumes the private DNS zones are already created. Which resulted in a race condition
-    // awaiting on the KV creation allows time for Azure to propagate the DNS zone creation
-    // so that the resourceId() use for the privateDnsZoneResourceIds reference returns a valid value.
+    // The AVM assumes the private DNS zones are already created. Which resulted in a race condition.
+    // Awaiting on the KV creation allows time for Azure to propagate the DNS zone creation
+    // so that the resourceId(), used for the privateDnsZoneResourceIds reference, returns a valid value.
     sharedKeyVault
   ]
 
