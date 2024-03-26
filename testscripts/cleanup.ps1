@@ -84,6 +84,8 @@ $rgSpoke = ""
 $rgHub = ""
 $rgSecondaryApplication = ""
 $rgSecondarySpoke = ""
+$rgContainerAppEnvironment = ""
+$rgSecondaryContainerAppEnvironment = ""
 #$CleanupAzureDirectory = $false
 
 $azdConfig = azd env get-values -o json | ConvertFrom-Json -Depth 9 -AsHashtable
@@ -110,9 +112,11 @@ if ($Prefix) {
         $rgSpoke = "$rgPrefix-$location-spoke"
         $rgSecondaryApplication = "$rgPrefix-$locationSecondary-2-application"
         Write-Host "Secondary Application Resource Group: $rgSecondaryApplication"
-        $rgSecondarySpoke = "$rgPrefix-$locationSecondary-2-spoke"    
+        $rgSecondarySpoke = "$rgPrefix-$locationSecondary-2-spoke"
         Write-Host "Secondary Spoke Resource Group: $rgSecondarySpoke"
         $rgHub = "$rgPrefix-hub"
+
+        $rg
         #$CleanupAzureDirectory = $true
     } else {
         $rgApplication = $ResourceGroup
@@ -270,6 +274,13 @@ $resourceGroups = [System.Collections.ArrayList]@()
 if (Test-ResourceGroupExists -ResourceGroupName $rgApplication) {
     "`tFound application resource group: $rgApplication" | Write-Output
     $resourceGroups.Add($rgApplication) | Out-Null
+    
+    $resourceToken=(Get-ResourceToken -resourceGroupName $rgApplication) # expecting to be something like 'fjmjdbizcdxt4'
+    $possibleContainerAppEnvironmentGroup = "ME_acae-common-$resourceToken"
+    if (Test-ResourceGroupExists -ResourceGroupName $possibleContainerAppEnvironmentGroup) {
+        "`tFound container app environment resource group: $possibleContainerAppEnvironmentGroup" | Write-Output
+        $resourceGroups.Add($possibleContainerAppEnvironmentGroup) | Out-Null
+    }
 } else {
     "`tConfirm the correct subscription was selected and check the spelling of the group to be deleted" | Write-Warning
     "`tCould not find resource group: $rgApplication" | Write-Error
@@ -278,6 +289,13 @@ if (Test-ResourceGroupExists -ResourceGroupName $rgApplication) {
 if (Test-ResourceGroupExists -ResourceGroupName $rgSecondaryApplication) {
     "`tFound secondary application resource group: $rgSecondaryApplication" | Write-Output
     $resourceGroups.Add($rgSecondaryApplication) | Out-Null
+
+    $resourceToken=(Get-ResourceToken -resourceGroupName $rgSecondaryApplication) # expecting to be something like 'fjmjdbizcdxt4'
+    $possibleContainerAppEnvironmentGroup = "ME_acae-common-$resourceToken"
+    if (Test-ResourceGroupExists -ResourceGroupName $possibleContainerAppEnvironmentGroup) {
+        "`tFound secondary container app environment resource group: $possibleContainerAppEnvironmentGroup" | Write-Output
+        $resourceGroups.Add($possibleContainerAppEnvironmentGroup) | Out-Null
+    }
 }
 
 
