@@ -439,7 +439,7 @@ module application './modules/application-resources.bicep' = {
     dnsResourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : ''
     subnets: isNetworkIsolated ? spokeNetwork.outputs.subnets : {}
     frontDoorSettings: frontdoor.outputs.settings
-    sharedAzureContainerRegistry: willDeployHubNetwork ? hubNetwork.outputs.container_registry_name : ''
+    sharedAzureContainerRegistry: willDeployHubNetwork ? hubNetwork.outputs.container_registry_name : naming.outputs.resourceNames.containerRegistry
 
     // Settings
     administratorUsername: administratorUsername
@@ -466,7 +466,7 @@ module application2 './modules/application-resources.bicep' =  if (isMultiLocati
     dnsResourceGroupName: willDeployHubNetwork ? resourceGroups.outputs.hub_resource_group_name : ''
     subnets: isNetworkIsolated && isMultiLocationDeployment? spokeNetwork2.outputs.subnets : {}
     frontDoorSettings: frontdoor.outputs.settings
-    sharedAzureContainerRegistry: willDeployHubNetwork ? hubNetwork.outputs.container_registry_name : ''
+    sharedAzureContainerRegistry: willDeployHubNetwork ? hubNetwork.outputs.container_registry_name : naming.outputs.resourceNames.containerRegistry
 
     // Settings
     administratorUsername: administratorUsername

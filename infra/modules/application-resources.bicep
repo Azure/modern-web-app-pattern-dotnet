@@ -119,7 +119,7 @@ param subnets object = {}
 param frontDoorSettings FrontDoorSettings
 
 @description('The name of the shared Azure Container Registry used in network isolated scenarios.')
-param sharedAzureContainerRegistry string = ''
+param sharedAzureContainerRegistry string
 
 /*
 ** Settings
@@ -694,7 +694,7 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
   name: 'application-container-registry'
   scope: resourceGroup
   params: {
-    name: resourceNames.containerRegistry
+    name: sharedAzureContainerRegistry
     location: deploymentSettings.location
     tags: moduleTags
     acrSku: deploymentSettings.isProduction ? 'Premium' :  'Basic'
@@ -736,7 +736,7 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
 */
 
 resource sharedRegistry 'Microsoft.ContainerRegistry/registries@2023-06-01-preview' existing = if (deploymentSettings.isNetworkIsolated) {
-  name: resourceNames.containerRegistry
+  name: sharedAzureContainerRegistry
   scope: az.resourceGroup(resourceNames.hubResourceGroup)
 }
 
