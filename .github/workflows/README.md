@@ -28,7 +28,9 @@ We recommend these following considerations to expand on the `azure-release.yml`
 
 - You may want to review `scheduled-azure-dev.yml` to see how to add more steps such as validation testing
 - You may want multiple workflows defined in different files for different purposes
-	@@ -34,7 +19,7 @@ We recommend these following considerations to expand on the `azure-release.yml`
+    - Consider database lifecycle management
+    - Consider quality testing processes (e.g. integration testing)
+
 ## Engineering workflows
 This repository also contains workflows that are part of our engineering process to ensure the quality of this sample. The following files are used by the team:
 
