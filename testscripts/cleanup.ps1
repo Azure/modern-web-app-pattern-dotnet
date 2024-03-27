@@ -115,8 +115,6 @@ if ($Prefix) {
         $rgSecondarySpoke = "$rgPrefix-$locationSecondary-2-spoke"
         Write-Host "Secondary Spoke Resource Group: $rgSecondarySpoke"
         $rgHub = "$rgPrefix-hub"
-
-        $rg
         #$CleanupAzureDirectory = $true
     } else {
         $rgApplication = $ResourceGroup
