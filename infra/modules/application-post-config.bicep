@@ -102,16 +102,16 @@ param redisCacheNamePrimary string
 @description('Name of the second Azure Cache for Redis.')
 param redisCacheNameSecondary string
 
-@description('Name of the resource group containing Azure Cache for Redis.')
+@description('Name of the primary resource group containing application resources such as Azure Cache for Redis and Azure Service Bus.')
 param applicationResourceGroupNamePrimary string
 
-@description('Name of the resource group containing Azure Cache for Redis.')
+@description('Name of the secondary resource group containing application resources such as Azure Cache for Redis and Azure Service Bus.')
 param applicationResourceGroupNameSecondary string
 
 @description('Name of the primary Service Bus namespace.')
 param serviceBusNamespacePrimary string
 
-@description('Name of the primary Service Bus namespace.')
+@description('Name of the secondary Service Bus namespace.')
 param serviceBusNamespaceSecondary string
 
 @description('List of user assigned managed identities that will receive Secrets User role to the shared key vault')
