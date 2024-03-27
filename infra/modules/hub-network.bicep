@@ -489,47 +489,33 @@ module sharedKeyVault '../core/security/key-vault.bicep' = {
 ** The registry is deployed with the hub in production scenarios but with application resources in dev scenarios.
 */
 
-module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.1' = {
-  name: 'shared-application-container-registry'
+module containerRegistry '../core/containers/container-registry.bicep' = {
+  name: 'hub-container-registry-${deploymentSettings.resourceToken}'
   scope: resourceGroup
-
   dependsOn: [
-    // Provisioning the Container Registry involves creating a private endpoint, which requires
+    // Provisioning the Key Vault involves creating a private endpoint, which requires
     // private DNS zones to be created and linked to the virtual network.
-    // The AVM assumes the private DNS zones are already created. Which resulted in a race condition.
-    // Awaiting on the KV creation allows time for Azure to propagate the DNS zone creation
-    // so that the resourceId(), used for the privateDnsZoneResourceIds reference, returns a valid value.
-    sharedKeyVault
+    privateDnsZones
   ]
-
+  
   params: {
     name: resourceNames.containerRegistry
     location: deploymentSettings.location
     tags: moduleTags
     acrSku: (deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated) ? 'Premium' :  'Basic'
-
-    diagnosticSettings: [
-      {
-        workspaceResourceId: logAnalyticsWorkspaceId
-      }
-    ]
+    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
 
     // Settings
     acrAdminUserEnabled: false
     anonymousPullEnabled: false
-    exportPolicyStatus: 'disabled'
     zoneRedundancy: deploymentSettings.isProduction ? 'Enabled' : 'Disabled'
     publicNetworkAccess: (deploymentSettings.isProduction && deploymentSettings.isNetworkIsolated) ? 'Disabled' : 'Enabled'
-    privateEndpoints: deploymentSettings.isNetworkIsolated ? [
-      {
-        privateDnsZoneGroupName: resourceGroup.name
-        privateDnsZoneResourceIds: [
-          resourceId(subscription().subscriptionId, resourceGroup.name, 'Microsoft.Network/privateDnsZones', 'privatelink.azurecr.io')
-        ]
-        subnetResourceId: virtualNetwork.outputs.subnets[privateEndpointSubnet.name].id
-        tags: moduleTags
-      }
-    ] : null
+    privateEndpointSettings:  {
+      dnsResourceGroupName: resourceGroup.name
+      name: resourceNames.containerRegistryPrivateEndpoint
+      resourceGroupName: resourceGroup.name
+      subnetId: virtualNetwork.outputs.subnets[privateEndpointSubnet.name].id
+    }
     replications: deploymentSettings.isMultiLocationDeployment ? [
       // The primary region doesn't need to be listed in replicas. It will be deployed automatically.
       // Replications only needs to list secondary regions.
