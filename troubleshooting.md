@@ -60,6 +60,22 @@ IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
     ssh-keygen -R [127.0.0.1]:50022
     ```
 
+## ERROR: initializing service 'rendering-service', failed to initialize secrets at project...
+This error message is displayed when the `dotnet` tool is not found in the $PATH. The `dotnet` tool is required to build and deploy the application's three projects.
+
+**Full error message**
+```sh
+ERROR: initializing service 'rendering-service', failed to initialize secrets at project '/home/azureadmin/web-app-pattern/src/Relecloud.TicketRenderer/Relecloud.TicketRenderer.csproj': exec: "dotnet": executable file not found in $PATH
+```
+
+### Workaround
+
+1. Install the `dotnet` tool:
+    ```sh
+    sudo apt-get install -y dotnet-sdk-8.0
+    ```
+    > Full .NET Core SDK installation instructions can be found [here](https://learn.microsoft.com/dotnet/core/install/linux-ubuntu-2204).
+
 ## The deployment <azd-env-name> already exists in location
 This error most often happens when trying a new region with the same for a deployment with the same name used for the AZD environment name (e.g. by default it would be `dotnetwebapp`).
 
