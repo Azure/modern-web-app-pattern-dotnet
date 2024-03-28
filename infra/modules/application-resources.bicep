@@ -602,7 +602,7 @@ module applicationBudget '../core/cost-management/budget.bicep' = {
 */
 
 module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
-  name: 'application-service-bus-namespace'
+  name: 'application-service-bus-namespace-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.serviceBusNamespace
@@ -690,8 +690,8 @@ module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
 ** The registry is deployed with the application when not using network isolation. When using network isolation, the registry is deployed with the hub.
 */
 
-module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' = if (!deploymentSettings.isNetworkIsolated) {
-  name: 'application-container-registry'
+module containerRegistry '../core/containers/container-registry.bicep' = if (!deploymentSettings.isNetworkIsolated) {
+  name: 'application-container-registry-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: sharedAzureContainerRegistry
@@ -699,11 +699,7 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.1.0' =
     tags: moduleTags
     acrSku: deploymentSettings.isProduction ? 'Premium' :  'Basic'
 
-    diagnosticSettings: [
-      {
-        workspaceResourceId: logAnalyticsWorkspaceId
-      }
-    ]
+    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
 
     // Settings
     acrAdminUserEnabled: false

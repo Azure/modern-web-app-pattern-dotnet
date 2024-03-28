@@ -362,3 +362,4 @@ resource registry_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021
 // ========================================================================
 
 output name string = registry.name
+output loginServer string = registry.properties.loginServer
