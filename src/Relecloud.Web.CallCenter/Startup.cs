@@ -44,6 +44,10 @@ namespace Relecloud.Web
 
             if (Configuration["App:ApplicationInsights:ConnectionString"] is string appInsightsConnectionString)
             {
+                // Normally, AppInsights services wouldn't need to also be registered alongside OpenTelemetry services.
+                // But this application uses custom AppInsights events which are currently not possible to send with the
+                // Azure Monitor OpenTelemetry distro.
+                services.AddApplicationInsightsTelemetry(o => o.ConnectionString = appInsightsConnectionString);
                 AddOpenTelemetry(services, appInsightsConnectionString);
             }
 

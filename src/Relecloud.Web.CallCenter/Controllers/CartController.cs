@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Relecloud.Models.ConcertContext;
@@ -19,15 +20,17 @@ namespace Relecloud.Web.CallCenter.Controllers
 
         private readonly ITicketPurchaseService ticketPurchaseService;
         private readonly IConcertContextService concertService;
+        private readonly TelemetryClient telemetryClient;
         private readonly ILogger<CartController> logger;
 
         #endregion
 
         #region Constructors
 
-        public CartController(IConcertContextService concertService, ILogger<CartController> logger, ITicketPurchaseService ticketPurchaseService)
+        public CartController(IConcertContextService concertService, TelemetryClient telemetry, ILogger<CartController> logger, ITicketPurchaseService ticketPurchaseService)
         {
             this.concertService = concertService;
+            this.telemetryClient = telemetry;
             this.logger = logger;
             this.ticketPurchaseService = ticketPurchaseService;
         }
@@ -78,11 +81,19 @@ namespace Relecloud.Web.CallCenter.Controllers
                     }
                     cartData[concertId] = cartData[concertId] + count;
                     SetCartData(cartData);
-                    // TODO
-                    //this.telemetryClient.TrackEvent("AddToCart", new Dictionary<string, string> {
-                    //    { "ConcertId", concertId.ToString() },
-                    //    { "Count", count.ToString() }
-                    //});
+                    // Most custom telemetry should go through OpenTelemetry APIs,
+                    // but Azure Monitor's OpenTelemetry SDK does not support custom events yet.
+                    // https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-add-modify#send-custom-telemetry-using-the-application-insights-classic-api
+                    // https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-add-modify#whats-the-current-release-state-of-features-within-the-azure-monitor-opentelemetry-distro
+                    this.telemetryClient.TrackEvent("AddToCart", new Dictionary<string, string> {
+                        { "ConcertId", concertId.ToString() },
+                        { "Count", count.ToString() }
+                    });
+
+                    // An alternative which wouldn't require AppInsights SDK usage is to log traces.
+                    // Note that these will appear as traces in Application Insights rather than true
+                    // separately queryable custom events. But they may work for some scenarios.
+                    this.logger.LogInformation("Concert {ConcertId} (count {Count}) added to cart", concertId, count);
                 }
                 catch (Exception ex)
                 {
@@ -109,8 +120,17 @@ namespace Relecloud.Web.CallCenter.Controllers
                         cartData.Remove(concertId);
                     }
                     SetCartData(cartData);
-                    // TODO
-                    // this.telemetryClient.TrackEvent("RemoveFromCart", new Dictionary<string, string> { { "ConcertId", concertId.ToString() } });
+
+                    // Most custom telemetry should go through OpenTelemetry APIs,
+                    // but Azure Monitor's OpenTelemetry SDK does not support custom events yet.
+                    // https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-add-modify#send-custom-telemetry-using-the-application-insights-classic-api
+                    // https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-add-modify#whats-the-current-release-state-of-features-within-the-azure-monitor-opentelemetry-distro
+                    this.telemetryClient.TrackEvent("RemoveFromCart", new Dictionary<string, string> { { "ConcertId", concertId.ToString() } });
+
+                    // An alternative which wouldn't require AppInsights SDK usage is to log traces.
+                    // Note that these will appear as traces in Application Insights rather than true
+                    // separately queryable custom events. But they may work for some scenarios.
+                    this.logger.LogInformation("Concert {ConcertId} removed from cart", concertId);                    
                 }
                 catch (Exception ex)
                 {
@@ -164,8 +184,18 @@ namespace Relecloud.Web.CallCenter.Controllers
                     {
                         // Remove all items from the cart.
                         SetCartData(new Dictionary<int, int>());
-                        // TODO
-                        // this.telemetryClient.TrackEvent("CheckoutCart");
+
+                        // Most custom telemetry should go through OpenTelemetry APIs,
+                        // but Azure Monitor's OpenTelemetry SDK does not support custom events yet.
+                        // https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-add-modify#send-custom-telemetry-using-the-application-insights-classic-api
+                        // https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-add-modify#whats-the-current-release-state-of-features-within-the-azure-monitor-opentelemetry-distro
+                        this.telemetryClient.TrackEvent("CheckoutCart");
+
+                        // An alternative which wouldn't require AppInsights SDK usage is to log traces.
+                        // Note that these will appear as traces in Application Insights rather than true
+                        // separately queryable custom events. But they may work for some scenarios.
+                        this.logger.LogInformation("Cart checked out");
+
                         return RedirectToAction(nameof(Index), "Ticket");
                     }
 
