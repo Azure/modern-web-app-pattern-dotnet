@@ -1,13 +1,16 @@
-﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
 using Azure.Core;
 using Azure.Identity;
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Azure.Storage.Blobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FeatureManagement;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using Relecloud.Messaging.ServiceBus;
 using Relecloud.Models.Services;
 using Relecloud.Web.Api.Infrastructure;
@@ -51,7 +54,10 @@ namespace Relecloud.Web.Api
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
 
-            services.AddApplicationInsightsTelemetry(Configuration["App:Api:ApplicationInsights:ConnectionString"]);
+            if (Configuration["App:ApplicationInsights:ConnectionString"] is string appInsightsConnectionString)
+            {
+                AddOpenTelemetry(services, appInsightsConnectionString);
+            }
 
             // Add Azure Service Bus message bus.
             services.AddAzureServiceBusMessageBus("App:ServiceBus", azureCredential);
@@ -174,6 +180,31 @@ namespace Relecloud.Web.Api
                 ?? throw new InvalidOperationException("Required configuration missing. Could not find App:StorageAccount:Uri setting.");
             services.AddSingleton(sp => new BlobServiceClient(new Uri(storageAccountUri), GetAzureCredential()));
         }
+
+        private void AddOpenTelemetry(IServiceCollection services, string appInsightsConnectionString)
+        {
+            services.AddOpenTelemetry()
+                .UseAzureMonitor(o => o.ConnectionString = appInsightsConnectionString)
+                .WithMetrics(metrics =>
+                {
+                    metrics.AddAspNetCoreInstrumentation()
+                           .AddHttpClientInstrumentation()
+                           .AddRuntimeInstrumentation();
+                })
+                .WithTracing(tracing =>
+                {
+                    tracing.AddAspNetCoreInstrumentation()
+                           .AddHttpClientInstrumentation()
+                           .AddRedisInstrumentation()
+                           .AddSqlClientInstrumentation(o =>
+                           {
+                               o.SetDbStatementForText = true;
+                               o.SetDbStatementForStoredProcedure = true;
+                           })
+                           .AddSource("Azure.*");
+                });
+        }
+
 
         private TokenCredential GetAzureCredential() =>
             Configuration["App:AzureCredentialType"] switch

@@ -1,7 +1,6 @@
-﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
-using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Relecloud.Models.ConcertContext;
@@ -20,17 +19,15 @@ namespace Relecloud.Web.CallCenter.Controllers
 
         private readonly ITicketPurchaseService ticketPurchaseService;
         private readonly IConcertContextService concertService;
-        private readonly TelemetryClient telemetryClient;
         private readonly ILogger<CartController> logger;
 
         #endregion
 
         #region Constructors
 
-        public CartController(IConcertContextService concertService, TelemetryClient telemetry, ILogger<CartController> logger, ITicketPurchaseService ticketPurchaseService)
+        public CartController(IConcertContextService concertService, ILogger<CartController> logger, ITicketPurchaseService ticketPurchaseService)
         {
             this.concertService = concertService;
-            this.telemetryClient = telemetry;
             this.logger = logger;
             this.ticketPurchaseService = ticketPurchaseService;
         }
@@ -81,10 +78,11 @@ namespace Relecloud.Web.CallCenter.Controllers
                     }
                     cartData[concertId] = cartData[concertId] + count;
                     SetCartData(cartData);
-                    this.telemetryClient.TrackEvent("AddToCart", new Dictionary<string, string> {
-                        { "ConcertId", concertId.ToString() },
-                        { "Count", count.ToString() }
-                    });
+                    // TODO
+                    //this.telemetryClient.TrackEvent("AddToCart", new Dictionary<string, string> {
+                    //    { "ConcertId", concertId.ToString() },
+                    //    { "Count", count.ToString() }
+                    //});
                 }
                 catch (Exception ex)
                 {
@@ -111,7 +109,8 @@ namespace Relecloud.Web.CallCenter.Controllers
                         cartData.Remove(concertId);
                     }
                     SetCartData(cartData);
-                    this.telemetryClient.TrackEvent("RemoveFromCart", new Dictionary<string, string> { { "ConcertId", concertId.ToString() } });
+                    // TODO
+                    // this.telemetryClient.TrackEvent("RemoveFromCart", new Dictionary<string, string> { { "ConcertId", concertId.ToString() } });
                 }
                 catch (Exception ex)
                 {
@@ -165,7 +164,8 @@ namespace Relecloud.Web.CallCenter.Controllers
                     {
                         // Remove all items from the cart.
                         SetCartData(new Dictionary<int, int>());
-                        this.telemetryClient.TrackEvent("CheckoutCart");
+                        // TODO
+                        // this.telemetryClient.TrackEvent("CheckoutCart");
                         return RedirectToAction(nameof(Index), "Ticket");
                     }
 

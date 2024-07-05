@@ -2,7 +2,10 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Microsoft.Extensions.Azure;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using Relecloud.Messaging.ServiceBus;
 using Relecloud.TicketRenderer.Models;
 using Relecloud.TicketRenderer.Services;
@@ -96,5 +99,29 @@ internal static class Extensions
 
             });
         });
+    }
+
+    public static void AddTelemetry(this WebApplicationBuilder builder, string appInsightsConnectionString)
+    {
+        builder.Logging.AddOpenTelemetry(o =>
+        {
+            o.IncludeFormattedMessage = true;
+            o.IncludeScopes = true;
+        });
+
+        builder.Services.AddOpenTelemetry()
+            .UseAzureMonitor(o => o.ConnectionString = appInsightsConnectionString)
+            .WithMetrics(metrics =>
+            {
+                metrics.AddAspNetCoreInstrumentation()
+                       .AddHttpClientInstrumentation()
+                       .AddRuntimeInstrumentation();
+            })
+            .WithTracing(tracing =>
+            {
+                tracing.AddAspNetCoreInstrumentation()
+                       .AddHttpClientInstrumentation()
+                       .AddSource("Azure.*");
+            });
     }
 }

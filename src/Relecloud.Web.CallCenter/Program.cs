@@ -28,6 +28,11 @@ if (hasRequiredConfigSettings)
 builder.Configuration.AddUserSecrets<Program>(optional: true);
 
 builder.Logging.AddConsole();
+builder.Logging.AddOpenTelemetry(o =>
+{
+    o.IncludeFormattedMessage = true;
+    o.IncludeScopes = true;
+});
 
 if (builder.Environment.IsDevelopment())
 {

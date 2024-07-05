@@ -1,6 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation. All Rights Reserved.
+// Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Identity.Web;
@@ -8,6 +9,8 @@ using Microsoft.Identity.Web.TokenCacheProviders.Distributed;
 using Microsoft.Identity.Web.UI;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.Net.Http.Headers;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
@@ -38,7 +41,11 @@ namespace Relecloud.Web
             services.AddOptions();
             AddMicrosoftEntraIdServices(services);
             services.AddControllersWithViews();
-            services.AddApplicationInsightsTelemetry(Configuration["App:Api:ApplicationInsights:ConnectionString"]);
+
+            if (Configuration["App:ApplicationInsights:ConnectionString"] is string appInsightsConnectionString)
+            {
+                AddOpenTelemetry(services, appInsightsConnectionString);
+            }
 
             AddConcertContextService(services);
             AddConcertSearchService(services);
@@ -231,6 +238,24 @@ namespace Relecloud.Web
                     };
                 }));
             }
+        }
+
+        private void AddOpenTelemetry(IServiceCollection services, string appInsightsConnectionString)
+        {
+            services.AddOpenTelemetry()
+                .UseAzureMonitor(o => o.ConnectionString = appInsightsConnectionString)
+                .WithMetrics(metrics =>
+                {
+                    metrics.AddAspNetCoreInstrumentation()
+                           .AddHttpClientInstrumentation()
+                           .AddRuntimeInstrumentation();
+                })
+                .WithTracing(tracing =>
+                {
+                    tracing.AddAspNetCoreInstrumentation()
+                           .AddHttpClientInstrumentation()
+                           .AddRedisInstrumentation();
+                });
         }
 
         private static async Task CreateOrUpdateUserInformation(TokenValidatedContext ctx)

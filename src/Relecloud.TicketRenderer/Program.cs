@@ -26,13 +26,12 @@ TokenCredential azureCredentials = builder.Configuration["App:AzureCredentialTyp
 };
 
 builder.AddAzureAppConfiguration(azureCredentials);
+if (builder.Configuration["App:ApplicationInsights:ConnectionString"] is string appInsightsConnectionString)
+{
+    builder.AddTelemetry(appInsightsConnectionString);
+}
 builder.AddAzureServices(azureCredentials);
 builder.AddTicketRenderingServices();
-
-builder.Services.AddApplicationInsightsTelemetry(options =>
-{
-    options.ConnectionString = builder.Configuration["App:Api:ApplicationInsights:ConnectionString"];
-});
 
 // Add health checks, including health checks for Azure services that are used by this service.
 // The Blob Storage and Service Bus health checks are provided by AspNetCore.Diagnostics.HealthChecks
