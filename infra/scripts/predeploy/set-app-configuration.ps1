@@ -163,6 +163,27 @@ function Get-WorkloadServiceBus {
     return Get-AzServiceBusNamespace -Name $serviceBusName -ResourceGroupName $group.ResourceGroupName
 }
 
+function Get-ApplicationInsights {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ResourceGroupName
+    )
+    Write-Host "`tGetting Application Insights resource for $highlightColor'$ResourceGroupName'$defaultColor"
+
+    $group = Get-AzResourceGroup -Name $ResourceGroupName
+    $hubGroup = Get-AzResourceGroup -Name $group.Tags["HubGroupName"]
+
+    # The group contains tags that explain what the default name of the Application Insights resource should be.
+    $appInsightsName = "appi-$($hubGroup.Tags["ResourceToken"])"
+
+    # If the Application Insights resource is not formed correctly (because resource token is unavailable), throw an error.
+    if ($appInsightsName.Length -lt 6) {
+        throw "Resource token not found in $hubGroup.ResourceGroupName"
+    }
+
+    return Get-AzApplicationInsights -Name $appInsightsName -ResourceGroupName $hubGroup.ResourceGroupName
+}
+
 # Working around https://github.com/Azure/azure-powershell/issues/17773
 function Set-AzAppConfiguration-FeatureFlag {
     param(
@@ -194,6 +215,7 @@ $defaultRedisCacheKeyName = (Get-RedisCacheKeyName -ResourceGroupName $ResourceG
 $defaultTicketRenderRequestQueueName = "ticket-render-requests" # matches the default defined in application-resources.bicep file
 $defaultTicketRenderCompleteQueueName = "ticket-render-completions" # matches the default defined in application-resources.bicep file
 $defaultAzureServiceBusHost = ([System.Uri](Get-WorkloadServiceBus -ResourceGroupName $ResourceGroupName).ServiceBusEndpoint).Host # the host of the Service Bus namespace
+$defaultAppInsightsConnectionString = (Get-ApplicationInsights -ResourceGroupName $ResourceGroupName).ConnectionString # the connection string to the Application Insights resource
 $defaultUseDistributedTicketRenderingResponse = "y"
 
 # prompt to confirm settings
@@ -287,6 +309,15 @@ if ($ticketRenderCompleteQueueName -eq "") {
     $ticketRenderCompleteQueueName = $defaultTicketRenderCompleteQueueName
 }
 
+$appInsightsConnectionString = ""
+if (-not $NoPrompt) {
+    $appInsightsConnectionString = Read-Host -Prompt "`nWhat value should be used for the Application Insights connection string? [default: $highlightColor$defaultAppInsightsConnectionString$defaultColor]"
+}
+
+if ($appInsightsConnectionString -eq "") {
+    $appInsightsConnectionString = $defaultAppInsightsConnectionString
+}
+
 $useDistributedTicketRenderingResponse = ""
 if (-not $NoPrompt) {
     while ($useDistributedTicketRenderingResponse -ne "y" -and $useDistributedTicketRenderingResponse -ne "n") {
@@ -317,6 +348,7 @@ Write-Host "`tAzureServiceBusHost: $highlightColor'$azureServiceBusHost'$default
 Write-Host "`tRenderRequestQueueName: $highlightColor'$ticketRenderRequestQueueName'$defaultColor"
 Write-Host "`tRenderCompleteQueueName: $highlightColor'$ticketRenderCompleteQueueName'$defaultColor"
 Write-Host "`tDistributedTicketRendering: $highlightColor'$useDistributedTicketRendering'$defaultColor"
+Write-Host "`tAppInsightsConnectionString: $highlightColor'$appInsightsConnectionString'$defaultColor"
 
 # handles multi-regional app configuration because the app config must be in the same region as the code deployment
 $configStore = Get-AzAppConfigurationStore -ResourceGroupName $resourceGroupName
@@ -331,7 +363,8 @@ try {
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:ServiceBus:Host -Value $azureServiceBusHost > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:ServiceBus:RenderRequestQueueName -Value $ticketRenderRequestQueueName > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:ServiceBus:RenderCompleteQueueName -Value $ticketRenderCompleteQueueName > $null
-    
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:ApplicationInsights:ConnectionString -Value $appInsightsConnectionString > $null
+
     # Az.AppConfiguration does not support feature flags yet, so we use our own helper function
     # https://github.com/Azure/azure-powershell/issues/17773
     Set-AzAppConfiguration-FeatureFlag -Endpoint $configStore.Endpoint -FeatureFlagName "DistributedTicketRendering" -FeatureFlagDescription "Enable to render ticket images out-of-process" -FeatureFlagValue $useDistributedTicketRendering
