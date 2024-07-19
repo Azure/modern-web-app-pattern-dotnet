@@ -101,7 +101,7 @@ internal static class Extensions
         });
     }
 
-    public static void AddTelemetry(this WebApplicationBuilder builder, string appInsightsConnectionString)
+    public static void AddTelemetry(this IHostApplicationBuilder builder, string appInsightsConnectionString)
     {
         builder.Logging.AddOpenTelemetry(o =>
         {
