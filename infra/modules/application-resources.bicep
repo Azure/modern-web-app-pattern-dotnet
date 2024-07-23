@@ -8,84 +8,9 @@ targetScope = 'subscription'
 ***************************************************************************
 */
 
-// ========================================================================
-// USER-DEFINED TYPES
-// ========================================================================
-
-// From: infra/types/DeploymentSettings.bicep
-@description('Type that describes the global deployment settings')
-type DeploymentSettings = {
-  @description('If \'true\', then two regional deployments will be performed.')
-  isMultiLocationDeployment: bool
-  
-  @description('If \'true\', use production SKUs and settings.')
-  isProduction: bool
-
-  @description('If \'true\', isolate the workload in a virtual network.')
-  isNetworkIsolated: bool
-
-  @description('The Azure region to host resources')
-  location: string
-
-  @description('The Azure region to host primary resources. In a multi-region deployment, this will match \'location\' while deploying the primary region\'s resources.')
-  primaryLocation: string
-
-  @description('The secondary Azure region in a multi-region deployment. This will match \'location\' while deploying the secondary region\'s resources during a multi-region deployment.')
-  secondaryLocation: string
-
-  @description('The name of the workload.')
-  name: string
-
-  @description('The ID of the principal that is being used to deploy resources.')
-  principalId: string
-
-  @description('The type of the \'principalId\' property.')
-  principalType: 'ServicePrincipal' | 'User'
-
-  @description('The token to use for naming resources.  This should be unique to the deployment.')
-  resourceToken: string
-
-  @description('The development stage for this application')
-  stage: 'dev' | 'prod'
-
-  @description('The common tags that should be used for all created resources')
-  tags: object
-
-  @description('The common tags that should be used for all workload resources')
-  workloadTags: object
-}
-
-// From: infra/types/DiagnosticSettings.bicep
-@description('The diagnostic settings for a resource')
-type DiagnosticSettings = {
-  @description('The number of days to retain log data.')
-  logRetentionInDays: int
-
-  @description('The number of days to retain metric data.')
-  metricRetentionInDays: int
-
-  @description('If true, enable diagnostic logging.')
-  enableLogs: bool
-
-  @description('If true, enable metrics logging.')
-  enableMetrics: bool
-}
-
-// From: infra/types/FrontDoorSettings.bicep
-@description('Type describing the settings for Azure Front Door.')
-type FrontDoorSettings = {
-  @description('The name of the Azure Front Door endpoint')
-  endpointName: string
-
-  @description('Front Door Id used for traffic restriction')
-  frontDoorId: string
-
-  @description('The hostname that can be used to access Azure Front Door content.')
-  hostname: string
-
-  @description('The profile name that is used for configuring Front Door routes.')
-  profileName: string
-}
+import { FrontDoorSettings } from '../types/FrontDoorSettings.bicep'
+import { DiagnosticSettings } from '../types/DiagnosticSettings.bicep'
+import { DeploymentSettings } from '../types/DeploymentSettings.bicep'
 
 // ========================================================================
 // PARAMETERS
@@ -124,14 +49,6 @@ param sharedAzureContainerRegistry string
 /*
 ** Settings
 */
-@secure()
-@minLength(8)
-@description('The password for the administrator account on the SQL Server.')
-param databasePassword string
-
-@minLength(8)
-@description('The username for the administrator account on the SQL Server.')
-param administratorUsername string
 
 @description('The IP address of the current system.  This is used to set up the firewall for Key Vault and SQL Server if in development mode.')
 param clientIpAddress string = ''
@@ -344,8 +261,6 @@ module sqlServer '../core/database/sql-server.bicep' = if (createSqlServer) {
     } : null
     diagnosticSettings: diagnosticSettings
     enablePublicNetworkAccess: !deploymentSettings.isNetworkIsolated
-    sqlAdministratorPassword: databasePassword
-    sqlAdministratorUsername: administratorUsername
   }
 }
 
@@ -372,6 +287,12 @@ module sqlDatabase '../core/database/sql-database.bicep' = {
     } : null
     sku: deploymentSettings.isProduction ? 'Premium' : 'Standard'
     zoneRedundant: deploymentSettings.isProduction
+    users: deploymentSettings.isProduction ? [] : [ 
+      {
+        principalId: deploymentSettings.principalId
+        principalName: deploymentSettings.principalName
+      } ]
+    managedIdentityName: ownerManagedIdentity.outputs.name
   }
 }
 
@@ -504,7 +425,7 @@ module webFrontendFrontDoorRoute '../core/security/front-door-route.bicep' = if 
 */
 
 module redis '../core/database/azure-cache-for-redis.bicep' = {
-  name: 'application-redis-${deploymentSettings.resourceToken}'
+  name: 'application-redis-db-${deploymentSettings.resourceToken}'
   scope: resourceGroup
   params: {
     name: resourceNames.redis
@@ -512,16 +433,37 @@ module redis '../core/database/azure-cache-for-redis.bicep' = {
     diagnosticSettings: diagnosticSettings
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
     // vault provided by Hub resource group when network isolated
-    redisCacheSku : deploymentSettings.isProduction ? 'Standard' : 'Basic'
-    redisCacheFamily : 'C'
+    redisCacheSku: deploymentSettings.isProduction ? 'Standard' : 'Basic'
+    redisCacheFamily: 'C'
     redisCacheCapacity: deploymentSettings.isProduction ? 1 : 0
-    
-    privateEndpointSettings: deploymentSettings.isNetworkIsolated ? {
-      dnsResourceGroupName: dnsResourceGroupName
-      name: resourceNames.redisPrivateEndpoint
-      resourceGroupName: resourceNames.spokeResourceGroup
-      subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
-    } : null
+
+    privateEndpointSettings: deploymentSettings.isNetworkIsolated
+      ? {
+          dnsResourceGroupName: dnsResourceGroupName
+          name: resourceNames.redisPrivateEndpoint
+          resourceGroupName: resourceNames.spokeResourceGroup
+          subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
+        }
+      : null
+
+    users: deploymentSettings.principalId == null ? [
+      {
+        alias: ownerManagedIdentity.name
+        objectId: ownerManagedIdentity.outputs.principal_id
+        accessPolicy: 'Data Contributor'
+      }
+    ] : [
+      {
+        alias: ownerManagedIdentity.name
+        objectId: ownerManagedIdentity.outputs.principal_id
+        accessPolicy: 'Data Contributor'
+      }
+      {
+        alias: deploymentSettings.principalId
+        objectId: deploymentSettings.principalId
+        accessPolicy: 'Data Contributor'
+      }
+    ]
   }
 }
 
@@ -538,6 +480,7 @@ module storageAccount '../core/storage/storage-account.bicep' = {
 
     // Settings
     allowSharedKeyAccess: false
+    enablePublicNetworkAccess: !deploymentSettings.isNetworkIsolated
     ownerIdentities: [
       { principalId: deploymentSettings.principalId, principalType: deploymentSettings.principalType }
       { principalId: ownerManagedIdentity.outputs.principal_id, principalType: 'ServicePrincipal' }
@@ -551,6 +494,8 @@ module storageAccount '../core/storage/storage-account.bicep' = {
       resourceGroupName: resourceNames.spokeResourceGroup
       subnetId: subnets[resourceNames.spokePrivateEndpointSubnet].id
     } : null
+
+    firewallRules: clientIpAddress != '' ? { allowedIpAddresses: [clientIpAddress]} : null
   }
 }
 

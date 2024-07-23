@@ -83,6 +83,19 @@ function Get-WorkloadSqlManagedIdentityConnectionString {
     return "Server=tcp:$($sqlServerResource.FullyQualifiedDomainName),1433;Initial Catalog=$($sqlDatabaseCatalogName);Authentication=Active Directory Default; Connect Timeout=180"
 }
 
+function Get-WorkloadRedisManagedIdentityConnectionString {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ResourceGroupName
+    )
+    Write-Host "`tGetting redis server connection for $highlightColor'$ResourceGroupName'$defaultColor"
+
+    $group = Get-AzResourceGroup -Name $ResourceGroupName
+    $redisName = "application-redis-db-$($group.Tags["ResourceToken"])"
+
+    return "$redisName.redis.cache.windows.net:6380,ssl=True,abortConnect=False"
+}
+
 function Get-WorkloadStorageAccount {
     param(
         [Parameter(Mandatory = $true)]
@@ -122,25 +135,6 @@ function Get-WorkloadKeyVault {
     }
 
     return Get-AzKeyVault -VaultName $keyVaultName -ResourceGroupName $hubGroup.ResourceGroupName
-}
-
-function Get-RedisCacheKeyName {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$ResourceGroupName
-    )
-    Write-Host "`tGetting redis cache key name for $highlightColor'$ResourceGroupName'$defaultColor"
-
-    $group = Get-AzResourceGroup -Name $ResourceGroupName
-
-    # if the group contains a tag 'IsPrimary' then use the primary redis cache
-    if ($group.Tags["IsPrimaryLocation"] -eq "true") {
-        # matches hard coded value in application-post-config.bicep module
-        return "App--RedisCache--ConnectionString-Primary"
-    }
-
-    # matches hard coded value in application-post-config.bicep module
-    return "App--RedisCache--ConnectionString-Secondary"
 }
 
 function Get-WorkloadServiceBus {
@@ -208,10 +202,10 @@ Write-Host "Configuring app settings for $highlightColor'$ResourceGroupName'$def
 $defaultAzureStorageTicketContainerName = "tickets" # matches the default defined in application-resources.bicep file
 $defaultSqlConnectionString = (Get-WorkloadSqlManagedIdentityConnectionString -ResourceGroupName $ResourceGroupName) # the connection string to the SQL database set with Managed Identity
 $defaultAzureStorageTicketUri = (Get-WorkloadStorageAccount -ResourceGroupName $ResourceGroupName).PrimaryEndpoints.Blob # the URI of the storage account container where tickets are stored
+$defaultRedisConnectionString = (Get-WorkloadRedisManagedIdentityConnectionString -ResourceGroupname $ResourceGroupname) # the connection string to the redis database set with managed identity
 $defaultAzureFrontDoorHostName = $WebUri.Substring("https://".Length) # the hostname of the front door
 $defaultRelecloudBaseUri = "$WebUri/api" # used by the frontend to call the backend through the front door
 $defaultKeyVaultUri = (Get-WorkloadKeyVault -ResourceGroupName $ResourceGroupName).VaultUri # the URI of the key vault where secrets are stored
-$defaultRedisCacheKeyName = (Get-RedisCacheKeyName -ResourceGroupName $ResourceGroupName) # workloads use independent redis caches and a shared vault to store the connection string
 $defaultTicketRenderRequestQueueName = "ticket-render-requests" # matches the default defined in application-resources.bicep file
 $defaultTicketRenderCompleteQueueName = "ticket-render-completions" # matches the default defined in application-resources.bicep file
 $defaultAzureServiceBusHost = ([System.Uri](Get-WorkloadServiceBus -ResourceGroupName $ResourceGroupName).ServiceBusEndpoint).Host # the host of the Service Bus namespace
@@ -235,6 +229,15 @@ if (-not $NoPrompt) {
 
 if ($sqlConnectionString -eq "") {
     $sqlConnectionString = $defaultSqlConnectionString
+}
+
+$redisConnectionString = ""
+if (-not $NoPrompt) {
+    $redisConnectionString = Read-Host -Prompt "`nWhat value should be used for the Redis connection string? [default: $highlightColor$defaultRedisConnectionString$defaultColor]"
+}
+
+if ($redisConnectionString -eq "") {
+    $redisConnectionString = $defaultRedisConnectionString
 }
 
 $azureStorageTicketUri = ""
@@ -271,15 +274,6 @@ if (-not $NoPrompt) {
 
 if ($keyVaultUri -eq "") {
     $keyVaultUri = $defaultKeyVaultUri
-}
-
-$redisCacheKeyName = ""
-if (-not $NoPrompt) {
-    $redisCacheKeyName = Read-Host -Prompt "`nWhat value should be used for the RedisCacheKeyName? [default: $highlightColor$defaultRedisCacheKeyName$defaultColor]"
-}
-
-if ($redisCacheKeyName -eq "") {
-    $redisCacheKeyName = $defaultRedisCacheKeyName
 }
 
 $azureServiceBusHost = ""
@@ -340,10 +334,10 @@ Write-Host "`nWorking settings:"
 Write-Host "`tazureStorageTicketContainerName: $highlightColor'$azureStorageTicketContainerName'$defaultColor"
 Write-Host "`tresourceGroupName: $highlightColor'$resourceGroupName'$defaultColor"
 Write-Host "`tSqlConnectionString: $highlightColor'$sqlConnectionString'$defaultColor"
+Write-Host "`tRedisConnectionString: $highlightColor'$redisConnectionString'$defaultColor"
 Write-Host "`tAzureStorageTicketUri: $highlightColor'$azureStorageTicketUri'$defaultColor"
 Write-Host "`tAzureFrontDoorHostName: $highlightColor'$azureFrontDoorHostName'$defaultColor"
 Write-Host "`tRelecloudBaseUri: $highlightColor'$relecloudBaseUri'$defaultColor"
-Write-Host "`tRedisCacheKeyName: $highlightColor'$redisCacheKeyName'$defaultColor"
 Write-Host "`tAzureServiceBusHost: $highlightColor'$azureServiceBusHost'$defaultColor"
 Write-Host "`tRenderRequestQueueName: $highlightColor'$ticketRenderRequestQueueName'$defaultColor"
 Write-Host "`tRenderCompleteQueueName: $highlightColor'$ticketRenderCompleteQueueName'$defaultColor"
@@ -373,11 +367,13 @@ try {
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:FrontDoorHostname -Value $azureFrontDoorHostName > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RelecloudApi:BaseUri -Value $relecloudBaseUri > $null
 
+    Write-Host "Set values for redis..."
+    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:Redis:ConnectionString -Value $redisConnectionString > $null
+
     Write-Host "Set values for key vault references..."
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:MicrosoftEntraId:ClientId -Value "{ `"uri`":`"$($keyVaultUri)secrets/Api--MicrosoftEntraId--ClientId`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:MicrosoftEntraId:Instance -Value "{ `"uri`":`"$($keyVaultUri)secrets/Api--MicrosoftEntraId--Instance`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key Api:MicrosoftEntraId:TenantId -Value "{ `"uri`":`"$($keyVaultUri)secrets/Api--MicrosoftEntraId--TenantId`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
-    Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RedisCache:ConnectionString -Value "{ `"uri`":`"$($keyVaultUri)secrets/$($redisCacheKeyName)`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key App:RelecloudApi:AttendeeScope -Value "{ `"uri`":`"$($keyVaultUri)secrets/App--RelecloudApi--AttendeeScope`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key MicrosoftEntraId:Instance -Value "{ `"uri`":`"$($keyVaultUri)secrets/MicrosoftEntraId--Instance`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null
     Set-AzAppConfigurationKeyValue -Endpoint $configStore.Endpoint -Key MicrosoftEntraId:CallbackPath -Value "{ `"uri`":`"$($keyVaultUri)secrets/MicrosoftEntraId--CallbackPath`"}" -ContentType 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8' > $null

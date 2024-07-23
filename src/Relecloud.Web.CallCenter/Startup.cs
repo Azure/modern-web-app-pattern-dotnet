@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All Rights Reserved.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
+using Azure.Core;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -21,7 +23,7 @@ using Relecloud.Web.CallCenter.Services;
 using Relecloud.Web.CallCenter.Services.ApiConcertService;
 using Relecloud.Web.CallCenter.Services.MockServices;
 using Relecloud.Web.CallCenter.Services.RelecloudApiServices;
-using System.Diagnostics;
+using StackExchange.Redis;
 
 namespace Relecloud.Web
 {
@@ -34,7 +36,7 @@ namespace Relecloud.Web
 
         public IConfiguration Configuration { get; }
 
-        public void ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services, TokenCredential token)
         {
             services.AddHttpContextAccessor();
             services.Configure<RelecloudApiOptions>(Configuration.GetSection("App:RelecloudApi"));
@@ -55,7 +57,7 @@ namespace Relecloud.Web
             AddConcertSearchService(services);
             AddTicketPurchaseService(services);
             AddTicketImageService(services);
-            AddAzureCacheForRedis(services);
+            AddAzureCacheForRedis(services, token);
             services.AddHealthChecks();
 
             // Add support for session state.
@@ -63,13 +65,19 @@ namespace Relecloud.Web
             services.AddSession();
         }
 
-        private void AddAzureCacheForRedis(IServiceCollection services)
+        private void AddAzureCacheForRedis(IServiceCollection services, TokenCredential token)
         {
-            if (!string.IsNullOrWhiteSpace(Configuration["App:RedisCache:ConnectionString"]))
+            var redisCacheConnectionString = Configuration["App:RedisCache:ConnectionString"];
+
+            if (!string.IsNullOrWhiteSpace(redisCacheConnectionString))
             {
                 services.AddStackExchangeRedisCache(options =>
                 {
-                    options.Configuration = Configuration["App:RedisCache:ConnectionString"];
+                    var configurationOptions = ConfigurationOptions.Parse(redisCacheConnectionString);
+
+                    configurationOptions.ConfigureForAzureWithTokenCredentialAsync(token).GetAwaiter().GetResult();
+
+                    options.ConfigurationOptions = configurationOptions;
                 });
             }
             else
@@ -117,7 +125,7 @@ namespace Relecloud.Web
                 .AddPolicyHandler(GetCircuitBreakerPolicy());
             }
         }
-        
+
         private void AddTicketImageService(IServiceCollection services)
         {
             var baseUri = Configuration["App:RelecloudApi:BaseUri"];

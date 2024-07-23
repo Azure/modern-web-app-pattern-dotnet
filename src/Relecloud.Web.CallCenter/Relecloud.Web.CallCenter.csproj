@@ -29,6 +29,7 @@
     </PackageReference>
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.8.1" />
     <PackageReference Include="OpenTelemetry.Instrumentation.StackExchangeRedis" Version="1.0.0-rc9.14" />
+    <PackageReference Include="Microsoft.Azure.StackExchangeRedis" Version="3.0.0" />
     <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
   </ItemGroup>
 

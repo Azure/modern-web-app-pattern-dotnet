@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Logging;
 using Relecloud.Web;
 
 var builder = WebApplication.CreateBuilder(args);
+var azureCredential = new DefaultAzureCredential();
 
 var hasRequiredConfigSettings = !string.IsNullOrEmpty(builder.Configuration["App:AppConfig:Uri"]);
 
@@ -14,12 +15,12 @@ if (hasRequiredConfigSettings)
     builder.Configuration.AddAzureAppConfiguration(options =>
     {
         options
-            .Connect(new Uri(builder.Configuration["App:AppConfig:Uri"]), new DefaultAzureCredential())
+            .Connect(new Uri(builder.Configuration["App:AppConfig:Uri"]), azureCredential)
             .ConfigureKeyVault(kv =>
             {
                 // Some of the values coming from Azure App Configuration are stored Key Vault, use
                 // the managed identity of this host for the authentication.
-                kv.SetCredential(new DefaultAzureCredential());
+                kv.SetCredential(azureCredential);
             });
     });
 }
@@ -46,7 +47,7 @@ var startup = new Startup(builder.Configuration);
 // Add services to the container.
 if (hasRequiredConfigSettings)
 {
-    startup.ConfigureServices(builder.Services);
+    startup.ConfigureServices(builder.Services, azureCredential);
 }
 
 var hasMicrosoftEntraIdSettings = !string.IsNullOrEmpty(builder.Configuration["MicrosoftEntraId:ClientId"]);

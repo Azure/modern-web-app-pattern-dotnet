@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# install AZD
-curl -fsSL https://aka.ms/install-azd.sh | sudo bash
+# install AZD - keep this version in sync with the version used in the file /.devcontainer/devcontainer.json file
+curl -fsSL https://aka.ms/install-azd.sh | bash -s -- -- version 1.9.5
 
 # add Microsoft package feed for the dotnet install
 # Get Ubuntu version
@@ -27,11 +27,6 @@ sudo apt-get install -y dotnet-sdk-8.0
 
 # install Azure CLI
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-
-# make directory for SCP
-mkdir /home/azureadmin/web-app-pattern
-
-sudo chown -R azureadmin:azureadmin /home/azureadmin/web-app-pattern
 
 # install pwsh core
 
@@ -68,4 +63,3 @@ echo \
 sudo apt-get update
 
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-sudo usermod -aG docker azureadmin

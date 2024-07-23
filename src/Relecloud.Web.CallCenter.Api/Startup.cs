@@ -24,6 +24,10 @@ using Relecloud.Web.CallCenter.Api.Services.TicketManagementService;
 using Relecloud.Web.Models.Services;
 using Relecloud.Web.Services.Search;
 using System.Diagnostics;
+using Azure.Core;
+using Azure.Identity;
+using StackExchange.Redis;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace Relecloud.Web.Api
 {
@@ -64,7 +68,7 @@ namespace Relecloud.Web.Api
 
             AddAzureSearchService(services);
             AddConcertContextServices(services);
-            AddDistributedSession(services);
+            AddDistributedSession(services, azureCredential);
             AddPaymentGatewayService(services);
             AddTicketManagementService(services);
             AddTicketImageService(services);
@@ -72,7 +76,7 @@ namespace Relecloud.Web.Api
             // The ApplicationInitializer is injected in the Configure method with all its dependencies and will ensure
             // they are all properly initialized upon construction.
             services.AddScoped<ApplicationInitializer, ApplicationInitializer>();
-            
+
             services.AddHealthChecks();
         }
 
@@ -93,7 +97,7 @@ namespace Relecloud.Web.Api
             else
             {
                 services.AddScoped<ITicketManagementService, TicketManagementService>();
-                
+
                 // Reading a feature flag is an asynchronous operation, so it's not possible
                 // to register an ITicketRenderingService provider method directly. Instead,
                 // use a factory pattern to retrieve the service asynchronously.
@@ -147,7 +151,7 @@ namespace Relecloud.Web.Api
             }
         }
 
-        private void AddDistributedSession(IServiceCollection services)
+        private void AddDistributedSession(IServiceCollection services, TokenCredential token)
         {
             var redisCacheConnectionString = Configuration["App:RedisCache:ConnectionString"];
             if (!string.IsNullOrWhiteSpace(redisCacheConnectionString))
@@ -156,7 +160,11 @@ namespace Relecloud.Web.Api
                 // If not, ASP.NET Core automatically injects an in-memory cache.
                 services.AddStackExchangeRedisCache(options =>
                 {
-                    options.Configuration = redisCacheConnectionString;
+                    var configurationOptions = ConfigurationOptions.Parse(redisCacheConnectionString);
+
+                    configurationOptions.ConfigureForAzureWithTokenCredentialAsync(token).GetAwaiter().GetResult();
+
+                    options.ConfigurationOptions = configurationOptions;
                 });
             }
             else
@@ -251,7 +259,7 @@ namespace Relecloud.Web.Api
 
             app.UseAuthentication();
             app.UseAuthorization();
-            
+
             app.MapHealthChecks("/healthz");
 
             app.MapGet("/", () => "Default Web API endpoint");

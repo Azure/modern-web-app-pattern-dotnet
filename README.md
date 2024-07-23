@@ -107,7 +107,7 @@ Import-Module Az.Resources
 ```
 
 ```pwsh
-Connect-AzAccount
+Connect-AzAccount -UseDeviceAuthentication
 ```
 
 Set the subscription to the one you want to use (you can use [Get-AzSubscription](https://learn.microsoft.com/powershell/module/az.accounts/get-azsubscription?view=azps-11.3.0) to list available subscriptions):
@@ -123,9 +123,8 @@ Set-AzContext -SubscriptionId $AZURE_SUBSCRIPTION_ID
 Use the next command to login with the Azure Dev CLI (AZD) tool:
 
 ```pwsh
-azd auth login
+azd auth login --use-device-code
 ```
-
 
 ### 4. Create a new environment
 
@@ -149,6 +148,12 @@ Set the `AZURE_LOCATION` (Run `(Get-AzLocation).Location` to see a list of locat
 
 ```pwsh
 azd env set AZURE_LOCATION <pick_a_region>
+```
+
+(Optionally) Set your principal name:
+
+```pwsh
+azd env set AZURE_PRINCIPAL_NAME (Get-AzContext).Account.Id
 ```
 
 ### 5. Create the Azure resources and deploy the code

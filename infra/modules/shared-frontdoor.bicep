@@ -8,85 +8,9 @@ targetScope = 'subscription'
 ***************************************************************************
 */
 
-// ========================================================================
-// USER-DEFINED TYPES
-// ========================================================================
-
-// From: infra/types/DeploymentSettings.bicep
-@description('Type that describes the global deployment settings')
-type DeploymentSettings = {
-  @description('If \'true\', then two regional deployments will be performed.')
-  isMultiLocationDeployment: bool
-  
-  @description('If \'true\', use production SKUs and settings.')
-  isProduction: bool
-
-  @description('If \'true\', isolate the workload in a virtual network.')
-  isNetworkIsolated: bool
-
-  @description('The Azure region to host resources')
-  location: string
-
-  @description('The Azure region to host primary resources. In a multi-region deployment, this will match \'location\' while deploying the primary region\'s resources.')
-  primaryLocation: string
-
-  @description('The secondary Azure region in a multi-region deployment. This will match \'location\' while deploying the secondary region\'s resources during a multi-region deployment.')
-  secondaryLocation: string
-
-  @description('The name of the workload.')
-  name: string
-
-  @description('The ID of the principal that is being used to deploy resources.')
-  principalId: string
-
-  @description('The type of the \'principalId\' property.')
-  principalType: 'ServicePrincipal' | 'User'
-
-  @description('The token to use for naming resources.  This should be unique to the deployment.')
-  resourceToken: string
-
-  @description('The development stage for this application')
-  stage: 'dev' | 'prod'
-
-  @description('The common tags that should be used for all created resources')
-  tags: object
-
-  @description('The common tags that should be used for all workload resources')
-  workloadTags: object
-}
-
-// From: infra/types/DiagnosticSettings.bicep
-@description('The diagnostic settings for a resource')
-type DiagnosticSettings = {
-  @description('The number of days to retain log data.')
-  logRetentionInDays: int
-
-  @description('The number of days to retain metric data.')
-  metricRetentionInDays: int
-
-  @description('If true, enable diagnostic logging.')
-  enableLogs: bool
-
-  @description('If true, enable metrics logging.')
-  enableMetrics: bool
-}
-
-// From: infra/types/FrontDoorSettings.bicep
-@description('Type describing the settings for Azure Front Door.')
-type FrontDoorSettings = {
-  @description('The name of the Azure Front Door endpoint')
-  endpointName: string
-
-  @description('Front Door Id used for traffic restriction')
-  frontDoorId: string
-
-  @description('The hostname that can be used to access Azure Front Door content.')
-  hostname: string
-
-  @description('The profile name that is used for configuring Front Door routes.')
-  profileName: string
-}
-
+import { DiagnosticSettings } from '../types/DiagnosticSettings.bicep'
+import { DeploymentSettings } from '../types/DeploymentSettings.bicep'
+import { FrontDoorSettings } from '../types/FrontDoorSettings.bicep'
 
 // ========================================================================
 // PARAMETERS
@@ -123,6 +47,8 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing 
   name: resourceNames.resourceGroup
 }
 
+var documentationIPAddressRange = '192.0.2.0/24' // This is the TEST-NET-1 documentation IP address range.
+
 // ========================================================================
 // NEW RESOURCES
 // ========================================================================
@@ -149,6 +75,39 @@ module frontDoor '../core/security/front-door-with-waf.bicep' = {
       { name: 'Microsoft_BotManagerRuleSet', version: '1.0' }
     ] : []
     sku: deploymentSettings.isProduction || deploymentSettings.isNetworkIsolated ? 'Premium' : 'Standard'
+
+    customRules: {
+      rules: [{
+        name: 'RateLimitRule'
+        enabledState: 'Enabled'
+        priority: 100
+        ruleType: 'RateLimitRule'
+        rateLimitDurationInMinutes: 1
+        rateLimitThreshold: 200
+        matchConditions: [
+        // Currently Front Door requires that a rate limit rule has a match condition. This specifies the subset
+        // of requests it should apply to. For this sample, we are using an IP address-based match condition
+        // and setting the value to "not 192.0.2.0/24". This is an IANA documentation range and no real clients
+        // will use that range, so this match condition effectively matches all requests.
+        // Note that the rate limit is applied per IP address.
+          {
+            matchVariable: 'RemoteAddr'
+            operator: 'IPMatch'
+            negateCondition: true
+            matchValue: [
+              documentationIPAddressRange
+            ]
+          }
+        ]
+        action: 'Block'
+        groupBy: [
+          {
+            variableName: 'SocketAddr'
+          }
+        ]
+      }
+    ]
+    }
   }
 }
 

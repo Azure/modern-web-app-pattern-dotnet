@@ -13,52 +13,7 @@ targetScope = 'subscription'
 ** modules that depend on the hub.
 */
 
-// ========================================================================
-// USER-DEFINED TYPES
-// ========================================================================
-
-// From: infra/types/DeploymentSettings.bicep
-@description('Type that describes the global deployment settings')
-type DeploymentSettings = {
-  @description('If \'true\', then two regional deployments will be performed.')
-  isMultiLocationDeployment: bool
-  
-  @description('If \'true\', use production SKUs and settings.')
-  isProduction: bool
-
-  @description('If \'true\', isolate the workload in a virtual network.')
-  isNetworkIsolated: bool
-
-  @description('The Azure region to host resources')
-  location: string
-
-  @description('The Azure region to host primary resources. In a multi-region deployment, this will match \'location\' while deploying the primary region\'s resources.')
-  primaryLocation: string
-
-  @description('The secondary Azure region in a multi-region deployment. This will match \'location\' while deploying the secondary region\'s resources during a multi-region deployment.')
-  secondaryLocation: string
-
-  @description('The name of the workload.')
-  name: string
-
-  @description('The ID of the principal that is being used to deploy resources.')
-  principalId: string
-
-  @description('The type of the \'principalId\' property.')
-  principalType: 'ServicePrincipal' | 'User'
-
-  @description('The token to use for naming resources.  This should be unique to the deployment.')
-  resourceToken: string
-
-  @description('The development stage for this application')
-  stage: 'dev' | 'prod'
-
-  @description('The common tags that should be used for all created resources')
-  tags: object
-
-  @description('The common tags that should be used for all workload resources')
-  workloadTags: object
-}
+import { DeploymentSettings } from '../types/DeploymentSettings.bicep'
 
 // ========================================================================
 // PARAMETERS
@@ -68,26 +23,6 @@ type DeploymentSettings = {
 param deploymentSettings DeploymentSettings
 
 /*
-** Passwords - specify these!
-*/
-@secure()
-@minLength(12)
-@description('The password for the administrator account.  This will be used for the jump box, SQL server, and anywhere else a password is needed for creating a resource.')
-param administratorPassword string = newGuid()
-
-@minLength(8)
-@description('The username for the administrator account on the jump box.')
-param administratorUsername string = 'adminuser'
-
-@secure()
-@minLength(8)
-@description('The password for the administrator account on the SQL Server.')
-param databasePassword string
-
-@description('The resource names for the resources to be created.')
-param resourceNames object
-
-/*
 ** Dependencies
 */
 @description('The resource names for the resources to be created.')
@@ -95,12 +30,6 @@ param keyVaultName string
 
 @description('Name of the hub resource group containing the key vault.')
 param kvResourceGroupName string
-
-@description('Name of the primary Azure Cache for Redis.')
-param redisCacheNamePrimary string
-
-@description('Name of the second Azure Cache for Redis.')
-param redisCacheNameSecondary string
 
 @description('Name of the primary resource group containing application resources such as Azure Cache for Redis and Azure Service Bus.')
 param applicationResourceGroupNamePrimary string
@@ -131,12 +60,10 @@ var microsoftEntraIdClientSecret = 'MicrosoftEntraId--ClientSecret'
 var microsoftEntraIdInstance = 'MicrosoftEntraId--Instance'
 var microsoftEntraIdSignedOutCallbackPath = 'MicrosoftEntraId--SignedOutCallbackPath'
 var microsoftEntraIdTenantId = 'MicrosoftEntraId--TenantId'
-var redisCacheSecretNamePrimary = 'App--RedisCache--ConnectionString-Primary'
-var redisCacheSecretNameSecondary = 'App--RedisCache--ConnectionString-Secondary'
 var serviceBusConnectionStringPrimary = 'App--RenderRequestQueue--ConnectionString--Primary'
 var serviceBusConnectionStringSecondary = 'App--RenderRequestQueue--ConnectionString--Secondary'
 
-var multiRegionalSecrets = deploymentSettings.isMultiLocationDeployment ? [redisCacheSecretNameSecondary, serviceBusConnectionStringSecondary] : []
+var multiRegionalSecrets = deploymentSettings.isMultiLocationDeployment ? [serviceBusConnectionStringSecondary] : []
 
 var listOfAppConfigSecrets = [
   microsoftEntraIdApiClientId
@@ -153,26 +80,14 @@ var listOfAppConfigSecrets = [
 
 var listOfSecretNames = union(listOfAppConfigSecrets,
   [
-    redisCacheSecretNamePrimary
     serviceBusConnectionStringPrimary
   ], multiRegionalSecrets)
-
 // ========================================================================
 // EXISTING RESOURCES
 // ========================================================================
 
 resource existingKvResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
   name: kvResourceGroupName
-}
-
-resource existingPrimaryRedisCache 'Microsoft.Cache/redis@2023-04-01' existing = {
-  name: redisCacheNamePrimary
-  scope: resourceGroup(applicationResourceGroupNamePrimary)
-}
-
-resource existingSecondaryRediscache 'Microsoft.Cache/redis@2023-04-01' existing = if (deploymentSettings.isMultiLocationDeployment) {
-  name: redisCacheNameSecondary
-  scope: resourceGroup(deploymentSettings.isMultiLocationDeployment ? applicationResourceGroupNameSecondary : applicationResourceGroupNamePrimary)
 }
 
 resource existingPrimaryServiceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' existing = {
@@ -203,53 +118,6 @@ resource existingKeyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
 // ========================================================================
 // AZURE MODULES
 // ========================================================================
-
-module writeJumpBoxCredentialsToKeyVault '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isNetworkIsolated) {
-  name: 'hub-write-jumpbox-credentials-${deploymentSettings.resourceToken}'
-  scope: existingKvResourceGroup
-  params: {
-    name: existingKeyVault.name
-    secrets: [
-      { key: 'Jumpbox--AdministratorPassword', value: administratorPassword          }
-      { key: 'Jumpbox--AdministratorUsername', value: administratorUsername          }
-      { key: 'Jumpbox--ComputerName',          value: resourceNames.hubJumpbox }
-    ]
-  }
-}
-
-module writeSqlAdminInfoToKeyVault '../core/security/key-vault-secrets.bicep' = {
-  name: 'write-sql-admin-info-to-keyvault-${deploymentSettings.resourceToken}'
-  scope: existingKvResourceGroup
-  params: {
-    name: existingKeyVault.name
-    secrets: [
-      { key: 'Application--SqlAdministratorUsername', value: administratorUsername }
-      { key: 'Application--SqlAdministratorPassword', value: databasePassword }
-    ]
-  }
-}
-
-module writePrimaryRedisSecret '../core/security/key-vault-secrets.bicep' = {
-  name: 'write-primary-redis-secret-to-keyvault-${deploymentSettings.resourceToken}'
-  scope: existingKvResourceGroup
-  params: {
-    name: existingKeyVault.name
-    secrets: [
-      { key: redisCacheSecretNamePrimary, value: '${existingPrimaryRedisCache.name}.redis.cache.windows.net:6380,password=${existingPrimaryRedisCache.listKeys().primaryKey},ssl=True,abortConnect=False' }
-    ]
-  }
-}
-
-module writeSecondaryRedisSecret '../core/security/key-vault-secrets.bicep' = if (deploymentSettings.isMultiLocationDeployment) {
-  name: 'write-secondary-redis-secret-to-keyvault-${deploymentSettings.resourceToken}'
-  scope: existingKvResourceGroup
-  params: {
-    name: existingKeyVault.name
-    secrets: [
-      { key: redisCacheSecretNameSecondary, value: '${existingSecondaryRediscache.name}.redis.cache.windows.net:6380,password=${existingSecondaryRediscache.listKeys().primaryKey},ssl=True,abortConnect=False' }
-    ]
-  }
-}
 
 module writePrimaryRenderQueueConnectionString '../core/security/key-vault-secrets.bicep' = {
   name: 'write-primary-render-queue-connection-string-${deploymentSettings.resourceToken}'

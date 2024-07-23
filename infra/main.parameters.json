@@ -2,17 +2,8 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "adoOrganizationUrl": {
-        "value": "${AZURE_DEVOPS_ORG_URL}"
-    },
-    "adoToken": {
-        "value": "${AZURE_DEVOPS_TOKEN}"
-    },
     "clientIpAddress": {
         "value": "${AZD_IP_ADDRESS}"
-    },
-    "databasePassword": {
-        "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} Application--SqlAdministratorPassword)"
     },
     "differentiator": {
         "value": "${AZURE_CI_DIFFERENTIATOR=none}"
@@ -26,20 +17,14 @@
     "environmentType": {
         "value": "${ENVIRONMENT=dev}"
     },
-    "githubRepositoryUrl": {
-        "value": "${GITHUB_REPO}"
-    },
-    "githubToken": {
-        "value": "${GITHUB_TOKEN}"
-    },
-    "jumpboxAdministratorPassword": {
-        "value": "$(secretOrRandomPassword ${AZURE_OPS_VAULT_NAME} Jumpbox--AdministratorPassword)"
-    },
     "location": {
         "value": "${AZURE_LOCATION}"
     },
     "principalId": {
         "value": "${AZURE_PRINCIPAL_ID}"
+    },
+    "principalName": {
+        "value": "${AZURE_PRINCIPAL_NAME=Developer}"
     },
     "principalType": {
         "value": "${AZURE_PRINCIPAL_TYPE=User}"
