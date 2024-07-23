@@ -150,7 +150,7 @@ Set the `AZURE_LOCATION` (Run `(Get-AzLocation).Location` to see a list of locat
 azd env set AZURE_LOCATION <pick_a_region>
 ```
 
-(Optionally) Set your principal name:
+(Optionally) Set your principal name (If you don't, your user will be named "Developer" in the SQL database for development deployments):
 
 ```pwsh
 azd env set AZURE_PRINCIPAL_NAME (Get-AzContext).Account.Id
