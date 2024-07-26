@@ -24,11 +24,11 @@ hooks:
     posix:
       interactive: true
       shell: sh
-      run: ./infra/scripts/predeploy/call-configure-aca-secrets.sh && ./infra/scripts/predeploy/call-set-app-configuration.sh
+      run: ./infra/scripts/predeploy/call-set-app-configuration.sh
     windows:
       interactive: true
       shell: pwsh
-      run: ./infra/scripts/predeploy/call-configure-aca-secrets.ps1 &&./infra/scripts/predeploy/call-set-app-configuration.ps1
+      run: ./infra/scripts/predeploy/call-set-app-configuration.ps1
   postdeploy:
     posix:
       interactive: true

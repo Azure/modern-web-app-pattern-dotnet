@@ -10,8 +10,6 @@ targetScope = 'resourceGroup'
 ** Creates an Azure Container Registry resource, including permission grants and diagnostics.
 */
 
-
-
 // ========================================================================
 // PARAMETERS
 // ========================================================================

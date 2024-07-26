@@ -10,42 +10,12 @@ targetScope = 'resourceGroup'
 ** Creates an Azure Container Registry resource, including permission grants and diagnostics.
 */
 
+import { DiagnosticSettings } from '../../types/DiagnosticSettings.bicep'
+import { PrivateEndpointSettings } from '../../types/PrivateEndpointSettings.bicep'
 
 // ========================================================================
 // USER-DEFINED TYPES
 // ========================================================================
-
-// From: infra/types/DiagnosticSettings.bicep
-@description('The diagnostic settings for a resource')
-type DiagnosticSettings = {
-  @description('The number of days to retain log data.')
-  logRetentionInDays: int
-
-  @description('The number of days to retain metric data.')
-  metricRetentionInDays: int
-
-  @description('If true, enable diagnostic logging.')
-  enableLogs: bool
-
-  @description('If true, enable metrics logging.')
-  enableMetrics: bool
-}
-
-// From: infra/types/PrivateEndpointSettings.bicep
-@description('Type describing the private endpoint settings.')
-type PrivateEndpointSettings = {
-  @description('The name of the resource group to hold the Private DNS Zone. By default, this uses the same resource group as the resource.')
-  dnsResourceGroupName: string
-
-  @description('The name of the private endpoint resource.')
-  name: string
-
-  @description('The name of the resource group to hold the private endpoint.')
-  resourceGroupName: string
-
-  @description('The ID of the subnet to link the private endpoint to.')
-  subnetId: string
-}
 
 // From: https://github.com/Azure/bicep-registry-modules/blob/main/avm/res/container-registry/registry/main.bicep
 type roleAssignmentType = {

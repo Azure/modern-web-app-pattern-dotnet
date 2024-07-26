@@ -91,7 +91,7 @@ module containerAppsEnvironment 'br/public:avm/res/app/managed-environment:0.4.2
   }
 }
 
-module renderingServiceContainerApp 'br/public:avm/res/app/container-app:0.1.0' = {
+module renderingServiceContainerApp 'br/public:avm/res/app/container-app:0.5.0' = {
   name: 'application-rendering-service-container-app'
   scope: resourceGroup()
   params: {
@@ -112,7 +112,7 @@ module renderingServiceContainerApp 'br/public:avm/res/app/container-app:0.1.0' 
 
         probes: [
           {
-            type: 'liveness'
+            type: 'Liveness'
             httpGet: {
               path: '/health'
               port: 8080
@@ -166,15 +166,6 @@ module renderingServiceContainerApp 'br/public:avm/res/app/container-app:0.1.0' 
       }
     ]
 
-    secrets: {
-      secureList: [
-        // Key Vault secrets are not populated yet when this template is deployed.
-        // Therefore, no secrets are added at this time. Instead, they are added
-        // by the pre-deployment 'call-configure-aca-secrets' that is executed
-        // as part of `azd deploy`.
-      ]
-    }
-
     scaleRules: [
       {
         name: 'service-bus-queue-length-rule'
@@ -185,12 +176,7 @@ module renderingServiceContainerApp 'br/public:avm/res/app/container-app:0.1.0' 
             namespace: renderRequestServiceBusNamespace
             queueName: renderRequestServiceBusQueueName
           }
-          auth: [
-            {
-              secretRef: 'render-request-queue-connection-string'
-              triggerParameter: 'connection'
-            }
-          ]
+          identity: managedIdentity.id
         }
       }
     ]
