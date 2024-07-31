@@ -91,7 +91,7 @@ module containerAppsEnvironment 'br/public:avm/res/app/managed-environment:0.4.2
   }
 }
 
-module renderingServiceContainerApp 'br/public:avm/res/app/container-app:0.5.0' = {
+module renderingServiceContainerApp '../core/hosting/container-app.bicep' = {
   name: 'application-rendering-service-container-app'
   scope: resourceGroup()
   params: {
@@ -111,8 +111,9 @@ module renderingServiceContainerApp 'br/public:avm/res/app/container-app:0.5.0' 
         image: 'mcr.microsoft.com/k8se/quickstart:latest'
 
         probes: [
+          // As per https://learn.microsoft.com/azure/container-apps/health-probes?tabs=arm-template#examples
           {
-            type: 'Liveness'
+            type: 'liveness'
             httpGet: {
               path: '/health'
               port: 8080
@@ -153,11 +154,7 @@ module renderingServiceContainerApp 'br/public:avm/res/app/container-app:0.5.0' 
     ingressAllowInsecure: false
     ingressTargetPort: 8080
 
-    managedIdentities: {
-      userAssignedResourceIds: [
-        managedIdentity.id
-      ]
-    }
+    managedIdentityId: managedIdentity.id
 
     registries: [
       {
