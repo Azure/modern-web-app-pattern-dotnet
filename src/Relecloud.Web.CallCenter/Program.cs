@@ -50,7 +50,7 @@ if (hasRequiredConfigSettings)
     startup.ConfigureServices(builder.Services, azureCredential);
 }
 
-var hasMicrosoftEntraIdSettings = !string.IsNullOrEmpty(builder.Configuration["MicrosoftEntraId:ClientId"]);
+var hasMicrosoftEntraIdSettings = true; // !string.IsNullOrEmpty(builder.Configuration["MicrosoftEntraId:ClientId"]);
 
 var app = builder.Build();
 

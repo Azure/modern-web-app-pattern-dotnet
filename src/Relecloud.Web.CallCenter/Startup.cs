@@ -41,7 +41,7 @@ namespace Relecloud.Web
             services.AddHttpContextAccessor();
             services.Configure<RelecloudApiOptions>(Configuration.GetSection("App:RelecloudApi"));
             services.AddOptions();
-            AddMicrosoftEntraIdServices(services);
+            // AddMicrosoftEntraIdServices(services);
             services.AddControllersWithViews();
 
             if (Configuration["App:ApplicationInsights:ConnectionString"] is string appInsightsConnectionString)
@@ -321,8 +321,8 @@ namespace Relecloud.Web
 
             app.UseRouting();
 
-            app.UseAuthentication();
-            app.UseAuthorization();
+            // app.UseAuthentication();
+            // app.UseAuthorization();
 
             app.UseSession(); // required for carts
 
@@ -333,7 +333,7 @@ namespace Relecloud.Web
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
-                endpoints.MapRazorPages();
+                // endpoints.MapRazorPages();
             });
         }
     }
