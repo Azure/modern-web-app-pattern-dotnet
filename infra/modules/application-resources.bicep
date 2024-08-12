@@ -287,7 +287,7 @@ module sqlDatabase '../core/database/sql-database.bicep' = {
     } : null
     sku: deploymentSettings.isProduction ? 'Premium' : 'Standard'
     zoneRedundant: deploymentSettings.isProduction
-    users: deploymentSettings.isProduction ? [] : [ 
+    users: deploymentSettings.isProduction ? [] : [
       {
         principalId: deploymentSettings.principalId
         principalName: deploymentSettings.principalName
@@ -306,7 +306,7 @@ module commonAppServicePlan '../core/hosting/app-service-plan.bicep' = if (useCo
     name: resourceNames.commonAppServicePlan
     location: deploymentSettings.location
     tags: moduleTags
-    
+
     // Dependencies
     logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
 
@@ -326,7 +326,7 @@ module webService './application-appservice.bicep' = {
     diagnosticSettings: diagnosticSettings
     // mapping code projects to web apps by tags matching names from azure.yaml
     tags: moduleTags
-    
+
     // Dependencies
     appConfigurationName: appConfiguration.outputs.name
     applicationInsightsId: applicationInsightsId
@@ -378,7 +378,7 @@ module webFrontend './application-appservice.bicep' = {
     diagnosticSettings: diagnosticSettings
     // mapping code projects to web apps by tags matching names from azure.yaml
     tags: moduleTags
-    
+
     // Dependencies
     appConfigurationName: appConfiguration.outputs.name
     applicationInsightsId: applicationInsightsId
@@ -573,12 +573,7 @@ module serviceBusNamespace 'br/public:avm/res/service-bus/namespace:0.2.3' = {
       trustedServiceAccessEnabled: false
     } : null
 
-    // Ideally this would be disabled, but it is required for ACA scaling rules to be able to
-    // trigger based on Service Bus metrics.
-    // If, in the future, ACA scaling rules can authenticate with managed identity then this
-    // should be set to true.
-    // https://github.com/microsoft/azure-container-apps/issues/592
-    disableLocalAuth: false
+    disableLocalAuth: true
 
     // This is a workaround for a bug in the service bus module https://github.com/Azure/ResourceModules/issues/2867
     // Authorization rules should be optional and not required when using RBAC roles, but due to the bug, we need to
