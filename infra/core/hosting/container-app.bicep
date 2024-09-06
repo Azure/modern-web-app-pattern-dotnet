@@ -8,6 +8,9 @@ targetScope = 'resourceGroup'
 ***************************************************************************
 */
 
+// This simple ACA module is used until an updated Azure Verified Module
+// is available using the new Container Apps API (version 2024-02-02-preview or newer).
+
 // ========================================================================
 // USER-DEFINED TYPES
 // ========================================================================

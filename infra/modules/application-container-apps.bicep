@@ -91,6 +91,8 @@ module containerAppsEnvironment 'br/public:avm/res/app/managed-environment:0.4.2
   }
 }
 
+// TheACA Azure Verified Module (AVM) does not yet support API version 2024-02-02-preview,
+// so we are using our own ACA module until the AVM is updated.
 module renderingServiceContainerApp '../core/hosting/container-app.bicep' = {
   name: 'application-rendering-service-container-app'
   scope: resourceGroup()
