@@ -174,7 +174,7 @@ To see distributed tracing in action, follow these steps:
 1. Search for **rendering**. You should see some recent traces related to rendering activities, as shown below.
     1. ![The Transaction Search blade in the Application Insights resource](./assets/images/Guide/AiTransactionSearch.png)
 1. Click on one of the traces to see more details. You will see a list of correlated traces and events showing diagnostic information for the entire request across multiple services.
-1. Click the 'View timeline' button to see a timeline tree of the activities involved in serving the request. This will show you how long each part of the system took to process the request and allows selecting any individual event to see more details.
+1. Click the **View timeline** button to see a timeline tree of the activities involved in serving the request. This will show you how long each part of the system took to process the request and allows selecting any individual event to see more details.
     1. ![A trace in the Application Insights resource showing a tree of activities](./assets/images/Guide/AiTrace.png)
 
 For more information, see [.NET Distributed Tracing](https://learn.microsoft.com/dotnet/core/diagnostics/distributed-tracing).
