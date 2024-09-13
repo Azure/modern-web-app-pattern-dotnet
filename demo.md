@@ -119,7 +119,7 @@ HGETALL UpcomingConcerts
 
 ## Strangler Fig pattern
 
-The strangler fig pattern is used to separate some functionality that used to run in the Relecloud web API into a separate independently versionable and scalable service. Ticket rendering functionality has been separated into a new service called the Ticket Rendering Service. We have included an Azure App Configuration feature flag called `DistributedTicketRendering` that allows toggling between the old and new architectures (before and after applying the strangler fig pattern) for demo purposes.
+The strangler fig pattern is used to separate some functionality that was previously part of the Relecloud web API into a separate independently versionable and scalable service. Ticket rendering functionality is separated into a new service called the Ticket Rendering Service. We used an Azure App Configuration feature flag called `DistributedTicketRendering` that allows us to toggle between the old and new architectures (before and after applying the strangler fig pattern) for demo purposes.
 
 By default, the new ticket rendering service is used. To switch back and forth, follow these steps:
 
