@@ -171,7 +171,7 @@ To see distributed tracing in action, follow these steps:
 
 1. Navigate to the Relecloud web app and purchase a ticket. This will cause a request to be sent to the web front end. The front end will call the web API which will then send a message to the ticket rendering service via Azure Service Bus. There are also multiple database updates along the way.
 1. Navigate to the Application Insights resource in the Azure Portal and select the **Transaction Search** blade. This will allow you to search recent traces.
-1. Search for **rendering**. You should see some recent traces related to rendering activities, as shown below.
+1. Search for "rendering". You should see some recent traces related to rendering activities, as shown below.
     1. ![The Transaction Search blade in the Application Insights resource](./assets/images/Guide/AiTransactionSearch.png)
 1. Click on one of the traces to see more details. You will see a list of correlated traces and events showing diagnostic information for the entire request across multiple services.
 1. Click the **View timeline** button to see a timeline tree of the activities involved in serving the request. This will show you how long each part of the system took to process the request and allows selecting any individual event to see more details.
