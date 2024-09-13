@@ -125,7 +125,7 @@ By default, the new ticket rendering service is used. To switch back and forth, 
 
 1. Disable the `DistributedTicketRendering` feature flag.
     1. Go to App Configuration in the Azure Portal.
-    1. Choose the 'Feature manager' option in the left-hand blade under 'Operations'.
+    1. Choose the **Feature manager** option in the left-hand blade under **Operations**.
     1. Note the feature flag named `DistributedTicketRendering` which should be enabled by default and click it to disable it, as shown in this screenshot.
         1. ![The DistributedTicketRendering feature flag disabled in Azure App Configuration](./assets/images/Guide/DisabledFeatureFlag.png)
     1. Wait for 30 seconds. The change will take effect without needing to restart or redeploy the web app but it takes about 30 seconds to propagate.
