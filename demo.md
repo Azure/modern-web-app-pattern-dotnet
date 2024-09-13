@@ -157,7 +157,7 @@ To see these patterns in action, follow these steps:
 1. Now, navigate to the Relecloud web app and purchase multiple tickets. You can use the browser developer tools to set the quantity to 400, for example. Notice that although you are shown the purchase confirmation page, the ticket images are not available immediately. According to the queue based load leveling pattern, the ticket rendering is done asynchronously so the web API is not blocked.
 1. After purchasing the tickets, navigate back to the Azure Container Apps resource and notice that the replica count has increased. This is because the ticket rendering service has automatically scaled out to handle the increased load based on the ticket rendering Service Bus queue length. These replicas will all work in parallel to process the tickets as quickly as possible.
     1. ![The Revisions and replicas blade in the Azure Container Apps resource showing increased replica count](./assets/images/Guide/AcaReplicaCountIncreased.png)
-1. After some time (about five minutes), you will notice that the number of replicas has decreased again. This is because the ticket rendering service has scaled in to save costs since the queue length has decreased.
+1. After some time (about five minutes), you will notice that the number of replicas has decreased again. This is because the ticket rendering service has scaled in to minimize costs since the queue length has decreased.
 
 For more information, see [Queue-based Load Leveling pattern](https://learn.microsoft.com/azure/architecture/patterns/queue-based-load-leveling) and [Competing Consumers pattern](https://learn.microsoft.com/azure/architecture/patterns/competing-consumers).
 
