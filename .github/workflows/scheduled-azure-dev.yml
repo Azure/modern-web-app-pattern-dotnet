@@ -20,7 +20,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/azure-dev-cli-apps:1.9.5
+      image: mcr.microsoft.com/azure-dev-cli-apps:1.10.1
     env:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -40,7 +40,7 @@ jobs:
       - name: Check configuration
         if: ${{ env.AZURE_CLIENT_ID == '' }}
         run: echo "AZURE_CLIENT_ID are not available."
-        
+
       # login to run ado commands such provision, deploy, and down
       - name: Log in with Azure (Federated Credentials)
         if: ${{ env.AZURE_CLIENT_ID != '' }}
@@ -50,7 +50,7 @@ jobs:
             --federated-credential-provider "github" `
             --tenant-id "$Env:AZURE_TENANT_ID" `
         shell: pwsh
-        
+
       # login to run azd hooks and the QA validation script
       - name: Log in with Azure CLI
         if: ${{ env.AZURE_CLIENT_ID != '' }}

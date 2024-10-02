@@ -12,11 +12,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/azure-dev-cli-apps:1.9.5
+      image: mcr.microsoft.com/azure-dev-cli-apps:1.10.1
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        
+
       # login to run ado commands such provision, deploy, and down
       - name: Log in with Azure (Client Credentials)
         if: ${{ env.AZURE_CREDENTIALS != '' }}
@@ -31,7 +31,7 @@ jobs:
         shell: pwsh
         env:
           AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-          
+
       - name: Azure Dev Provision
         run: azd provision --no-prompt
         env:

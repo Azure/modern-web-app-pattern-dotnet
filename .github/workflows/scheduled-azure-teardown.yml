@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 13 1 * *' # Run at 13:00 on the 1st day of the month
-    
+
 # https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Clinux#set-up-azure-login-with-openid-connect-authentication
 permissions:
   id-token: write
@@ -19,7 +19,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/azure-dev-cli-apps:1.9.5
+      image: mcr.microsoft.com/azure-dev-cli-apps:1.10.1
     env:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -35,7 +35,7 @@ jobs:
       - name: Install Az module
         run: Install-Module -Name Az -Force -AllowClobber -Scope CurrentUser -Repository PSGallery
         shell: pwsh
-        
+
       # login to run ado commands such provision, deploy, and down
       - name: Log in with Azure (Federated Credentials)
         if: ${{ env.AZURE_CLIENT_ID != '' }}
@@ -45,7 +45,7 @@ jobs:
             --federated-credential-provider "github" `
             --tenant-id "$Env:AZURE_TENANT_ID" `
         shell: pwsh
-        
+
       # login to run azd hooks and the QA validation script
       - name: Log in with Azure CLI
         if: ${{ env.AZURE_CLIENT_ID != '' }}

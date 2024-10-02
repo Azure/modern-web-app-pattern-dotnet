@@ -56,6 +56,7 @@ services:
     project: src/Relecloud.TicketRenderer
     language: dotnet
     host: containerapp
+    apiVersion: 2024-02-02-preview # Force `azd` to use this API version for GET/PATCH operations
     docker:
       # These paths are relative to the project directory
       path: ./Dockerfile

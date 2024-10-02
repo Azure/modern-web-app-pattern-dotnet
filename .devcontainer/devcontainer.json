@@ -2,14 +2,14 @@
 	"name": "web-app-pattern-dotnet",
 	"build": {
 		"dockerfile": "Dockerfile",
-		"args": { 
+		"args": {
 			"VARIANT": "8.0-bookworm"
 		}
 	},
 	"runArgs": ["--init", "--privileged"],
 
 	"customizations": {
-		"vscode": {	
+		"vscode": {
 			"extensions": [
 				"ms-azuretools.azure-dev",
 				"ms-azuretools.vscode-azureappservice",
@@ -35,7 +35,7 @@
 			//  - /.github/workflows/azure-dev.yml
 			//  - /.github/workflows/scheduled-azure-dev.yml
 			//  - /.github/workflows/scheduled-azure-teardown.yml
-			"version": "1.9.5"
+			"version": "1.10.1"
 		},
 		"ghcr.io/devcontainers/features/docker-in-docker:2": {
 			"version": "latest"
