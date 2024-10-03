@@ -42,6 +42,11 @@ The following detailed deployment steps assume you are using a Dev Container ins
     ```pwsh
     Connect-AzAccount -UseDeviceAuthentication
     ```
+    If you have multiple tenants, you can use the following command instead to login to the correct tenant:
+
+    ```pwsh
+    Connect-AzAccount -UseDeviceAuthentication -TenantId <tenant-id>
+    ```    
 
 1. Set the subscription to the one you want to use (you can use [Get-AzSubscription](https://learn.microsoft.com/powershell/module/az.accounts/get-azsubscription?view=azps-11.3.0) to list available subscriptions):
 
@@ -60,6 +65,11 @@ The following detailed deployment steps assume you are using a Dev Container ins
     azd auth login --use-device-code
     ```
 
+    If you have multiple tenants, you can use the following command instead to log into the correct tenant:
+
+    ```pwsh
+    azd auth login --use-device-code --tenant-id <tenant-id>
+    ```
 
 ### 2. Provision the app
 
@@ -116,6 +126,12 @@ The following detailed deployment steps assume you are using a Dev Container ins
 
     ```pwsh
     az login --use-device-code
+    ```
+
+    If you have multiple tenants, you can use the following command instead to log into the correct tenant:
+
+    ```pwsh
+    az login --use-device-code --tenant <tenant-id>
     ```
     
     ```pwsh
@@ -207,12 +223,19 @@ The following detailed deployment steps assume you are using a Dev Container ins
     exit # exit the ssh connection
     ssh -F ./ssh-config 127.0.0.1 -p 50022
     pwsh
+    cd web-app-pattern
     ```
 
 1. [Sign in to Azure PowerShell interactively](https://learn.microsoft.com/powershell/azure/authenticate-interactive):
 
     ```pwsh
     Connect-AzAccount -UseDeviceAuthentication
+    ```
+
+    If you have multiple tenants, you can use the following command instead to login to the correct tenant:
+
+    ```pwsh
+    Connect-AzAccount -UseDeviceAuthentication -TenantId <tenant-id>
     ```
 
     ```pwsh
@@ -223,6 +246,12 @@ The following detailed deployment steps assume you are using a Dev Container ins
 
     ```pwsh
     azd auth login --use-device-code
+    ```
+
+    If you have multiple tenants, you can use the following command instead to log into the correct tenant:
+
+    ```pwsh
+    azd auth login --use-device-code --tenant-id <tenant-id>
     ```
 
 1. Deploy the application to the primary region using:

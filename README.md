@@ -110,6 +110,12 @@ Import-Module Az.Resources
 Connect-AzAccount -UseDeviceAuthentication
 ```
 
+If you have multiple tenants, you can use the following command instead to login to the correct tenant:
+
+```pwsh
+Connect-AzAccount -UseDeviceAuthentication -TenantId <tenant-id>
+```
+
 Set the subscription to the one you want to use (you can use [Get-AzSubscription](https://learn.microsoft.com/powershell/module/az.accounts/get-azsubscription?view=azps-11.3.0) to list available subscriptions):
 
 ```pwsh
@@ -124,6 +130,12 @@ Use the next command to login with the Azure Dev CLI (AZD) tool:
 
 ```pwsh
 azd auth login --use-device-code
+```
+
+If you have multiple tenants, you can use the following command instead to log into the correct tenant:
+
+```pwsh
+azd auth login --use-device-code --tenant-id <tenant-id>
 ```
 
 ### 4. Create a new environment
