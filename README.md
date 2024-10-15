@@ -1,6 +1,6 @@
-# Modern web app pattern for .NET
+# Modern Web App pattern for .NET
 
-The reference implementation provides a production-grade web application that uses best practices from our guidance and gives developers concrete examples to build their own Modern Web Application in Azure. This repository specifically demonstrates a concert ticketing application for the fictional company Relecloud, embodying the modern web app pattern with a focus on .NET technologies. It guides developers through a simulated migration from an on-premises ASP.NET application to Azure, detailing the architectural changes and enhancements that capitalize on the cloud's strengths during the initial adoption phase.
+The reference implementation provides a production-grade web application that uses best practices from our guidance and gives developers concrete examples to build their own Modern Web App in Azure. This repository specifically demonstrates a concert ticketing application for the fictional company Relecloud, embodying the Modern Web App pattern with a focus on .NET technologies. It guides developers through a simulated migration from an on-premises ASP.NET application to Azure, detailing the architectural changes and enhancements that capitalize on the cloud's strengths during the initial adoption phase.
 
 This project has [a companion article in the Azure Architecture Center](https://aka.ms/eap/mwa/dotnet/doc) that describes design patterns and best practices. Here's an outline of the contents in this readme:
 
