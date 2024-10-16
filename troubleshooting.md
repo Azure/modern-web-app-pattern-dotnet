@@ -98,3 +98,19 @@ When the `azd provision` command runs it creates a deployment resource in your s
     ```
 
 1. You should now be able to run the `azd provision` command and resume your deployment.
+
+## ERROR: resolving bicep parameters file: fetching current principal id: getting tenant id for subscription...
+This error can happen when you are using an account that has access to multiple subscriptions. The `azd auth` command is not able to retrieve a list of the subscriptions that you can access when that tenant is configured to require a Multi-Factor Auth experience that was not completed.
+
+### Workaround
+You should complete the MFA experience for your default tenant, and the tenant that you wish to access by running both authentication commands:
+
+1. Authenticate to your default tenant
+    ```sh
+    azd auth login --use-device-code
+    ```
+
+1. Authenticate to the tenant that owns the subscription you want to use
+    ```sh
+    azd auth login --use-device-code --tenant <tenant-id>
+    ```
