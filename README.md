@@ -196,7 +196,7 @@ azd down --purge --force
 - [Troubleshooting](troubleshooting.md)
 - [Pattern Simulations](demo.md)
 - [Developer Experience](developer-experience.md)
-- [Calculating SLA](./assets/sla-calculation.md)
+- [Calculating SLO](./assets/slo-calculation.md)
 - [Find additional resources](additional-resources.md)
 - [Report security concerns](SECURITY.md)
 - [Find Support](SUPPORT.md)
