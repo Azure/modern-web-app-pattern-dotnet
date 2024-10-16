@@ -99,8 +99,16 @@ When the `azd provision` command runs it creates a deployment resource in your s
 
 1. You should now be able to run the `azd provision` command and resume your deployment.
 
-## ERROR: resolving bicep parameters file: fetching current principal id: getting tenant id for subscription...
+## ERROR: reauthentication required, run `azd auth login --scope https://management.azure.com//.default` to log in
 This error can happen when you are using an account that has access to multiple subscriptions. The `azd auth` command is not able to retrieve a list of the subscriptions that you can access when that tenant is configured to require a Multi-Factor Auth experience that was not completed.
+
+**Alternate error message text**
+
+Depending on your workflow you may get a different error message for the same issue:
+
+```sh
+ERROR: resolving bicep parameters file: fetching current principal id: getting tenant id for subscription...
+```
 
 ### Workaround
 You should complete the MFA experience for your default tenant, and the tenant that you wish to access by running both authentication commands:
