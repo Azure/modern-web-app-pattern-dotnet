@@ -380,7 +380,7 @@ foreach ($resourceGroupName in $resourceGroups) {
 
 if ($azdConfig['ENVIRONMENT'] ?? 'dev' -eq "dev") {
     # when performing dev cleanup there are no dependencies between resource groups
-    # exitig at this point allows AZD to handle the tear down responsibilities
+    # existing at this point allows AZD to handle the tear down responsibilities
     "`nCleanup complete." | Write-Output
     exit 0
 }
