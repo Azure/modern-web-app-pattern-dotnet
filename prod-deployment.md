@@ -262,6 +262,7 @@ The following detailed deployment steps assume you are using a Dev Container ins
     ```pwsh
     azd deploy
     ```
+    > If you were unable to deploy due to [ERROR: getting target resource](troubleshooting.md#error-reauthentication-required-run-azd-auth-login---scope-httpsmanagementazurecomdefault-to-log-in)
 
     It takes approximately 5 minutes to deploy the code.
     
