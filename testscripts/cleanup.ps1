@@ -378,6 +378,12 @@ foreach ($resourceGroupName in $resourceGroups) {
     Remove-DiagnosticSettingsForResourceGroup -ResourceGroupName $resourceGroupName
 }
 
+if ($azdConfig['AZURE_ENV_NAME'] -eq "dev") {
+    # when performing dev cleanup there are no dependencies between resource groups
+    # exitig at this point allows AZD to handle the tear down responsibilities
+    "`nCleanup complete." | Write-Output
+}
+
 # if $SkipResourceGroupDeletion is false, then we skip the resource group deletion
 # flag is expected to be set to false when combined with the `azd down` command
 if (-not $SkipResourceGroupDeletion) {
