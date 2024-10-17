@@ -106,8 +106,13 @@ This error can happen when you are using an account that has access to multiple 
 
 Depending on your workflow you may get a different error message for the same issue:
 
+Option 1:
 ```sh
 ERROR: resolving bicep parameters file: fetching current principal id: getting tenant id for subscription...
+```
+Option 2:
+```sh
+ERROR: getting target resource: getting service resource: resolving user access to subscription 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX' : reauthentication required, run `azd auth login --scope https://management.azure.com//.default` to log in
 ```
 
 ### Workaround
