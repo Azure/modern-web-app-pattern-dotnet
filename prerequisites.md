@@ -51,8 +51,8 @@ The following tools are pre-requisites to running the associated deployment step
     azd version
     ```
 
-1. [Install .NET 7 SDK](https://dotnet.microsoft.com/download/dotnet/7.0)
-    Run the following command to verify that the .NET SDK 7.0 is installed.
+1. [Install .NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+    Run the following command to verify that the .NET SDK 8.0 is installed.
     ```ps1
     dotnet --version
     ```
